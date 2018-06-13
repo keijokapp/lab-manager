@@ -1,0 +1,25 @@
+{
+	"database": "db",
+	"appUrl": "http://localhost:3000",
+	"listen": {
+		"address": "::",
+		"port": 3000
+	},
+	"tokens": [ "bearer-token" ],
+	"repositories": "repositories",
+	"labProxy": {
+		"url": "https://lab-host.example.com/lab-proxy",
+		"key": "api-token"
+	},
+	"virtualbox": "http://localhost:3001",
+	"remote": "https://example.com/remote",
+	"lxd": {
+		"url": "https://localhost:9443",
+		"certificate": "lxd-client-certificate",
+		"key": "lxd-client-key"
+	},
+	"iTee": {
+		"url": "https://i-tee.example.com",
+		"key": "XXX"
+	}
+}
