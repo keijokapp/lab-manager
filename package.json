@@ -1,0 +1,44 @@
+{
+	"name": "lab-manager",
+	"version": "0.0.1",
+	"description": "Virtual laboratory management API",
+	"author": "Keijo Kapp <keijo.kapp@rangeforce.com>",
+	"license": "MIT",
+	"bin": "./dist/index.js",
+	"scripts": {
+		"build": "babel lib --out-dir dist"
+	},
+	"browser": {
+		"./lib/config.js": "./lib/config-browser.js",
+		"./lib/request.js": "./lib/request-browser.js"
+	},
+	"dependencies": {
+		"browserify-middleware": "^8.1.1",
+		"express": "^4.16.3",
+		"express-bearer-token": "^2.2.0",
+		"express-jsonschema": "^1.1.6",
+		"express-winston": "^3.0.0",
+		"jsonschema": "^1.2.4",
+		"node-fetch": "^2.2.0",
+		"node-lxd": "github:alandoherty/node-lxd#2317dd7e57a2dfe1331cbd2c03329d4027e42375",
+		"pouchdb": "^7.0.0",
+		"pushover": "^1.3.6",
+		"react": "^16.4.2",
+		"react-copy-to-clipboard": "^5.0.1",
+		"react-dom": "^16.4.2",
+		"sd-notify": "^2.3.0",
+		"semantic-ui-react": "^0.82.2",
+		"table-dragger": "^1.0.2",
+		"uniqid": "^5.0.3",
+		"uuid": "^3.3.0",
+		"winston": "^3.0.0"
+	},
+	"devDependencies": {
+		"babel-cli": "^6.26.0",
+		"babel-plugin-syntax-async-functions": "^6.13.0",
+		"babel-plugin-syntax-object-rest-spread": "^6.13.0",
+		"babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
+		"babel-preset-react": "^6.24.1",
+		"babelify": "^8.0.0"
+	}
+}
