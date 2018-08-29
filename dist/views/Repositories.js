@@ -10,9 +10,9 @@ var _react2 = _interopRequireDefault(_react);
 
 var _semanticUiReact = require('semantic-ui-react');
 
-var _reactCopyToClipboard = require('react-copy-to-clipboard');
+var _copyToClipboard = require('copy-to-clipboard');
 
-var _reactCopyToClipboard2 = _interopRequireDefault(_reactCopyToClipboard);
+var _copyToClipboard2 = _interopRequireDefault(_copyToClipboard);
 
 var _request = require('../request');
 
@@ -147,12 +147,9 @@ class Repository extends _react2.default.Component {
 					{ size: 'big' },
 					this.state.link,
 					' ',
-					_react2.default.createElement(
-						_reactCopyToClipboard2.default,
-						{ text: this.state.link },
-						_react2.default.createElement(_semanticUiReact.Icon, { name: 'clipboard outline',
-							style: { cursor: 'pointer' } })
-					)
+					_react2.default.createElement(_semanticUiReact.Icon, { name: 'clipboard outline',
+						style: { cursor: 'pointer', padding: '0 0 0 01em' },
+						onClick: () => (0, _copyToClipboard2.default)(this.state.link) })
 				)
 			),
 			_react2.default.createElement(
