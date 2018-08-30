@@ -23,6 +23,7 @@
 		"node-fetch": "^2.2.0",
 		"node-lxd": "github:alandoherty/node-lxd#2317dd7e57a2dfe1331cbd2c03329d4027e42375",
 		"pouchdb": "^7.0.0",
+		"pouchdb-seed-design": "^0.3.0",
 		"pushover": "^1.3.6",
 		"react": "^16.4.2",
 		"react-dom": "^16.4.2",
