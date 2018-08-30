@@ -44,6 +44,10 @@ var _pouchdb = require('pouchdb');
 
 var _pouchdb2 = _interopRequireDefault(_pouchdb);
 
+var _pouchdbSeedDesign = require('pouchdb-seed-design');
+
+var _pouchdbSeedDesign2 = _interopRequireDefault(_pouchdbSeedDesign);
+
 var _request = require('./request');
 
 var _request2 = _interopRequireDefault(_request);
@@ -107,6 +111,30 @@ const logger = exports.logger = _winston2.default.createLogger({
 });
 
 const db = exports.db = new _pouchdb2.default(_config2.default.database);
+
+// TODO: make application stop on fail
+(0, _pouchdbSeedDesign2.default)(db, {
+	instance: {
+		views: {
+			uuid: {
+				map: function (doc) {
+					if (doc._id.indexOf('instance/') === 0) {
+						emit(doc.privateToken);
+						emit(doc.publicToken);
+					}
+				}
+			}
+		}
+	}
+}).then(updated => {
+	if (updated) {
+		logger.info('Design documents updated');
+	} else {
+		logger.debug('Design documents didn\'t need updates');
+	}
+}, e => {
+	logger.error('Failed to seed database with design documents', { e: e.message });
+});
 
 /**
  * Authorizes token usage
