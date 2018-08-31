@@ -363,8 +363,7 @@ routes.post('/:lab/instance/:username', (0, _expressJsonschema.validate)({
 	headers: {
 		properties: {
 			'if-match': { type: 'string', minLength: 1 }
-		},
-		required: ['if-match']
+		}
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
 	const username = req.params.username;
