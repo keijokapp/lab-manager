@@ -364,42 +364,55 @@ routes.post('/:lab/instance/:username', (0, _expressJsonschema.validate)({
 		properties: {
 			'if-match': { type: 'string', minLength: 1 }
 		}
+	},
+	body: {
+		properties: {
+			lab: labSchema
+		},
+		additionalProperties: false
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
 	const username = req.params.username;
 	let lab;
-	try {
-		lab = await _common.db.get('lab/' + req.params.lab);
-	} catch (e) {
-		if (e.name === 'not_found') {
-			res.status(404).send({
-				error: 'Not found',
-				message: 'Lab does not exist'
-			});
-		} else {
-			throw e;
+
+	if (req.body instanceof Object && 'lab' in req.body) {
+		lab = req.body.lab;
+		lab._id = req.params.lab;
+		delete lab._rev;
+	} else {
+		try {
+			lab = await _common.db.get('lab/' + req.params.lab);
+		} catch (e) {
+			if (e.name === 'not_found') {
+				res.status(404).send({
+					error: 'Not found',
+					message: 'Lab does not exist'
+				});
+			} else {
+				throw e;
+			}
+			return;
 		}
-		return;
-	}
 
-	if ('if-match' in req.headers && lab._rev !== req.headers['if-match']) {
-		res.status(410).send({
-			error: 'Gone',
-			message: 'Requested lab revision is not available'
-		});
-		return;
-	}
+		if ('if-match' in req.headers && lab._rev !== req.headers['if-match']) {
+			res.status(410).send({
+				error: 'Gone',
+				message: 'Requested lab revision is not available'
+			});
+			return;
+		}
 
-	lab._id = lab._id.slice(4);
+		lab._id = lab._id.slice(4);
 
-	const validationResult = (0, _jsonschema.validate)(lab, labSchema);
-	if (!validationResult.valid) {
-		res.status(412).send({
-			error: 'Precondition Failed',
-			message: 'Requested lab is in invalid state',
-			errors: validationResult.errors
-		});
-		return;
+		const validationResult = (0, _jsonschema.validate)(lab, labSchema);
+		if (!validationResult.valid) {
+			res.status(412).send({
+				error: 'Precondition Failed',
+				message: 'Requested lab is in invalid state',
+				errors: validationResult.errors
+			});
+			return;
+		}
 	}
 
 	const instance = await (0, _createInstance2.default)({
