@@ -10,10 +10,6 @@ var _react2 = _interopRequireDefault(_react);
 
 var _semanticUiReact = require('semantic-ui-react');
 
-var _request = require('../request');
-
-var _request2 = _interopRequireDefault(_request);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 class Machine extends _react2.default.Component {
@@ -53,7 +49,9 @@ class Machine extends _react2.default.Component {
 		}
 
 		this.setState({ loading: 'snapshot' });
-		_request2.default.post('machine/' + encodeURIComponent(this.state.machine.id) + '/snapshot/' + encodeURIComponent(snapshotName)).then(response => {
+		fetch('machine/' + encodeURIComponent(this.state.machine.id) + '/snapshot/' + encodeURIComponent(snapshotName), {
+			method: 'POST'
+		}).then(response => {
 			if (response.ok) {
 				this.reload(true);
 			} else {
@@ -70,7 +68,11 @@ class Machine extends _react2.default.Component {
 		}
 
 		this.setState({ loading: state });
-		_request2.default.put('machine/' + encodeURIComponent(this.state.machine.id) + '?ip', { state }).then(response => {
+		fetch('machine/' + encodeURIComponent(this.state.machine.id) + '?ip', {
+			method: 'PUT',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ state })
+		}).then(response => {
 			if (response.ok) {
 				return response.json().then(body => {
 					this.setState({
@@ -95,7 +97,7 @@ class Machine extends _react2.default.Component {
 		}
 
 		this.setState({ loading: 'reload' });
-		_request2.default.get('machine/' + encodeURIComponent(this.state.machine.id) + '?ip').then(response => {
+		fetch('machine/' + encodeURIComponent(this.state.machine.id) + '?ip').then(response => {
 			if (response.ok) {
 				return response.json().then(body => {
 					this.setState({

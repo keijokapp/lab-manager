@@ -37,16 +37,6 @@ exports.default = routes;
 
 
 routes.use(_iTeeCompat2.default);
-routes.use((req, res, next) => {
-	if ('if-match' in req.headers) {
-		if (!('rev' in req.query)) {
-			req.query.rev = req.headers['if-match'];
-		}
-	} else {
-		req.headers['if-match'] = req.query.rev;
-	}
-	next();
-});
 routes.use('/lab', _lab2.default);
 routes.use('/instance', _instance2.default);
 routes.use('/machine', _machine2.default);

@@ -10,10 +10,6 @@ var _react2 = _interopRequireDefault(_react);
 
 var _semanticUiReact = require('semantic-ui-react');
 
-var _request = require('../request');
-
-var _request2 = _interopRequireDefault(_request);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 class LabRow extends _react2.default.Component {
@@ -30,7 +26,10 @@ class LabRow extends _react2.default.Component {
 		}
 
 		this.setState({ loading: 'delete' });
-		_request2.default.delete('lab/' + encodeURIComponent(this.props.lab._id) + '?rev=' + encodeURIComponent(this.props.lab._rev)).then(response => {
+		fetch('lab/' + encodeURIComponent(this.props.lab._id), {
+			method: 'DELETE',
+			headers: { 'if-match': this.props.lab._rev }
+		}).then(response => {
 			if (response.ok) {
 				window.location.reload();
 			} else {
@@ -47,7 +46,11 @@ class LabRow extends _react2.default.Component {
 		}
 
 		this.setState({ loading: 'clone' });
-		_request2.default.post('lab/' + encodeURIComponent(cloneName), this.props.lab).then(response => {
+		fetch('lab/' + encodeURIComponent(cloneName), {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify(this.props.lab)
+		}).then(response => {
 			if (response.ok) {
 				return response.json().then(body => {
 					window.location.href = 'lab/' + encodeURIComponent(body._id);
@@ -67,7 +70,10 @@ class LabRow extends _react2.default.Component {
 
 		this.setState({ loading: 'start' });
 		const resourceUrl = 'lab/' + encodeURIComponent(this.props.lab._id) + '/instance/' + encodeURIComponent(username);
-		_request2.default.post(resourceUrl + '?rev=' + encodeURIComponent(this.props.lab._rev)).then(response => {
+		fetch(resourceUrl, {
+			method: 'POST',
+			headers: { 'if-match': this.props.lab._rev }
+		}).then(response => {
 			if (response.ok) {
 				window.location.href = resourceUrl;
 			} else {
@@ -255,7 +261,11 @@ class Labs extends _react2.default.Component {
 		}
 
 		this.setState({ loading: 'new' });
-		_request2.default.post('lab/' + encodeURIComponent(newName), {}).then(response => {
+		fetch('lab/' + encodeURIComponent(newName), {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({})
+		}).then(response => {
 			if (response.ok) {
 				return response.json().then(body => {
 					window.location.href = 'lab/' + encodeURIComponent(body._id);

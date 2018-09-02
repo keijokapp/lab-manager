@@ -14,10 +14,6 @@ var _copyToClipboard = require('copy-to-clipboard');
 
 var _copyToClipboard2 = _interopRequireDefault(_copyToClipboard);
 
-var _request = require('../request');
-
-var _request2 = _interopRequireDefault(_request);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 class Repository extends _react2.default.Component {
@@ -37,7 +33,9 @@ class Repository extends _react2.default.Component {
 		}
 
 		this.setState({ loading: 'fetch' });
-		_request2.default.post('repository/' + encodeURIComponent(this.state.name) + '/fetch').then(response => {
+		fetch('repository/' + encodeURIComponent(this.state.name) + '/fetch', {
+			method: 'POST'
+		}).then(response => {
 			if (response.ok) {
 				this.reload(true);
 			} else {
@@ -54,7 +52,7 @@ class Repository extends _react2.default.Component {
 		}
 
 		this.setState({ loading: 'reload' });
-		_request2.default.get('repository/' + encodeURIComponent(this.state.name)).then(response => {
+		fetch('repository/' + encodeURIComponent(this.state.name)).then(response => {
 			if (response.ok) {
 				return response.json().then(body => {
 					this.setState({

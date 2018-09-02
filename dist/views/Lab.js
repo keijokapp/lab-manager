@@ -18,10 +18,6 @@ var _tableDragger2 = _interopRequireDefault(_tableDragger);
 
 var _semanticUiReact = require('semantic-ui-react');
 
-var _request = require('../request');
-
-var _request2 = _interopRequireDefault(_request);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 let templatesLoadPromiseResolve;
@@ -33,7 +29,9 @@ let templatesLoadPromise = new Promise(resolve => {
 async function loadTemplates() {
 	if (needTemplates) {
 		needTemplates = false;
-		const response = await _request2.default.get('machine?templates', null);
+		const response = await fetch('machine?templates', {
+			headers: { 'accept': 'application/json' }
+		});
 		if (response.ok) {
 			response.json().then(body => {
 				templatesLoadPromiseResolve(body.map(t => t.id));
@@ -53,7 +51,9 @@ let repositoriesLoadPromise = new Promise(resolve => {
 async function loadRepositories() {
 	if (needRepositories) {
 		needRepositories = false;
-		const response = await _request2.default.get('repository', null);
+		const response = await fetch('repository', {
+			headers: { 'accept': 'application/json' }
+		});
 		if (response.ok) {
 			response.json().then(body => {
 				repositoriesLoadPromiseResolve(body.map(t => t._id));
@@ -1337,7 +1337,11 @@ exports.default = class extends _react2.default.Component {
 		}
 
 		this.setState({ loading: 'save' });
-		_request2.default.put('lab/' + encodeURIComponent(this.props.lab._id) + '?rev=' + encodeURIComponent(this.props.lab._rev), this.getValue()).then(response => {
+		fetch('lab/' + encodeURIComponent(this.props.lab._id), {
+			method: 'PUT',
+			headers: { 'content-type': 'application/json', 'if-match': this.props.lab._rev },
+			body: JSON.stringify(this.getValue())
+		}).then(response => {
 			if (response.ok) {
 				window.location.href = 'lab';
 			} else {

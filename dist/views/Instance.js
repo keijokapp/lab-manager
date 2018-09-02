@@ -10,10 +10,6 @@ var _react2 = _interopRequireDefault(_react);
 
 var _semanticUiReact = require('semantic-ui-react');
 
-var _request = require('../request');
-
-var _request2 = _interopRequireDefault(_request);
-
 var _util = require('./util');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -153,8 +149,10 @@ class Machine extends _react2.default.Component {
 		}
 
 		this.setState({ loading: state });
-		_request2.default.put('instance/' + encodeURIComponent(window.INIT_STATE.instanceToken) + '/machine/' + encodeURIComponent(this.props.id) + '?ip&rev=' + encodeURIComponent(this.props.rev), {
-			state
+		fetch('instance/' + encodeURIComponent(window.INIT_STATE.instanceToken) + '/machine/' + encodeURIComponent(this.props.id) + '?ip', {
+			method: 'PUT',
+			headers: { 'content-type': 'application/json', 'if-match': this.props.rev },
+			body: JSON.stringify({ state })
 		}).then(response => {
 			if (response.ok) {
 				return response.json().then(body => {
@@ -177,7 +175,9 @@ class Machine extends _react2.default.Component {
 		}
 
 		this.setState({ loading: 'reload' });
-		_request2.default.get('instance/' + encodeURIComponent(window.INIT_STATE.instanceToken) + '/machine/' + encodeURIComponent(this.props.id) + '?ip&rev=' + encodeURIComponent(this.props.rev)).then(response => {
+		fetch('instance/' + encodeURIComponent(window.INIT_STATE.instanceToken) + '/machine/' + encodeURIComponent(this.props.id) + '?ip', {
+			headers: { 'if-match': this.props.rev }
+		}).then(response => {
 			if (response.ok) {
 				return response.json().then(body => {
 					this.setState({
@@ -683,7 +683,10 @@ exports.default = class extends _react2.default.Component {
 		}
 
 		this.setState({ loading: 'delete' });
-		_request2.default.delete('lab/' + encodeURIComponent(this.props.instance.lab._id) + '/instance/' + encodeURIComponent(this.props.instance.username) + '?rev=' + encodeURIComponent(this.props.instance._rev)).then(response => {
+		fetch('lab/' + encodeURIComponent(this.props.instance.lab._id) + '/instance/' + encodeURIComponent(this.props.instance.username), {
+			method: 'DELETE',
+			headers: { 'if-match': this.props.instance._rev }
+		}).then(response => {
 			if (response.ok) {
 				window.location.href = 'instance';
 			} else {

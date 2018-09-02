@@ -10,10 +10,6 @@ var _react2 = _interopRequireDefault(_react);
 
 var _semanticUiReact = require('semantic-ui-react');
 
-var _request = require('../request');
-
-var _request2 = _interopRequireDefault(_request);
-
 var _util = require('./util');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -32,7 +28,10 @@ class LabRow extends _react2.default.Component {
 		}
 
 		this.setState({ loading: 'delete' });
-		_request2.default.delete('lab/' + encodeURIComponent(this.props.instance.lab._id) + '/instance/' + this.props.instance.username + '?rev=' + encodeURIComponent(this.props.instance._rev)).then(response => {
+		fetch('lab/' + encodeURIComponent(this.props.instance.lab._id) + '/instance/' + this.props.instance.username, {
+			method: 'DELETE',
+			headers: { 'if-match': this.props.instance._rev }
+		}).then(response => {
 			if (response.ok) {
 				window.location.reload();
 			} else {
