@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var _express = require('express');
 
+var _expressOpenapiMiddleware = require('express-openapi-middleware');
+
 var _request = require('../request');
 
 var _request2 = _interopRequireDefault(_request);
@@ -37,7 +39,36 @@ routes.use((req, res, next) => {
 	}
 });
 
-routes.get('/', (req, res, next) => {
+routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['Machine'],
+	summary: 'List virtual machines',
+	parameters: [{
+		in: 'query',
+		name: 'templates',
+		description: 'Fetch templates only',
+		schema: { type: 'string' }
+	}, {
+		in: 'query',
+		name: 'running',
+		description: 'Fetch running machines only',
+		schema: { type: 'string' }
+	}, {
+		in: 'query',
+		name: 'detailed',
+		description: 'Ask for machine details',
+		schema: { type: 'string' }
+	}, {
+		in: 'query',
+		name: 'ip',
+		description: 'Ask for machine IP-s',
+		schema: { type: 'string' }
+	}],
+	responses: {
+		200: {
+			description: 'List of machines'
+		}
+	}
+}), (req, res, next) => {
 
 	const activeTab = 'templates' in req.query ? 1 : 'running' in req.query ? 2 : 0;
 
@@ -100,7 +131,33 @@ routes.get('/', (req, res, next) => {
 	});
 });
 
-routes.get('/:machine', (req, res, next) => {
+routes.get('/:machine', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['Machine'],
+	summary: 'Fetch virtual machine',
+	parameters: [{
+		in: 'path',
+		name: 'machine',
+		description: 'Machine name',
+		required: false,
+		schema: {
+			type: 'string',
+			minLength: 1
+		}
+	}, {
+		in: 'query',
+		name: 'ip',
+		description: 'Ask for machine IP-s',
+		schema: { type: 'string' }
+	}],
+	responses: {
+		200: {
+			description: 'Machine'
+		},
+		404: {
+			description: 'Machine does not exist'
+		}
+	}
+}), (req, res, next) => {
 	_request2.default.get(_config2.default.virtualbox + '/machine/' + encodeURIComponent(req.params.machine) + ('ip' in req.query ? '?ip' : '')).then(response => {
 		if (response.ok) {
 			return response.json().then(body => {
@@ -114,7 +171,44 @@ routes.get('/:machine', (req, res, next) => {
 	}).catch(next);
 });
 
-routes.put('/:machine', (req, res, next) => {
+routes.put('/:machine', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['Machine'],
+	summary: 'Update state of virtual machine',
+	parameters: [{
+		in: 'path',
+		name: 'machine',
+		description: 'Machine name',
+		required: false,
+		schema: {
+			type: 'string',
+			minLength: 1
+		}
+	}, {
+		in: 'query',
+		name: 'ip',
+		description: 'Ask for machine IP-s',
+		schema: { type: 'string' }
+	}],
+	requestBody: {
+		description: 'Machine state',
+		required: true,
+		content: {
+			'application/json': {
+				schema: {
+					type: 'object'
+				}
+			}
+		}
+	},
+	responses: {
+		200: {
+			description: 'Machine'
+		},
+		404: {
+			description: 'Machine does not exist'
+		}
+	}
+}), (req, res, next) => {
 	_request2.default.put(_config2.default.virtualbox + '/machine/' + encodeURIComponent(req.params.machine) + ('ip' in req.query ? '?ip' : ''), req.body).then(response => {
 		if (response.ok) {
 			return response.json().then(body => {
@@ -128,7 +222,33 @@ routes.put('/:machine', (req, res, next) => {
 	}).catch(next);
 });
 
-routes.post('/:machine/snapshot/:snapshot', (req, res, next) => {
+routes.post('/:machine/snapshot/:snapshot', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['Machine'],
+	summary: 'Update state of virtual machine',
+	parameters: [{
+		in: 'path',
+		name: 'machine',
+		description: 'Machine name',
+		required: false,
+		schema: {
+			type: 'string',
+			minLength: 1
+		}
+	}, {
+		in: 'path',
+		name: 'snapshot',
+		description: 'Snapshot name',
+		schema: {
+			type: 'string',
+			minLength: 1
+		}
+	}],
+	responses: {
+		200: {
+			description: 'Snapshot has been created'
+		}
+	}
+}), (req, res, next) => {
 	_request2.default.post(_config2.default.virtualbox + '/machine/' + encodeURIComponent(req.params.machine) + '/snapshot/' + encodeURIComponent(req.params.snapshot)).then(response => {
 		if (response.ok) {
 			return response.json().then(body => {

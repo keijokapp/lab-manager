@@ -10,6 +10,8 @@ var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
 
 var _express = require('express');
 
+var _expressOpenapiMiddleware = require('express-openapi-middleware');
+
 var _config = require('../config');
 
 var _config2 = _interopRequireDefault(_config);
@@ -32,7 +34,15 @@ const routes = new _express.Router();
 exports.default = routes;
 
 
-routes.get('/', (0, _util.asyncMiddleware)(async (req, res) => {
+routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['Instance'],
+	summary: 'List instances',
+	responses: {
+		200: {
+			description: 'List of instances'
+		}
+	}
+}), (0, _util.asyncMiddleware)(async (req, res) => {
 	if (!(0, _common.authorize)(req.token)) {
 		res.status(403).send({
 			error: 'Permission Denied',
@@ -206,7 +216,18 @@ async function importInstanceFromITee(privateToken) {
 	return instance;
 }
 
-routes.use('/:token', (0, _util.asyncMiddleware)(async (req, res) => {
+routes.use('/:token', (0, _expressOpenapiMiddleware.apiOperation)({
+	parameters: [{
+		in: 'path',
+		name: 'token',
+		description: 'Public or private token of instance',
+		required: true,
+		schema: {
+			'type': 'string',
+			'minLength': 1
+		}
+	}]
+}), (0, _util.asyncMiddleware)(async (req, res) => {
 
 	// No authorization
 

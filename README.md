@@ -50,6 +50,10 @@ Example configuration is shown in [config_sample.json](config_sample.json). Only
 
 # Overview
 
+## API documentaiton
+
+Swagger-based API documentation is available at `/docs/api/` (note the slash at the end) on running application.
+
 ## Authentication and authorization
 
 Lab manager does not have concept of *users* and therefore does not provide authentication. However, if bearer tokens are configured, application uses these in authorization process as described in [RFC6750](https://tools.ietf.org/html/rfc6750). Instance endpoints accessed by instance tokens are not explicitly authorized. I-Tee compatibility layer uses its own request format to provide authorization token.

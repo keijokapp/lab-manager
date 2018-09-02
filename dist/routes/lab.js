@@ -6,9 +6,9 @@ Object.defineProperty(exports, "__esModule", {
 
 var _express = require('express');
 
-var _expressJsonschema = require('express-jsonschema');
-
 var _jsonschema = require('jsonschema');
+
+var _expressOpenapiMiddleware = require('express-openapi-middleware');
 
 var _util = require('../util');
 
@@ -187,7 +187,23 @@ routes.use((req, res, next) => {
 	}
 });
 
-routes.get('/', (0, _util.asyncMiddleware)(async (req, res) => {
+routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['Lab'],
+	summary: 'List labs',
+	responses: {
+		200: {
+			description: 'List of labs',
+			content: {
+				'application/json': {
+					schema: {
+						type: 'array',
+						items: labSchema
+					}
+				}
+			}
+		}
+	}
+}), (0, _util.asyncMiddleware)(async (req, res) => {
 
 	const result = await _common.db.allDocs({ startkey: 'lab/', endkey: 'lab/\uffff', include_docs: true });
 
@@ -207,13 +223,52 @@ routes.get('/', (0, _util.asyncMiddleware)(async (req, res) => {
 	});
 }));
 
-routes.post('/:lab', (0, _expressJsonschema.validate)({
-	params: {
-		properties: {
-			lab: labSchema.properties._id
+routes.post('/:lab', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['Lab'],
+	summary: 'Create lab',
+	parameters: [{
+		in: 'path',
+		name: 'lab',
+		description: 'Lab name',
+		required: true,
+		schema: {
+			type: 'string',
+			minLength: 1
+		}
+	}],
+	requestBody: {
+		required: true,
+		content: {
+			'application/json': {
+				schema: labSchema
+			}
 		}
 	},
-	body: labSchema
+	responses: {
+		200: {
+			headers: {
+				etag: {
+					description: 'Lab E-Tag',
+					schema: labSchema.properties._rev
+				}
+			},
+			content: {
+				'application/json': {
+					schema: labSchema
+				}
+			}
+		},
+		409: {
+			content: {
+				'application/json': {
+					example: {
+						error: 'Conflict',
+						message: 'Lab with given id already exists'
+					}
+				}
+			}
+		}
+	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
 	const lab = {
 		...req.body,
@@ -231,30 +286,78 @@ routes.post('/:lab', (0, _expressJsonschema.validate)({
 		res.send(lab);
 	} catch (e) {
 		if (e.name === 'conflict') {
-			res.status(409).send({
-				error: 'Conflict',
-				message: 'Lab with given id already exists'
-			});
+			res.status(409).send(req.apiOperation.responses[409]['application/json']);
 		} else {
 			throw e;
 		}
 	}
 }));
 
-routes.put('/:lab', (0, _expressJsonschema.validate)({
-	params: {
-		properties: {
-			lab: labSchema.properties._id
+routes.put('/:lab', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['Lab'],
+	summary: 'Update lab',
+	parameters: [{
+		in: 'path',
+		name: 'lab',
+		description: 'Lab name',
+		required: true,
+		schema: {
+			type: 'string',
+			minLength: 1
+		}
+	}, {
+		in: 'header',
+		name: 'if-match',
+		description: 'Lab E-Tag',
+		required: true,
+		schema: {
+			type: 'string',
+			minLength: 1
+		}
+	}],
+	requestBody: {
+		required: true,
+		content: {
+			'application/json': {
+				schema: labSchema
+			}
 		}
 	},
-	headers: {
-		type: 'object',
-		properties: {
-			'if-match': { type: 'string', minLength: 1 }
+	responses: {
+		200: {
+			headers: {
+				etag: {
+					description: 'Lab E-Tag',
+					schema: labSchema.properties._rev
+				}
+			},
+			content: {
+				'application/json': {
+					schema: labSchema
+				}
+			}
 		},
-		required: ['if-match']
-	},
-	body: labSchema
+		404: {
+			content: {
+				'application/json': {
+					example: {
+						error: 'Not Found',
+						message: 'Lab does not exist'
+					}
+				}
+			}
+		},
+		409: {
+			content: {
+				'application/json': {
+					example: {
+						error: 'Conflict',
+						message: 'Revision mismatch'
+					}
+				}
+			}
+		}
+	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
 	const lab = {
 		...req.body,
@@ -272,25 +375,48 @@ routes.put('/:lab', (0, _expressJsonschema.validate)({
 		res.send(lab);
 	} catch (e) {
 		if (e.name === 'not_found') {
-			res.status(404).send({
-				error: 'Not Found',
-				message: 'Lab does not exist'
-			});
+			res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
 		} else if (e.name === 'conflict') {
-			res.status(409).send({
-				error: 'Conflict',
-				message: 'Revision mismatch'
-			});
+			res.status(409).send(req.apiOperation.responses[409].content['application/json'].example);
 		} else {
 			throw e;
 		}
 	}
 }));
 
-routes.get('/:lab', (0, _expressJsonschema.validate)({
-	params: {
-		properties: {
-			lab: labSchema.properties._id
+routes.get('/:lab', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['Lab'],
+	summary: 'Fetch lab',
+	parameters: [{
+		in: 'path',
+		name: 'lab',
+		description: 'Lab name',
+		required: true,
+		schema: labSchema.properties._id
+	}],
+	responses: {
+		200: {
+			headers: {
+				etag: {
+					description: 'Lab E-Tag',
+					schema: labSchema.properties._rev
+				}
+			},
+			content: {
+				'application/json': {
+					schema: labSchema
+				}
+			}
+		},
+		404: {
+			content: {
+				'application/json': {
+					example: {
+						error: 'Not found',
+						message: 'Lab does not exist'
+					}
+				}
+			}
 		}
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
@@ -309,27 +435,59 @@ routes.get('/:lab', (0, _expressJsonschema.validate)({
 		});
 	} catch (e) {
 		if (e.name === 'not_found') {
-			res.status(404).send({
-				error: 'Not found',
-				message: 'Lab does not exist'
-			});
+			res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
 		} else {
 			throw e;
 		}
 	}
 }));
 
-routes.delete('/:lab', (0, _expressJsonschema.validate)({
-	params: {
-		properties: {
-			lab: labSchema.properties._id
+routes.delete('/:lab', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['Lab'],
+	summary: 'Delete lab',
+	parameters: [{
+		in: 'path',
+		name: 'lab',
+		description: 'Lab name',
+		required: true,
+		schema: {
+			type: 'string',
+			minLength: 1
 		}
-	},
-	headers: {
-		properties: {
-			'if-match': { type: 'string', minLength: 1 }
+	}, {
+		in: 'header',
+		name: 'if-match',
+		description: 'Instance E-Tag',
+		required: true,
+		schema: {
+			type: 'string',
+			minLength: 1
+		}
+	}],
+	responses: {
+		200: {
+			description: 'Lab has been deleted'
 		},
-		required: ['if-match']
+		404: {
+			content: {
+				'application/json': {
+					example: {
+						error: 'Not Found',
+						message: 'Lab does not exist'
+					}
+				}
+			}
+		},
+		409: {
+			content: {
+				'application/json': {
+					example: {
+						error: 'Conflict',
+						message: 'Revision mismatch'
+					}
+				}
+			}
+		}
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
 	try {
@@ -339,37 +497,96 @@ routes.delete('/:lab', (0, _expressJsonschema.validate)({
 		});
 	} catch (e) {
 		if (e.name === 'not_found') {
-			res.status(404).send({
-				error: 'Not found',
-				message: 'Lab does not exist'
-			});
+			res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
 		} else if (e.name === 'conflict') {
-			res.status(409).send({
-				error: 'Conflict',
-				message: 'Revision mismatch'
-			});
+			res.status(409).send(req.apiOperation.responses[409].content['application/json'].example);
 			throw e;
 		}
 	}
 }));
 
-routes.post('/:lab/instance/:username', (0, _expressJsonschema.validate)({
-	params: {
-		type: 'object',
-		properties: {
-			username: { type: 'string', pattern: '^[a-zA-Z0-9-]+$' }
+routes.post('/:lab/instance/:username', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['Instance'],
+	summary: 'Start lab',
+	parameters: [{
+		in: 'path',
+		name: 'lab',
+		description: 'Lab name',
+		required: true,
+		schema: labSchema.properties._id
+	}, {
+		in: 'path',
+		name: 'username',
+		description: 'Username',
+		required: true,
+		schema: {
+			type: 'string',
+			minLength: 1
+		}
+	}, {
+		in: 'header',
+		name: 'if-match',
+		description: 'Lab E-Tag',
+		schema: labSchema.properties._rev
+	}],
+	requestBody: {
+		content: {
+			'application/json': {
+				schema: {
+					type: 'object',
+					properties: {
+						lab: labSchema
+					},
+					additionalProperties: false
+				}
+			}
 		}
 	},
-	headers: {
-		properties: {
-			'if-match': { type: 'string', minLength: 1 }
-		}
-	},
-	body: {
-		properties: {
-			lab: labSchema
+	responses: {
+		200: {
+			description: 'Instance'
 		},
-		additionalProperties: false
+		404: {
+			content: {
+				'application/json': {
+					example: {
+						error: 'Not found',
+						message: 'Lab does not exist'
+					}
+				}
+			}
+		},
+		409: {
+			content: {
+				'application/json': {
+					example: {
+						error: 'Conflict',
+						message: 'Instance already exists'
+					}
+				}
+			}
+		},
+		410: {
+			content: {
+				'application/json': {
+					example: {
+						error: 'Gone',
+						message: 'Requested lab revision is not available'
+					}
+				}
+			}
+		},
+		412: {
+			content: {
+				'application/json': {
+					example: {
+						error: 'Precondition Failed',
+						message: 'Requested lab is in invalid state',
+						errors: []
+					}
+				}
+			}
+		}
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
 	const username = req.params.username;
@@ -384,10 +601,7 @@ routes.post('/:lab/instance/:username', (0, _expressJsonschema.validate)({
 			lab = await _common.db.get('lab/' + req.params.lab);
 		} catch (e) {
 			if (e.name === 'not_found') {
-				res.status(404).send({
-					error: 'Not found',
-					message: 'Lab does not exist'
-				});
+				res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
 			} else {
 				throw e;
 			}
@@ -395,10 +609,7 @@ routes.post('/:lab/instance/:username', (0, _expressJsonschema.validate)({
 		}
 
 		if ('if-match' in req.headers && lab._rev !== req.headers['if-match']) {
-			res.status(410).send({
-				error: 'Gone',
-				message: 'Requested lab revision is not available'
-			});
+			res.status(410).send(req.apiOperation.responses[410].content['application/json'].example);
 			return;
 		}
 
@@ -406,9 +617,8 @@ routes.post('/:lab/instance/:username', (0, _expressJsonschema.validate)({
 
 		const validationResult = (0, _jsonschema.validate)(lab, labSchema);
 		if (!validationResult.valid) {
-			res.status(412).send({
-				error: 'Precondition Failed',
-				message: 'Requested lab is in invalid state',
+			res.status(410).send({
+				...req.apiOperation.responses[410].content['application/json'].example,
 				errors: validationResult.errors
 			});
 			return;
@@ -422,17 +632,42 @@ routes.post('/:lab/instance/:username', (0, _expressJsonschema.validate)({
 	});
 
 	if (typeof instance === 'string') {
-		res.status(instance === 'Instance already exists' ? 409 : 500).send({
-			error: instance === 'Instance already exists' ? 'Conflict' : 'Internal Server Error',
-			message: instance
-		});
+		if (instance === 'Instance already exists') {
+			res.status(409).send(req.apiOperation.responses[409].content['application/json'].example);
+		} else {
+			res.status(500).send({
+				error: 'Internal Server Error',
+				message: instance
+			});
+		}
 	} else {
 		instance._id = instance._id.slice(9);
 		res.send(instance);
 	}
 }));
 
-routes.use('/:lab/instance/:username', (req, res, next) => {
+routes.use('/:lab/instance/:username', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['Instance'],
+	parameters: [{
+		in: 'path',
+		name: 'lab',
+		description: 'Lab name',
+		required: true,
+		schema: {
+			type: 'string',
+			minLength: 1
+		}
+	}, {
+		in: 'path',
+		name: 'username',
+		description: 'Username',
+		required: true,
+		schema: {
+			type: 'string',
+			minLength: 1
+		}
+	}]
+}), (req, res, next) => {
 	_common.db.get('instance/' + req.params.lab + ':' + req.params.username).then(instance => {
 		req.instance = instance;
 		req.instanceToken = instance.privateToken;
@@ -446,19 +681,46 @@ routes.use('/:lab/instance/:username', (req, res, next) => {
 	});
 });
 
-routes.delete('/:lab/instance/:username', (0, _expressJsonschema.validate)({
-	headers: {
-		properties: {
-			'if-match': { type: 'string', minLength: 1 }
+routes.delete('/:lab/instance/:username', (0, _expressOpenapiMiddleware.apiOperation)({
+	summary: 'End lab',
+	parameters: [{
+		in: 'header',
+		name: 'if-match',
+		description: 'Instance E-Tag',
+		required: true,
+		schema: {
+			type: 'string',
+			minLength: 1
+		}
+	}],
+	responses: {
+		200: {
+			description: 'Lab has been ended'
 		},
-		required: ['if-match']
+		404: {
+			content: {
+				'application/json': {
+					example: {
+						error: 'Not found',
+						message: 'Instance does not exist'
+					}
+				}
+			}
+		},
+		409: {
+			content: {
+				'application/json': {
+					example: {
+						error: 'Conflict',
+						message: 'Revision mismatch'
+					}
+				}
+			}
+		}
 	}
 }), (req, res, next) => {
 	if (!('instance' in req)) {
-		res.status(404).send({
-			error: 'Not found',
-			message: 'Instance does not exist'
-		});
+		res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
 		return;
 	}
 
@@ -470,10 +732,7 @@ routes.delete('/:lab/instance/:username', (0, _expressJsonschema.validate)({
 		res.send({});
 	}).catch(e => {
 		if (e.name === 'conflict') {
-			res.status(409).send({
-				error: 'Conflict',
-				message: 'Revision mismatch'
-			});
+			res.status(409).send(req.apiOperation.responses[409].content['application/json'].example);
 		} else {
 			next(e);
 		}

@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
+exports.routes = undefined;
 
 var _nodeFetch = require('node-fetch');
 
@@ -12,9 +13,9 @@ var _v = require('uuid/v4');
 
 var _v2 = _interopRequireDefault(_v);
 
-var _expressJsonschema = require('express-jsonschema');
-
 var _express = require('express');
+
+var _expressOpenapiMiddleware = require('express-openapi-middleware');
 
 var _config = require('../config');
 
@@ -147,7 +148,7 @@ async function fetchITeeLab(labId) {
 	return body[0];
 }
 
-const routes = new _express.Router();
+const routes = exports.routes = new _express.Router();
 
 exports.default = (req, res, next) => {
 	let authorized = false;
@@ -173,42 +174,104 @@ exports.default = (req, res, next) => {
 	}
 };
 
-routes.get('/', (req, res) => {
+routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['I-Tee compatibility'],
+	responses: {
+		200: {
+			content: {
+				'text/plain': {
+					example: 'OK'
+				}
+			}
+		}
+	}
+}), (req, res) => {
 	res.send('OK');
 });
 
-routes.get('/lab_users.json', (0, _expressJsonschema.validate)({
-	body: {
-		oneOf: [{
-			type: 'object',
-			properties: {
-				conditions: {
-					type: 'object',
-					properties: {
-						user_id: { type: 'integer', minValue: 1 },
-						lab_id: { type: 'integer', minValue: 1 }
-					},
-					additionalProperties: false,
-					required: ['user_id', 'lab_id']
+routes.get('/lab_users.json', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['I-Tee compatibility'],
+	summary: 'Fetch matching instances converted to I-Tee `labuser` objects',
+	requestBody: {
+		content: {
+			'application/json': {
+				schema: {
+					oneOf: [{
+						type: 'object',
+						properties: {
+							conditions: {
+								type: 'object',
+								properties: {
+									user_id: { type: 'integer', minValue: 1 },
+									lab_id: { type: 'integer', minValue: 1 }
+								},
+								additionalProperties: false,
+								required: ['user_id', 'lab_id']
+							}
+						},
+						additionalProperties: false,
+						required: ['conditions']
+					}, {
+						type: 'object',
+						properties: {
+							conditions: {
+								type: 'object',
+								properties: {
+									id: { type: 'integer', minValue: 1 }
+								},
+								additionalProperties: false,
+								required: ['id']
+							}
+						},
+						additionalProperties: false,
+						required: ['conditions']
+					}]
 				}
-			},
-			additionalProperties: false,
-			required: ['conditions']
-		}, {
-			type: 'object',
-			properties: {
-				conditions: {
-					type: 'object',
-					properties: {
-						id: { type: 'integer', minValue: 1 }
-					},
-					additionalProperties: false,
-					required: ['id']
+			}
+		}
+	},
+	responses: {
+		200: {
+			description: 'Array of matching I-Tee `labuser` objects',
+			content: {
+				'application/json': {
+					schema: {
+						type: 'array',
+						items: { type: 'object' }
+					}
 				}
-			},
-			additionalProperties: false,
-			required: ['conditions']
-		}]
+			}
+		},
+		404: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Lab or user was not found'
+					}
+				}
+			}
+		},
+		409: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Requested instance is not created via I-Tee compatibility API'
+					}
+				}
+			}
+		},
+		503: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'I-Tee integration is not fully configured'
+					}
+				}
+			}
+		}
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
 	if ('id' in req.body.conditions) {
@@ -265,10 +328,7 @@ routes.get('/lab_users.json', (0, _expressJsonschema.validate)({
 		}
 
 		if (!lab || !user || !/^[a-zA-Z0-9-]+$/.test(lab.name)) {
-			res.status(404).send({
-				success: false,
-				message: 'Lab or user was not found'
-			});
+			res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
 			return;
 		}
 
@@ -291,37 +351,70 @@ routes.get('/lab_users.json', (0, _expressJsonschema.validate)({
 		}
 
 		if (!('iTeeCompat' in instance)) {
-			res.status(409).send({
-				success: false,
-				message: 'Requested instance is not created via I-Tee compatibility API'
-			});
+			res.status(409).send(req.apiOperation.responses[409].content['application/json'].example);
 		} else {
 			res.send([instanceToLabUser(instance)]);
 		}
 	} else {
-		res.status(503).send({
-			success: false,
-			message: 'I-Tee integration is not fully configured'
-		});
+		res.status(503).send(req.apiOperation.responses[503].content['application/json'].example);
 	}
 }));
 
-routes.post('/lab_users.json', (0, _expressJsonschema.validate)({
-	body: {
-		type: 'object',
-		properties: {
-			lab_user: {
+routes.post('/lab_users.json', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['I-Tee compatibility'],
+	summary: 'Create I-Tee `labuser` object',
+	requestBody: {
+		content: {
+			'application/json': {
 				type: 'object',
 				properties: {
-					user_id: { type: 'integer', minValue: 1 },
-					lab_id: { type: 'integer', minValue: 1 }
+					lab_user: {
+						type: 'object',
+						properties: {
+							user_id: { type: 'integer', minValue: 1 },
+							lab_id: { type: 'integer', minValue: 1 }
+						},
+						additionalProperties: false,
+						required: ['user_id', 'lab_id']
+					}
 				},
 				additionalProperties: false,
-				required: ['user_id', 'lab_id']
+				required: ['lab_user']
+			}
+		}
+	},
+	responses: {
+		200: {
+			description: 'I-Tee `labuser` has been created',
+			content: {
+				'application/json': {
+					example: {
+						success: true,
+						lab_user: {}
+					}
+				}
 			}
 		},
-		additionalProperties: false,
-		required: ['lab_user']
+		404: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Lab or user was not found'
+					}
+				}
+			}
+		},
+		400: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Lab user exists'
+					}
+				}
+			}
+		}
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
 
@@ -345,10 +438,7 @@ routes.post('/lab_users.json', (0, _expressJsonschema.validate)({
 	}
 
 	if (!lab || !user || !/^[a-zA-Z0-9-]+$/.test(lab.name)) {
-		res.status(404).send({
-			success: false,
-			message: 'Lab or user was not found'
-		});
+		res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
 		return;
 	}
 
@@ -381,10 +471,7 @@ routes.post('/lab_users.json', (0, _expressJsonschema.validate)({
 		await _common.db.post(iTeeCompat);
 	} catch (e) {
 		if (e.name !== 'conflict') {
-			res.status(400).send({
-				success: false,
-				message: 'Lab user exists'
-			});
+			res.status(400).send(req.apiOperation.responses[400].content['application/json'].example);
 		} else {
 			_common.logger.error('Error creating I-Tee compatibility object', {
 				id: iTeeCompat._id,
@@ -406,20 +493,63 @@ routes.post('/lab_users.json', (0, _expressJsonschema.validate)({
 	});
 }));
 
-routes.post('/set_vta_info.json', (0, _expressJsonschema.validate)({
-	body: {
-		type: 'object',
-		properties: {
-			id: { type: 'integer', min: 1 },
-			host: { type: 'string', minLength: 1 },
-			name: { type: 'string', minLength: 1 },
-			version: { type: 'string', enum: ['v1', 'v2'] },
-			token: { type: 'string', minLength: 1 },
-			lab_hash: { type: 'string', minLength: 1 },
-			user_key: { type: 'string', minLength: 1 }
+routes.post('/set_vta_info.json', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['I-Tee compatibility'],
+	summary: 'Set VirtualTA info on I-Tee `labuser`',
+	requestBody: {
+		content: {
+			'application/json': {
+				schema: {
+					body: {
+						type: 'object',
+						properties: {
+							id: { type: 'integer', min: 1 },
+							host: { type: 'string', minLength: 1 },
+							name: { type: 'string', minLength: 1 },
+							version: { type: 'string', enum: ['v1', 'v2'] },
+							token: { type: 'string', minLength: 1 },
+							lab_hash: { type: 'string', minLength: 1 },
+							user_key: { type: 'string', minLength: 1 }
+						},
+						additionalProperties: false,
+						required: ['id', 'host', 'name', 'version', 'token', 'lab_hash', 'user_key']
+					}
+				}
+			}
+		}
+	},
+	responses: {
+		200: {
+			description: 'Teaching assistant info has been set',
+			content: {
+				'application/json': {
+					example: {
+						success: true,
+						message: 'Teaching assistant has been initialized'
+					}
+				}
+			}
 		},
-		additionalProperties: false,
-		required: ['id', 'host', 'name', 'version', 'token', 'lab_hash', 'user_key']
+		400: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Unable to set VirtualTA info on running lab'
+					}
+				}
+			}
+		},
+		404: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Lab instance does not exist'
+					}
+				}
+			}
+		}
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
 
@@ -437,10 +567,7 @@ routes.post('/set_vta_info.json', (0, _expressJsonschema.validate)({
 	for (const row of docs.rows) {
 		if (row.doc._id.startsWith('instance/')) {
 			_common.logger.warn('Unable to set VirtualTA info on running lab', { id: req.body.id, instance: row.doc._id });
-			res.status(400).send({
-				success: false,
-				message: 'Unable to set VirtualTA info on running lab'
-			});
+			res.status(400).send(req.apiOperation.responses[400].content['application/json'].example);
 			return;
 		} else if (row.doc._id.startsWith('i-tee-compat/')) {
 			if (iTeeCompat) {
@@ -456,10 +583,7 @@ routes.post('/set_vta_info.json', (0, _expressJsonschema.validate)({
 	}
 
 	if (!iTeeCompat) {
-		res.status(404).send({
-			success: false,
-			message: 'Lab instance does not exist'
-		});
+		res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
 		return;
 	}
 
@@ -490,20 +614,60 @@ routes.post('/set_vta_info.json', (0, _expressJsonschema.validate)({
 		}
 	}
 
-	res.send({
-		success: true,
-		message: 'Teaching assistant has been initialized'
-	});
+	res.send(req.apiOperation.responses[200].content['application/json'].example);
 }));
 
-routes.post('/start_lab_by_id.json', (0, _expressJsonschema.validate)({
-	body: {
-		type: 'object',
-		properties: {
-			labuser_id: { type: 'integer', min: 1 }
+routes.post('/start_lab_by_id.json', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['I-Tee compatibility'],
+	summary: 'Start lab referenced by given I-Tee `labuser`',
+	requestBody: {
+		content: {
+			'application/json': {
+				schema: {
+					type: 'object',
+					properties: {
+						labuser_id: { type: 'integer', min: 1 }
+					},
+					additionalProperties: false,
+					required: ['labuser_id']
+				}
+			}
+		}
+	},
+	responses: {
+		200: {
+			description: 'Lab has been started',
+			content: {
+				'application/json': {
+					example: {
+						success: true,
+						message: 'Lab has been started',
+						lab_user: 123,
+						start_time: '2018-09-04T12:56:40.069Z'
+					}
+				}
+			}
 		},
-		additionalProperties: false,
-		required: ['labuser_id']
+		400: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Unable to start already running lab'
+					}
+				}
+			}
+		},
+		404: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Lab instance does not exist'
+					}
+				}
+			}
+		}
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
 	const docs = await _common.db.query(function (doc) {
@@ -520,10 +684,7 @@ routes.post('/start_lab_by_id.json', (0, _expressJsonschema.validate)({
 	for (const row of docs.rows) {
 		if (row.doc._id.startsWith('instance/')) {
 			_common.logger.warn('Unable to start already running lab', { id: req.body.id, instance: row.doc._id });
-			res.status(400).send({
-				success: false,
-				message: 'Unable to start already running lab'
-			});
+			res.status(400).send(req.apiOperation.responses[400].content['application/json'].example);
 			return;
 		} else if (row.doc._id.startsWith('i-tee-compat/')) {
 			if (iTeeCompat) {
@@ -539,10 +700,7 @@ routes.post('/start_lab_by_id.json', (0, _expressJsonschema.validate)({
 	}
 
 	if (!iTeeCompat) {
-		res.status(404).send({
-			success: false,
-			message: 'Lab instance does not exist'
-		});
+		res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
 		return;
 	}
 
@@ -562,14 +720,68 @@ routes.post('/start_lab_by_id.json', (0, _expressJsonschema.validate)({
 	}
 }));
 
-routes.post('/end_lab_by_id.json', (0, _expressJsonschema.validate)({
-	body: {
-		type: 'object',
-		properties: {
-			labuser_id: { type: 'integer', min: 1 }
+routes.post('/end_lab_by_id.json', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['I-Tee compatibility'],
+	summary: 'End lab referenced by given I-Tee `labuser`',
+	requestBody: {
+		content: {
+			'application/json': {
+				schema: {
+					type: 'object',
+					properties: {
+						labuser_id: { type: 'integer', min: 1 }
+					},
+					additionalProperties: false,
+					required: ['labuser_id']
+				}
+			}
+		}
+	},
+	responses: {
+		200: {
+			description: 'Lab has been ended',
+			content: {
+				'application/json': {
+					example: {
+						success: true,
+						message: 'Lab has been ended',
+						lab_user: 123,
+						end_time: '2018-09-04T12:56:40.069Z'
+					}
+				}
+			}
 		},
-		additionalProperties: false,
-		required: ['labuser_id']
+		400: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Unable to start already running lab'
+					}
+				}
+			}
+		},
+		404: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Lab instance does not exist'
+					}
+				}
+			}
+		},
+		409: {
+			description: 'Instance\'s state was changed while processing the request.',
+			content: {
+				'application/json': {
+					example: {
+						error: 'Conflict',
+						message: 'Revision mismatch'
+					}
+				}
+			}
+		}
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
 	const docs = await _common.db.query(function (doc) {
@@ -604,10 +816,7 @@ routes.post('/end_lab_by_id.json', (0, _expressJsonschema.validate)({
 	}
 
 	if (!instance) {
-		res.status(404).send({
-			success: false,
-			message: 'Lab instance does not exist'
-		});
+		res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
 		return;
 	}
 
@@ -630,10 +839,7 @@ routes.post('/end_lab_by_id.json', (0, _expressJsonschema.validate)({
 	} catch (e) {
 		if (e.name === 'conflict') {
 			// TODO: replay request
-			res.status(409).send({
-				error: 'Conflict',
-				message: 'Revision mismatch'
-			});
+			res.status(409).send(req.apiOperation.responses[409].content['application/json'].example);
 			return;
 		}
 		throw e;
@@ -648,14 +854,46 @@ routes.post('/end_lab_by_id.json', (0, _expressJsonschema.validate)({
 	});
 }));
 
-routes.get('/labuser_vms.json', (0, _expressJsonschema.validate)({
-	body: {
-		type: 'object',
-		properties: {
-			id: { type: 'integer', min: 1 }
+routes.get('/labuser_vms.json', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['I-Tee compatibility'],
+	summary: 'Fetch machines attached to I-Tee `labuser`',
+	requestBody: {
+		content: {
+			'application/json': {
+				schema: {
+					type: 'object',
+					properties: {
+						id: { type: 'integer', min: 1 }
+					},
+					additionalProperties: false,
+					required: ['id']
+				}
+			}
+		}
+	},
+	responses: {
+		200: {
+			description: 'Lab has been started',
+			content: {
+				'application/json': {
+					example: {
+						success: true,
+						vms: [{}],
+						lab_user: 123
+					}
+				}
+			}
 		},
-		additionalProperties: false,
-		required: ['id']
+		404: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Lab instance does not exist'
+					}
+				}
+			}
+		}
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
 	const result = await _common.db.query(function (doc) {
@@ -665,10 +903,7 @@ routes.get('/labuser_vms.json', (0, _expressJsonschema.validate)({
 	}, { key: req.body.id, include_docs: true });
 
 	if (result.rows.length !== 1) {
-		res.status(404).send({
-			success: false,
-			message: 'Instance does not exist'
-		});
+		res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
 		return;
 	}
 
@@ -730,14 +965,75 @@ routes.get('/labuser_vms.json', (0, _expressJsonschema.validate)({
 	});
 }));
 
-routes.get('/open_guacamole.json', (0, _expressJsonschema.validate)({
-	body: {
-		type: 'object',
-		properties: {
-			id: { type: 'integer', min: 1 }
+routes.get('/open_guacamole.json', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['I-Tee compatibility'],
+	summary: 'Get remote console connection string',
+	requestBody: {
+		content: {
+			'application/json': {
+				schema: {
+
+					type: 'object',
+					properties: {
+						id: { type: 'integer', min: 1 }
+					},
+					additionalProperties: false,
+					required: ['id']
+				}
+			}
+		}
+	},
+	responses: {
+		200: {
+			content: {
+				'application/json': {
+					example: {
+						success: true,
+						url: 'https://labhost.example.com/remote/privateToken:machineId'
+					}
+				}
+			}
 		},
-		additionalProperties: false,
-		required: ['id']
+		400: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Bad machine index'
+					}
+				}
+			}
+		},
+		403: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Remote console is not enabled'
+					}
+				}
+			}
+		},
+		404: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Instance does not exist'
+					}
+				}
+			}
+		},
+		501: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Remote console is not available'
+					}
+				}
+			}
+		}
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
 
@@ -759,30 +1055,21 @@ routes.get('/open_guacamole.json', (0, _expressJsonschema.validate)({
 	}, { key: instanceId, include_docs: true });
 
 	if (result.rows.length !== 1) {
-		res.status(404).send({
-			success: false,
-			message: 'Instance does not exist'
-		});
+		res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
 		return;
 	}
 
 	const instance = result.rows[0].doc;
 
 	if (!(machineIndex in instance.lab.machineOrder)) {
-		res.status(400).send({
-			success: false,
-			message: 'Bad machine index'
-		});
+		res.status(400).send(req.apiOperation.responses[400].content['application/json'].example);
 		return;
 	}
 
 	const machine = instance.lab.machines[instance.lab.machineOrder[machineIndex]];
 
 	if (!machine || !machine.enable_remote) {
-		res.status(403).send({
-			success: false,
-			message: 'Remote console is not enabled'
-		});
+		res.status(403).send(req.apiOperation.responses[403].content['application/json'].example);
 	} else {
 		res.send({
 			success: true,
@@ -791,14 +1078,64 @@ routes.get('/open_guacamole.json', (0, _expressJsonschema.validate)({
 	}
 }));
 
-routes.get('/start_vm.json', (0, _expressJsonschema.validate)({
-	body: {
-		type: 'object',
-		properties: {
-			id: { type: 'integer', min: 1 }
+routes.get('/start_vm.json', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['I-Tee compatibility'],
+	summary: 'Start virtual machine',
+	requestBody: {
+		content: {
+			'application/json': {
+				schema: {
+					type: 'object',
+					properties: {
+						id: { type: 'integer', min: 1 }
+					},
+					additionalProperties: false,
+					required: ['id']
+				}
+			}
+		}
+	},
+	responses: {
+		200: {
+			content: {
+				'application/json': {
+					example: {
+						success: true,
+						message: 'Machine has been started'
+					}
+				}
+			}
 		},
-		additionalProperties: false,
-		required: ['id']
+		400: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Bad machine index'
+					}
+				}
+			}
+		},
+		403: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Power control is not enabled'
+					}
+				}
+			}
+		},
+		404: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Instance does not exist'
+					}
+				}
+			}
+		}
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
 
@@ -812,20 +1149,14 @@ routes.get('/start_vm.json', (0, _expressJsonschema.validate)({
 	}, { key: instanceId, include_docs: true });
 
 	if (result.rows.length !== 1) {
-		res.status(404).send({
-			success: false,
-			message: 'Instance does not exist'
-		});
+		res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
 		return;
 	}
 
 	const instance = result.rows[0].doc;
 
 	if (!(machineIndex in instance.lab.machineOrder)) {
-		res.status(400).send({
-			success: false,
-			message: 'Bad machine index'
-		});
+		res.status(400).send(req.apiOperation.responses[400].content['application/json'].example);
 		return;
 	}
 
@@ -833,10 +1164,7 @@ routes.get('/start_vm.json', (0, _expressJsonschema.validate)({
 	const instanceMachine = instance.machines[instance.lab.machineOrder[machineIndex]];
 
 	if (!machine || !instanceMachine || !machine.enable_restart) {
-		res.status(403).send({
-			success: false,
-			message: 'Power control is not enabled'
-		});
+		res.status(403).send(req.apiOperation.responses[403].content['application/json'].example);
 	} else {
 		let result;
 		switch (machine.type) {
@@ -855,22 +1183,69 @@ routes.get('/start_vm.json', (0, _expressJsonschema.validate)({
 				message: 'Failed to power machine off'
 			});
 		} else {
-			res.send({
-				success: true,
-				message: 'Machine has been started'
-			});
+			res.send(req.apiOperation.responses[200].content['application/json'].example);
 		}
 	}
 }));
 
-routes.get('/stop_vm.json', (0, _expressJsonschema.validate)({
-	body: {
-		type: 'object',
-		properties: {
-			id: { type: 'integer', min: 1 }
+routes.get('/stop_vm.json', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['I-Tee compatibility'],
+	summary: 'Stop virtual machine',
+	requestBody: {
+		content: {
+			'application/json': {
+				schema: {
+					type: 'object',
+					properties: {
+						id: { type: 'integer', min: 1 }
+					},
+					additionalProperties: false,
+					required: ['id']
+				}
+			}
+		}
+	},
+	responses: {
+		200: {
+			content: {
+				'application/json': {
+					example: {
+						success: true,
+						message: 'Machine has been started'
+					}
+				}
+			}
 		},
-		additionalProperties: false,
-		required: ['id']
+		400: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Bad machine index'
+					}
+				}
+			}
+		},
+		403: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Power control is not enabled'
+					}
+				}
+			}
+		},
+		404: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Instance does not exist'
+					}
+				}
+			}
+		}
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
 
@@ -884,20 +1259,14 @@ routes.get('/stop_vm.json', (0, _expressJsonschema.validate)({
 	}, { key: instanceId, include_docs: true });
 
 	if (result.rows.length !== 1) {
-		res.status(404).send({
-			success: false,
-			message: 'Instance does not exist'
-		});
+		res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
 		return;
 	}
 
 	const instance = result.rows[0].doc;
 
 	if (!(machineIndex in instance.lab.machineOrder)) {
-		res.status(400).send({
-			success: false,
-			message: 'Bad machine index'
-		});
+		res.status(400).send(req.apiOperation.responses[400].content['application/json'].example);
 		return;
 	}
 
@@ -905,10 +1274,7 @@ routes.get('/stop_vm.json', (0, _expressJsonschema.validate)({
 	const instanceMachine = instance.machines[instance.lab.machineOrder[machineIndex]];
 
 	if (!machine || !instanceMachine || !machine.enable_restart) {
-		res.status(403).send({
-			success: false,
-			message: 'Power control is not enabled'
-		});
+		res.status(403).send(req.apiOperation.responses[403].content['application/json'].example);
 	} else {
 		let result;
 		switch (machine.type) {
@@ -927,21 +1293,48 @@ routes.get('/stop_vm.json', (0, _expressJsonschema.validate)({
 				message: 'Failed to power machine off'
 			});
 		} else {
-			res.send({
-				success: true,
-				message: 'Machine has been powered off'
-			});
+			res.send(req.apiOperation.responses[200].content['application/json'].example);
 		}
 	}
 }));
 
-routes.all('/labinfo.json', (0, _expressJsonschema.validate)({
-	query: {
-		type: 'object',
-		properties: {
-			uuid: { type: 'string', minLength: 1 }
+routes.all('/labinfo.json', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['I-Tee compatibility'],
+	summary: 'Stop virtual machine',
+	parameters: [{
+		in: 'query',
+		name: 'uuid',
+		description: 'private token of lab instance',
+		required: true,
+		schema: {
+			type: 'object',
+			properties: {
+				uuid: { type: 'string', minLength: 1 }
+			},
+			required: ['uuid']
+		}
+	}],
+	responses: {
+		200: {
+			content: {
+				'application/json': {
+					example: {
+						success: true,
+						message: 'Machine has been started'
+					}
+				}
+			}
 		},
-		required: ['uuid']
+		404: {
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Instance does not exist'
+					}
+				}
+			}
+		}
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
 	const result = await _common.db.query('instance/uuid', { key: req.query.uuid, include_docs: true });

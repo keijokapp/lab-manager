@@ -12,13 +12,11 @@ var _express = require('express');
 
 var _express2 = _interopRequireDefault(_express);
 
-var _expressJsonschema = require('express-jsonschema');
-
 var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
-var _server = require('react-dom/server');
+var _expressOpenapiMiddleware = require('express-openapi-middleware');
 
 var _config = require('../config');
 
@@ -108,7 +106,62 @@ async function fetchRepository(repository) {
 	return false;
 }
 
-routes.get('/', (0, _util.asyncMiddleware)(async (req, res) => {
+const repositorySchema = {
+	type: 'object',
+	properties: {
+		_id: {
+			description: 'Name',
+			type: 'string',
+			minLength: 1
+		},
+		link: {
+			description: 'Clone URL',
+			type: 'string',
+			minLength: 1
+		},
+		refs: {
+			description: 'Commit/ref pairs',
+			type: 'array',
+			items: {
+				type: 'array',
+				items: {
+					type: 'string',
+					minLength: 1
+				},
+				minItems: 2,
+				maxItems: 2
+			}
+		}
+	}
+};
+
+routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['Repository'],
+	summary: 'List repositories',
+	responses: {
+		200: {
+			description: 'List of repositories',
+			content: {
+				'application/json': {
+					schema: {
+						type: 'array',
+						items: repositorySchema
+					}
+				}
+			}
+		},
+		501: {
+			content: {
+				'application/json': {
+					example: {
+						error: 'Not Implemented',
+						message: 'Repositories are not available'
+					}
+				}
+			}
+		}
+	}
+}), (0, _util.asyncMiddleware)(async (req, res) => {
 	if (!(0, _common.authorize)(req.token)) {
 		res.status(403).send({
 			error: 'Permission Denied',
@@ -118,10 +171,7 @@ routes.get('/', (0, _util.asyncMiddleware)(async (req, res) => {
 	}
 
 	if (!('repositories' in _config2.default)) {
-		res.status(501).send({
-			error: 'Not Implemented',
-			message: 'Repositories are not available'
-		});
+		res.status(501).send(req.apiOperation.responses[501].content['application/json'].example);
 		return;
 	}
 
@@ -173,11 +223,37 @@ routes.get('/', (0, _util.asyncMiddleware)(async (req, res) => {
 	});
 }));
 
-routes.get('/:repository', (0, _expressJsonschema.validate)({
-	params: {
-		type: 'object',
-		properties: {
-			repository: { type: 'string', pattern: '^[a-zA-Z0-9-_]+$' }
+routes.get('/:repository', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['Repository'],
+	summary: 'Get repository',
+	parameters: [{
+		in: 'path',
+		name: 'repository',
+		description: 'Repository name',
+		required: true,
+		schema: {
+			type: 'string',
+			pattern: '^[a-zA-Z0-9-_]+$'
+		}
+	}],
+	responses: {
+		200: {
+			description: 'Repository',
+			content: {
+				'application/json': {
+					schema: repositorySchema
+				}
+			}
+		},
+		501: {
+			content: {
+				'application/json': {
+					example: {
+						error: 'Not Implemented',
+						message: 'Repositories are not available'
+					}
+				}
+			}
 		}
 	}
 }), (req, res) => {
@@ -208,11 +284,32 @@ routes.get('/:repository', (0, _expressJsonschema.validate)({
 	}
 });
 
-routes.post('/:repository/fetch', (0, _expressJsonschema.validate)({
-	params: {
-		type: 'object',
-		properties: {
-			repository: { type: 'string', pattern: '^[a-zA-Z0-9-_]+$' }
+routes.post('/:repository/fetch', (0, _expressOpenapiMiddleware.apiOperation)({
+	tags: ['Repository'],
+	summary: 'Fetch repository from remotes',
+	parameters: [{
+		in: 'path',
+		name: 'repository',
+		description: 'Repository name',
+		required: true,
+		schema: {
+			type: 'string',
+			pattern: '^[a-zA-Z0-9-_]+$'
+		}
+	}],
+	responses: {
+		200: {
+			description: 'Repository has been fetched'
+		},
+		501: {
+			content: {
+				'application/json': {
+					example: {
+						error: 'Not Implemented',
+						message: 'Repositories are not available'
+					}
+				}
+			}
 		}
 	}
 }), (req, res) => {
