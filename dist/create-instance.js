@@ -6,11 +6,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _child_process = require('child_process');
 
+var _nodeFetch = require('node-fetch');
+
+var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
+
 var _common = require('./common');
-
-var _request = require('./request');
-
-var _request2 = _interopRequireDefault(_request);
 
 var _v = require('uuid/v4');
 
@@ -256,7 +256,11 @@ async function virtualboxCreateMachine(instance, id) {
 	}
 
 	try {
-		const response = await _request2.default.put(_config2.default.virtualbox + '/machine/' + encodeURIComponent(instance.machines[id].name), requestData);
+		const response = await (0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(instance.machines[id].name), {
+			method: 'PUT',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify(requestData)
+		});
 		if (response.ok) {
 			return true;
 		}
@@ -281,13 +285,17 @@ async function createAssistant(instance) {
 	instance.timing.assistant = [Date.now()];
 
 	try {
-		const response = await _request2.default.post(instance.lab.assistant.url + '/api/v2/labusers', {
-			api_key: instance.lab.assistant.key,
-			host: _config2.default.appUrl,
-			username: instance.username,
-			fullname: instance.username,
-			labID: instance.lab.assistant.lab,
-			password: instance.publicToken // TODO: better password
+		const response = await (0, _nodeFetch2.default)(instance.lab.assistant.url + '/api/v2/labusers', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json', 'accept': 'application/json' },
+			body: JSON.stringify({
+				api_key: instance.lab.assistant.key,
+				host: _config2.default.appUrl,
+				username: instance.username,
+				fullname: instance.username,
+				labID: instance.lab.assistant.lab,
+				password: instance.publicToken // TODO: better password
+			})
 		});
 
 		if (!response.ok) {
@@ -322,7 +330,11 @@ async function createEndpoints(instance) {
 	}
 
 	try {
-		const response = await _request2.default.put(_config2.default.labProxy.url + '/api' + '/endpoints/' + encodeURIComponent(instance.privateToken) + '?auth-token=' + encodeURIComponent(_config2.default.labProxy.key), { endpoints });
+		const response = await (0, _nodeFetch2.default)(_config2.default.labProxy.url + '/api' + '/endpoints/' + encodeURIComponent(instance.privateToken) + '?auth-token=' + encodeURIComponent(_config2.default.labProxy.key), {
+			method: 'PUT',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ endpoints })
+		});
 
 		if (!response.ok) {
 			_common.logger.error('Failed to create endpoints', { endpoints, response: await response.text() });

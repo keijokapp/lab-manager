@@ -32,6 +32,10 @@ var _https = require('https');
 
 var _https2 = _interopRequireDefault(_https);
 
+var _nodeFetch = require('node-fetch');
+
+var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
+
 var _uniqid = require('uniqid');
 
 var _uniqid2 = _interopRequireDefault(_uniqid);
@@ -47,10 +51,6 @@ var _pouchdb2 = _interopRequireDefault(_pouchdb);
 var _pouchdbSeedDesign = require('pouchdb-seed-design');
 
 var _pouchdbSeedDesign2 = _interopRequireDefault(_pouchdbSeedDesign);
-
-var _request = require('./request');
-
-var _request2 = _interopRequireDefault(_request);
 
 var _config = require('./config');
 
@@ -361,7 +361,9 @@ async function lxdDeleteMachine(name) {
 async function virtualboxDeleteMachine(name) {
 	try {
 		if ('virtualbox' in _config2.default) {
-			const response = await _request2.default.delete(_config2.default.virtualbox + '/machine/' + encodeURIComponent(name));
+			const response = await (0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(name), {
+				method: 'DELETE'
+			});
 			if (!response.ok) {
 				logger.error('Failed to delete machine', {
 					type: 'virtualbox',
@@ -434,10 +436,14 @@ async function cleanupInstance(instance) {
  */
 async function createGitlabGroup(gitlab, publicToken) {
 	try {
-		const response = await _request2.default.post(gitlab.url + '/api/v4/groups?private_token=' + encodeURIComponent(gitlab.key), {
-			name: 'lab-' + publicToken,
-			path: 'lab-' + publicToken,
-			lfs_enabled: false
+		const response = await (0, _nodeFetch2.default)(gitlab.url + '/api/v4/groups?private_token=' + encodeURIComponent(gitlab.key), {
+			method: 'POST',
+			headers: { 'content-type': 'application/json', 'accept': 'application/json' },
+			body: JSON.stringify({
+				name: 'lab-' + publicToken,
+				path: 'lab-' + publicToken,
+				lfs_enabled: false
+			})
 		});
 
 		const body = await response.json();
@@ -450,7 +456,9 @@ async function createGitlabGroup(gitlab, publicToken) {
 		} else if (body && body.message === 'Failed to save group {:path=>["has already been taken"]}') {
 			logger.debug('GitLab group already exists');
 			try {
-				const response = await _request2.default.get(gitlab.url + '/api/v4/groups/' + 'lab-' + encodeURIComponent(publicToken) + '?private_token=' + encodeURIComponent(gitlab.key), null);
+				const response = await (0, _nodeFetch2.default)(gitlab.url + '/api/v4/groups/' + 'lab-' + encodeURIComponent(publicToken) + '?private_token=' + encodeURIComponent(gitlab.key), {
+					headers: { 'accept': 'application/json' }
+				});
 				const body = await response.json();
 				if (response.ok) {
 					return {
@@ -482,14 +490,18 @@ async function createGitlabGroup(gitlab, publicToken) {
  */
 async function createGitlabUser(gitlab, publicToken) {
 	try {
-		const response = await _request2.default.post(gitlab.url + '/api/v4/users?private_token=' + encodeURIComponent(gitlab.key), {
-			email: 'user-' + encodeURIComponent(publicToken) + '@lab.example.com',
-			username: 'user-' + publicToken,
-			password: publicToken,
-			name: 'user-' + publicToken,
-			projects_limit: 0,
-			can_create_group: false,
-			skip_confirmation: true
+		const response = await (0, _nodeFetch2.default)(gitlab.url + '/api/v4/users?private_token=' + encodeURIComponent(gitlab.key), {
+			method: 'POST',
+			headers: { 'content-type': 'application/json', 'accept': 'application/json' },
+			body: JSON.stringify({
+				email: 'user-' + encodeURIComponent(publicToken) + '@lab.example.com',
+				username: 'user-' + publicToken,
+				password: publicToken,
+				name: 'user-' + publicToken,
+				projects_limit: 0,
+				can_create_group: false,
+				skip_confirmation: true
+			})
 		});
 
 		const body = await response.json();
@@ -503,7 +515,9 @@ async function createGitlabUser(gitlab, publicToken) {
 		} else if (body && (body.message === 'Email has already been taken' || body.message === 'Username has already been taken')) {
 			logger.debug('GitLab user already exists');
 			try {
-				const response = await _request2.default.get(gitlab.url + '/api/v4/users?username=' + 'user-' + encodeURIComponent(publicToken) + '&private_token=' + encodeURIComponent(gitlab.key), null);
+				const response = await (0, _nodeFetch2.default)(gitlab.url + '/api/v4/users' + '?username=user-' + encodeURIComponent(publicToken) + '&private_token=' + encodeURIComponent(gitlab.key), {
+					headers: { 'accept': 'application/json' }
+				});
 				const body = await response.json();
 				if (response.ok) {
 					if (body.length === 0) {
@@ -542,9 +556,13 @@ async function createGitlabUser(gitlab, publicToken) {
  */
 async function addGitlabUserToGroup(gitlab, group, user) {
 	try {
-		const response = await _request2.default.post(gitlab.url + '/api/v4/groups/' + encodeURIComponent(group.id) + '/members?private_token=' + encodeURIComponent(gitlab.key), {
-			user_id: user.id,
-			access_level: 30
+		const response = await (0, _nodeFetch2.default)(gitlab.url + '/api/v4/groups/' + encodeURIComponent(group.id) + '/members?private_token=' + encodeURIComponent(gitlab.key), {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({
+				user_id: user.id,
+				access_level: 30
+			})
 		});
 		if (response.ok) {
 			return true;
@@ -607,7 +625,7 @@ async function virtualboxMachineInfo(name, ip = false) {
 		if (!('virtualbox' in _config2.default)) {
 			throw new Error('VirtualBox is not configured');
 		}
-		const response = await _request2.default.get(_config2.default.virtualbox + '/machine/' + encodeURIComponent(name) + (ip ? '?ip' : ''));
+		const response = await (0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(name) + (ip ? '?ip' : ''));
 		const body = await response.json();
 		if (response.ok) {
 			return body;
@@ -691,7 +709,11 @@ async function virtualboxUpdateMachine(name, state, ip = false) {
 		if (!('virtualbox' in _config2.default)) {
 			throw new Error('VirtualBox is not configured');
 		}
-		const response = await _request2.default.put(_config2.default.virtualbox + '/machine/' + encodeURIComponent(name) + (ip ? '?ip' : ''), state);
+		const response = await (0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(name) + (ip ? '?ip' : ''), {
+			method: 'PUT',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify(state)
+		});
 		const body = await response.json();
 		if (response.ok) {
 			return body;

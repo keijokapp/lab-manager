@@ -4,13 +4,13 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
+var _nodeFetch = require('node-fetch');
+
+var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
+
 var _express = require('express');
 
 var _expressOpenapiMiddleware = require('express-openapi-middleware');
-
-var _request = require('../request');
-
-var _request2 = _interopRequireDefault(_request);
 
 var _config = require('../config');
 
@@ -92,7 +92,7 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
 			params.push('ip');
 		}
 
-		return _request2.default.get(_config2.default.virtualbox + '/machine?' + params.join('&')).then(response => {
+		return (0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine?' + params.join('&')).then(response => {
 			if (!response.ok) {
 				return response.text().then(body => {
 					_common.logger.error('Failed to request machines', { body });
@@ -158,7 +158,7 @@ routes.get('/:machine', (0, _expressOpenapiMiddleware.apiOperation)({
 		}
 	}
 }), (req, res, next) => {
-	_request2.default.get(_config2.default.virtualbox + '/machine/' + encodeURIComponent(req.params.machine) + ('ip' in req.query ? '?ip' : '')).then(response => {
+	(0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(req.params.machine) + ('ip' in req.query ? '?ip' : '')).then(response => {
 		if (response.ok) {
 			return response.json().then(body => {
 				res.status(response.status).send(body);
@@ -209,7 +209,11 @@ routes.put('/:machine', (0, _expressOpenapiMiddleware.apiOperation)({
 		}
 	}
 }), (req, res, next) => {
-	_request2.default.put(_config2.default.virtualbox + '/machine/' + encodeURIComponent(req.params.machine) + ('ip' in req.query ? '?ip' : ''), req.body).then(response => {
+	(0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(req.params.machine) + ('ip' in req.query ? '?ip' : ''), {
+		method: 'PUT',
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify(req.body)
+	}).then(response => {
 		if (response.ok) {
 			return response.json().then(body => {
 				res.status(response.status).send(body);
@@ -249,7 +253,9 @@ routes.post('/:machine/snapshot/:snapshot', (0, _expressOpenapiMiddleware.apiOpe
 		}
 	}
 }), (req, res, next) => {
-	_request2.default.post(_config2.default.virtualbox + '/machine/' + encodeURIComponent(req.params.machine) + '/snapshot/' + encodeURIComponent(req.params.snapshot)).then(response => {
+	(0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(req.params.machine) + '/snapshot/' + encodeURIComponent(req.params.snapshot), {
+		method: 'POST'
+	}).then(response => {
 		if (response.ok) {
 			return response.json().then(body => {
 				res.status(response.status).send(body);
