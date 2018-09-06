@@ -258,7 +258,7 @@ async function virtualboxCreateMachine(instance, id) {
 	try {
 		const response = await (0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(instance.machines[id].name), {
 			method: 'PUT',
-			headers: { 'content-type': 'application/json' },
+			headers: { 'content-type': 'application/json', 'x-request-id': (0, _common.reqid)() },
 			body: JSON.stringify(requestData)
 		});
 		if (response.ok) {
@@ -287,7 +287,7 @@ async function createAssistant(instance) {
 	try {
 		const response = await (0, _nodeFetch2.default)(instance.lab.assistant.url + '/api/v2/labusers', {
 			method: 'POST',
-			headers: { 'content-type': 'application/json', 'accept': 'application/json' },
+			headers: { 'content-type': 'application/json', 'accept': 'application/json', 'x-request-id': (0, _common.reqid)() },
 			body: JSON.stringify({
 				api_key: instance.lab.assistant.key,
 				host: _config2.default.appUrl,
@@ -332,7 +332,7 @@ async function createEndpoints(instance) {
 	try {
 		const response = await (0, _nodeFetch2.default)(_config2.default.labProxy.url + '/api' + '/endpoints/' + encodeURIComponent(instance.privateToken) + '?auth-token=' + encodeURIComponent(_config2.default.labProxy.key), {
 			method: 'PUT',
-			headers: { 'content-type': 'application/json' },
+			headers: { 'content-type': 'application/json', 'x-request-id': (0, _common.reqid)() },
 			body: JSON.stringify({ endpoints })
 		});
 

@@ -92,7 +92,9 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
 			params.push('ip');
 		}
 
-		return (0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine?' + params.join('&')).then(response => {
+		return (0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine?' + params.join('&'), {
+			headers: { 'x-request-id': (0, _common.reqid)() }
+		}).then(response => {
 			if (!response.ok) {
 				return response.text().then(body => {
 					_common.logger.error('Failed to request machines', { body });
@@ -158,7 +160,9 @@ routes.get('/:machine', (0, _expressOpenapiMiddleware.apiOperation)({
 		}
 	}
 }), (req, res, next) => {
-	(0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(req.params.machine) + ('ip' in req.query ? '?ip' : '')).then(response => {
+	(0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(req.params.machine) + ('ip' in req.query ? '?ip' : ''), {
+		headers: { 'x-request-id': (0, _common.reqid)() }
+	}).then(response => {
 		if (response.ok) {
 			return response.json().then(body => {
 				res.status(response.status).send(body);
@@ -211,7 +215,7 @@ routes.put('/:machine', (0, _expressOpenapiMiddleware.apiOperation)({
 }), (req, res, next) => {
 	(0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(req.params.machine) + ('ip' in req.query ? '?ip' : ''), {
 		method: 'PUT',
-		headers: { 'content-type': 'application/json' },
+		headers: { 'content-type': 'application/json', 'x-request-id': (0, _common.reqid)() },
 		body: JSON.stringify(req.body)
 	}).then(response => {
 		if (response.ok) {
@@ -254,7 +258,8 @@ routes.post('/:machine/snapshot/:snapshot', (0, _expressOpenapiMiddleware.apiOpe
 	}
 }), (req, res, next) => {
 	(0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(req.params.machine) + '/snapshot/' + encodeURIComponent(req.params.snapshot), {
-		method: 'POST'
+		method: 'POST',
+		headers: { 'x-request-id': (0, _common.reqid)() }
 	}).then(response => {
 		if (response.ok) {
 			return response.json().then(body => {

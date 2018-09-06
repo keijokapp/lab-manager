@@ -85,6 +85,7 @@ function reqid(req, res, next) {
 				id: req.headers['x-request-id'] || (0, _uniqid2.default)()
 			};
 		}
+		res.setHeader('x-request-id', requestNamespace[eid].id);
 		if (typeof next === 'function') {
 			next();
 		}
@@ -362,7 +363,8 @@ async function virtualboxDeleteMachine(name) {
 	try {
 		if ('virtualbox' in _config2.default) {
 			const response = await (0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(name), {
-				method: 'DELETE'
+				method: 'DELETE',
+				headers: { 'x-request-id': reqid() }
 			});
 			if (!response.ok) {
 				logger.error('Failed to delete machine', {
@@ -438,7 +440,11 @@ async function createGitlabGroup(gitlab, publicToken) {
 	try {
 		const response = await (0, _nodeFetch2.default)(gitlab.url + '/api/v4/groups?private_token=' + encodeURIComponent(gitlab.key), {
 			method: 'POST',
-			headers: { 'content-type': 'application/json', 'accept': 'application/json' },
+			headers: {
+				'content-type': 'application/json',
+				'accept': 'application/json',
+				'x-request-id': reqid()
+			},
 			body: JSON.stringify({
 				name: 'lab-' + publicToken,
 				path: 'lab-' + publicToken,
@@ -457,7 +463,7 @@ async function createGitlabGroup(gitlab, publicToken) {
 			logger.debug('GitLab group already exists');
 			try {
 				const response = await (0, _nodeFetch2.default)(gitlab.url + '/api/v4/groups/' + 'lab-' + encodeURIComponent(publicToken) + '?private_token=' + encodeURIComponent(gitlab.key), {
-					headers: { 'accept': 'application/json' }
+					headers: { 'accept': 'application/json', 'x-request-id': reqid() }
 				});
 				const body = await response.json();
 				if (response.ok) {
@@ -492,7 +498,11 @@ async function createGitlabUser(gitlab, publicToken) {
 	try {
 		const response = await (0, _nodeFetch2.default)(gitlab.url + '/api/v4/users?private_token=' + encodeURIComponent(gitlab.key), {
 			method: 'POST',
-			headers: { 'content-type': 'application/json', 'accept': 'application/json' },
+			headers: {
+				'content-type': 'application/json',
+				'accept': 'application/json',
+				'x-request-id': reqid()
+			},
 			body: JSON.stringify({
 				email: 'user-' + encodeURIComponent(publicToken) + '@lab.example.com',
 				username: 'user-' + publicToken,
@@ -516,7 +526,10 @@ async function createGitlabUser(gitlab, publicToken) {
 			logger.debug('GitLab user already exists');
 			try {
 				const response = await (0, _nodeFetch2.default)(gitlab.url + '/api/v4/users' + '?username=user-' + encodeURIComponent(publicToken) + '&private_token=' + encodeURIComponent(gitlab.key), {
-					headers: { 'accept': 'application/json' }
+					headers: {
+						'accept': 'application/json',
+						'x-request-id': reqid()
+					}
 				});
 				const body = await response.json();
 				if (response.ok) {
@@ -558,7 +571,7 @@ async function addGitlabUserToGroup(gitlab, group, user) {
 	try {
 		const response = await (0, _nodeFetch2.default)(gitlab.url + '/api/v4/groups/' + encodeURIComponent(group.id) + '/members?private_token=' + encodeURIComponent(gitlab.key), {
 			method: 'POST',
-			headers: { 'content-type': 'application/json' },
+			headers: { 'content-type': 'application/json', 'x-request-id': reqid() },
 			body: JSON.stringify({
 				user_id: user.id,
 				access_level: 30
@@ -625,7 +638,9 @@ async function virtualboxMachineInfo(name, ip = false) {
 		if (!('virtualbox' in _config2.default)) {
 			throw new Error('VirtualBox is not configured');
 		}
-		const response = await (0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(name) + (ip ? '?ip' : ''));
+		const response = await (0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(name) + (ip ? '?ip' : ''), {
+			headers: { 'x-request-id': reqid() }
+		});
 		const body = await response.json();
 		if (response.ok) {
 			return body;
@@ -711,7 +726,7 @@ async function virtualboxUpdateMachine(name, state, ip = false) {
 		}
 		const response = await (0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(name) + (ip ? '?ip' : ''), {
 			method: 'PUT',
-			headers: { 'content-type': 'application/json' },
+			headers: { 'content-type': 'application/json', 'x-request-id': reqid() },
 			body: JSON.stringify(state)
 		});
 		const body = await response.json();

@@ -110,7 +110,9 @@ function instanceToLabinfo(instance) {
  * @returns {string} user
  */
 async function fetchITeeUser(userId) {
-	const response = await (0, _nodeFetch2.default)(_config2.default.iTee.url + '/users.json' + '?conditions[id]=' + encodeURIComponent(userId) + '&auth_token=' + encodeURIComponent(_config2.default.iTee.key));
+	const response = await (0, _nodeFetch2.default)(_config2.default.iTee.url + '/users.json' + '?conditions[id]=' + encodeURIComponent(userId) + '&auth_token=' + encodeURIComponent(_config2.default.iTee.key), {
+		headers: { 'x-request-id': (0, _common.reqid)() }
+	});
 
 	const body = await response.json();
 
@@ -132,7 +134,9 @@ async function fetchITeeUser(userId) {
  * @returns {string} lab
  */
 async function fetchITeeLab(labId) {
-	const response = await (0, _nodeFetch2.default)(_config2.default.iTee.url + '/labs.json' + '?conditions[id]=' + encodeURIComponent(labId) + '&auth_token=' + encodeURIComponent(_config2.default.iTee.key));
+	const response = await (0, _nodeFetch2.default)(_config2.default.iTee.url + '/labs.json' + '?conditions[id]=' + encodeURIComponent(labId) + '&auth_token=' + encodeURIComponent(_config2.default.iTee.key), {
+		headers: { 'x-request-id': (0, _common.reqid)() }
+	});
 
 	const body = await response.json();
 
