@@ -7,10 +7,6 @@ var _http = require('http');
 
 var _http2 = _interopRequireDefault(_http);
 
-var _sdNotify = require('sd-notify');
-
-var _sdNotify2 = _interopRequireDefault(_sdNotify);
-
 var _cleanup = require('./cleanup');
 
 var _cleanup2 = _interopRequireDefault(_cleanup);
@@ -26,6 +22,16 @@ var _app = require('./app');
 var _app2 = _interopRequireDefault(_app);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+let notify = {
+	ready() {}
+};
+
+try {
+	notify = require('sd-notify');
+} catch (e) {
+	_common.logger.debug('Systemd notifications are disabled');
+}
 
 const server = _http2.default.createServer(_app2.default);
 
@@ -64,13 +70,13 @@ if (_config2.default.listen === 'systemd') {
 		server._handle.open(3);
 		server._listen2(null, -1, -1);
 		_common.logger.info('Listening', { fd: 3 });
-		_sdNotify2.default.ready();
+		notify.ready();
 	}
 } else if ('port' in _config2.default.listen) {
 	server.listen(_config2.default.listen.port, _config2.default.listen.address, () => {
 		const address = server.address();
 		_common.logger.info('Listening', address);
-		_sdNotify2.default.ready();
+		notify.ready();
 	});
 } else if ('path' in _config2.default.listen) {
 	server.listen(_config2.default.listen.path, () => {
@@ -89,7 +95,7 @@ if (_config2.default.listen === 'systemd') {
 		}
 		if (!error) {
 			_common.logger.info('Listening', { path: _config2.default.listen.path });
-			_sdNotify2.default.ready();
+			notify.ready();
 		}
 	});
 }
