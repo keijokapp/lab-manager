@@ -738,10 +738,10 @@ async function virtualboxUpdateMachine(name, state, ip = false) {
 		if (response.ok) {
 			return body;
 		} else {
-			logger.error('Failed to update machine', { type: 'lxd', machine: name, response: body });
+			logger.error('Failed to update machine', { type: 'virtualbox', machine: name, response: body });
 		}
 	} catch (e) {
-		logger.error('Failed to update machine', { type: 'lxd', machine: name, e: e.message });
+		logger.error('Failed to update machine', { type: 'virtualbox', machine: name, e: e.message });
 	}
 	return null;
 }
