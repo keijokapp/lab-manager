@@ -184,18 +184,25 @@ async function lxdRequest(path, options = {}, wait = true, originalRequest = nul
 
 	const response = await new Promise((resolve, reject) => {
 		const req = _https2.default.request(opts, res => {
-			const chunks = [];
-			res.on('data', chunk => {
-				chunks.push(chunk);
-			});
-			res.on('end', () => {
+			if (res.statusCode === 202 && wait) {
 				resolve({
 					status: res.statusCode,
-					headers: res.headers,
-					body: chunks.join('')
+					headers: res.headers
 				});
-			});
-			res.on('error', reject);
+			} else {
+				const chunks = [];
+				res.on('data', chunk => {
+					chunks.push(chunk);
+				});
+				res.on('end', () => {
+					resolve({
+						status: res.statusCode,
+						headers: res.headers,
+						body: chunks.join('')
+					});
+				});
+				res.on('error', reject);
+			}
 		});
 		req.on('error', reject);
 
@@ -206,22 +213,12 @@ async function lxdRequest(path, options = {}, wait = true, originalRequest = nul
 		}
 	});
 
-	response.ok = response.status >= 200 && response.status <= 299;
-
-	if (response.headers['content-type'] === 'application/json') {
-		try {
-			response.body = JSON.parse(response.body);
-		} catch (e) {
-			throw new Error('Bad response body: ' + e.message);
+	if (!('body' in response)) {
+		const result = await lxdRequest(response.headers['location'].replace(/^\/1\.0(?=\/)/, '') + '/wait', {}, true, originalRequest);
+		if (result.body.status_code !== 200) {
+			throw new Error('LXD operation failed with (' + result.body.status_code + ') ' + result.body.err);
 		}
-
-		if (response.ok && response.body instanceof Object) {
-			const metadata = response.body.metadata;
-			if (response.body.type === 'async' && wait) {
-				return lxdRequest('/operations/' + encodeURIComponent(metadata.id) + '/wait', {}, true, originalRequest);
-			}
-			response.body = metadata;
-		}
+		return result.body.metadata;
 	}
 
 	logger.debug('LXD request', {
@@ -229,6 +226,16 @@ async function lxdRequest(path, options = {}, wait = true, originalRequest = nul
 		path: originalRequest.path,
 		timing: Math.floor((Date.now() - originalRequest.startTime) / 100) / 10
 	});
+
+	response.ok = response.status >= 200 && response.status <= 299;
+
+	if (response.headers['content-type'] === 'application/json') {
+		try {
+			response.body = JSON.parse(response.body).metadata;
+		} catch (e) {
+			throw new Error('Bad response body: ' + e.message);
+		}
+	}
 
 	if (response.ok) {
 		return response;
