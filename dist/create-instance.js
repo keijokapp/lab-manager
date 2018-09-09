@@ -425,21 +425,21 @@ exports.default = async function (instance) {
 		}
 	}
 
-	if ('endpoints' in lab && 'labProxy' in _config2.default) {
+	if ('endpoints' in lab && !('endpoints' in instance) && 'labProxy' in _config2.default) {
 		const error = await createEndpoints(instance);
 		if (error) {
 			return error;
 		}
 	}
 
-	if ('gitlab' in lab) {
+	if ('gitlab' in lab && !('gitlab' in instance)) {
 		const error = await createGitLabContext(instance);
 		if (error) {
 			return error;
 		}
 	}
 
-	if ('machines' in lab) {
+	if ('machines' in lab && !('machines' in instance)) {
 		timing.networks = [Date.now()];
 		const time = Date.now();
 		const bridges = {};

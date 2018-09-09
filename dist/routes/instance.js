@@ -24,6 +24,10 @@ var _renderLayout2 = _interopRequireDefault(_renderLayout);
 
 var _util = require('../util');
 
+var _createInstance = require('../create-instance');
+
+var _createInstance2 = _interopRequireDefault(_createInstance);
+
 var _instanceSubroutes = require('./instance-subroutes');
 
 var _instanceSubroutes2 = _interopRequireDefault(_instanceSubroutes);
@@ -172,48 +176,7 @@ async function importInstanceFromITee(privateToken) {
 		return consistencyErrors;
 	}
 
-	// Add additional features not supported by I-Tee
-
-	if ('endpoints' in lab && 'labProxy' in _config2.default) {
-		const endpoints = {};
-		for (const endpointName of lab.endpoints) {
-			endpoints[endpointName] = {};
-		}
-
-		try {
-			const response = await (0, _nodeFetch2.default)(_config2.default.labProxy.url + '/api/endpoints/' + encodeURIComponent(instance.privateToken) + '?auth-token=' + encodeURIComponent(_config2.default.labProxy.key), {
-				method: 'PUT',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({ endpoints })
-			});
-			if (!response.ok) {
-				_common.logger.error('Failed to create endpoints', { endpoints, response: await response.text() });
-				return;
-			}
-
-			const body = await response.json();
-			for (const name in body.endpoints) {
-				delete body.endpoints[name].destination;
-			}
-			instance.endpoints = body.endpoints;
-		} catch (e) {
-			_common.logger.error('Failed to create endpoints', { e: e.message });
-			return;
-		}
-	}
-
-	if ('gitlab' in lab) {
-		let [group, user] = await Promise.all([(0, _common.createGitlabGroup)(lab.gitlab, instance.publicToken), (0, _common.createGitlabUser)(lab.gitlab, instance.publicToken)]);
-		if (group && user && (await (0, _common.addGitlabUserToGroup)(lab.gitlab, group, user))) {
-			_common.logger.debug('Created lab instance in Gitlab', { group, user });
-			instance.gitlab = { group, user };
-		} else {
-			// error is already logged
-			return;
-		}
-	}
-
-	return instance;
+	return (0, _createInstance2.default)(instance);
 }
 
 routes.use('/:token', (0, _expressOpenapiMiddleware.apiOperation)({
@@ -236,29 +199,21 @@ routes.use('/:token', (0, _expressOpenapiMiddleware.apiOperation)({
 		_common.logger.debug('Trying to import lab instance from I-Tee', { privateToken: req.params.token });
 		const instance = await importInstanceFromITee(req.params.token);
 		if (instance !== null) {
-			if (!('_id' in instance)) {
+			if (typeof instance === 'string' && instance !== 'Instance already exists') {
+				res.status(500).send({
+					error: 'Internal Server Error',
+					message: 'Failed to import lab instance from I-Tee',
+					errors: instance
+				});
+			} else if (instance === 'instance already exists' || !('_id' in instance)) {
 				res.status(409).send({
 					error: 'Conflict',
 					message: 'Failed to import lab instance from I-Tee',
 					errors: instance
 				});
-				return;
-			}
-
-			try {
-				const result = await _common.db.post(instance);
-				instance._rev = result.rev;
+			} else {
 				req.instance = instance;
 				req.instanceToken = req.params.token;
-			} catch (e) {
-				if (e.name === 'conflict') {
-					// another import might have been completed while
-					// this one was running
-					req.instance = await _common.db.get(instance._id);
-					req.instanceToken = req.params.token;
-				} else {
-					throw e;
-				}
 			}
 		}
 	} else if (result.rows.length === 1) {
