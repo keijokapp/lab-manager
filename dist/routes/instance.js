@@ -115,6 +115,11 @@ async function importInstanceFromITee(privateToken) {
 		username: body.user.username,
 		imported: true,
 		startTime: body.labuser.start,
+		iTeeCompat: {
+			instanceId: body.id,
+			labId: body.lab.id,
+			userId: body.user.id
+		},
 		lab,
 		publicToken: body.labuser.token,
 		privateToken: body.labuser.uuid
