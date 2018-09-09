@@ -22,56 +22,57 @@ var _config2 = _interopRequireDefault(_config);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/*
 async function resolveRef(repository, ref) {
 	// assume ref is safe (alpha-numeric/alpha-numeric)
 	try {
 		return await new Promise((resolve, reject) => {
-			(0, _child_process.execFile)('git', ['-C', _config2.default.repositories + '/' + repository + '.git', 'rev-parse', ref], (e, stdout) => {
-				if (e) {
+			execFile('git', ['-C', config.repositories + '/' + repository + '.git', 'rev-parse', ref], (e, stdout) => {
+				if(e) {
 					reject(e);
 				} else {
 					resolve(stdout.trim());
 				}
 			});
 		});
-	} catch (e) {
-		_common.logger.error('Failed to resolve ref', { respository, ref, e: e.message });
+	} catch(e) {
+		logger.error('Failed to resolve ref', { repository, ref, e: e.message });
 	}
 	return null;
-} /**
-   * TODO: move this utility/service somewhere else
-   */
+}
+
 
 async function listFiles(repository, rev) {
 	try {
 		return await new Promise((resolve, reject) => {
-			(0, _child_process.execFile)('git', ['-C', _config2.default.repositories + '/' + repository + '.git', 'ls-tree', '--full-tree', '--name-only', '-r', rev], (e, stdout) => {
-				if (e) {
+			execFile('git', ['-C', config.repositories + '/' + repository + '.git', 'ls-tree', '--full-tree', '--name-only', '-r', rev], (e, stdout) => {
+				if(e) {
 					reject(e);
 				} else {
 					resolve(stdout.split(/\n/g).filter(f => f));
 				}
 			});
 		});
-	} catch (e) {
-		_common.logger.error('Failed to list files from repository', { respository, rev, e: e.message });
+	} catch(e) {
+		logger.error('Failed to list files from repository', { repository, rev, e: e.message });
 	}
 	return null;
 }
 
+
 async function fetchFile(repository, rev, file) {
 	try {
 		return await new Promise((resolve, reject) => {
-			(0, _child_process.execFile)('git', ['-C', _config2.default.repositories + '/' + repository + '.git', 'show', rev, '--', file], (e, stdout) => {
-				if (e) {
+			execFile('git', ['-C', config.repositories + '/' + repository + '.git', 'show', rev, '--', file], (e, stdout) => {
+				if(e) {
 					reject(e);
 				} else {
 					resolve(stdout);
 				}
 			});
 		});
-	} catch (e) {
-		_common.logger.error('Failed to fetch file from repository', { respository, rev, file, e: e.message });
+	} catch(e) {
+		logger.error('Failed to fetch file from repository', { repository, rev, file, e: e.message });
 	}
 	return null;
 }
@@ -218,6 +219,10 @@ async function lxdCreateMachine(instance, id) {
  * @param id {string}
  * @returns {boolean} true on success, false on failure
  */
+/**
+ * TODO: move this utility/service somewhere else
+ */
+
 async function virtualboxCreateMachine(instance, id) {
 	if (!('virtualbox' in _config2.default)) {
 		_common.logger.error('Failed to create machine', {
