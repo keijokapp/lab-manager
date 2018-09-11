@@ -453,7 +453,9 @@ routes.post('/lab_users.json', (0, _expressOpenapiMiddleware.apiOperation)({
 			instanceId: Date.now(),
 			labId: lab.id,
 			userId: user.id
-		}
+		},
+		privateToken: (0, _v2.default)(),
+		publicToken: (0, _v2.default)()
 	};
 
 	try {
