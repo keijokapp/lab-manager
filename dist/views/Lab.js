@@ -541,7 +541,7 @@ class Machine extends _react2.default.Component {
 
 		if ('enable_token' in props.machine) {
 			this.state.machine.enable_private = props.machine.enable_token;
-			delete props.machine.enable_token;
+			delete this.state.machine.enable_token;
 		}
 	}
 
