@@ -785,7 +785,7 @@ exports.default = class extends _react2.default.Component {
 							_react2.default.createElement(
 								_semanticUiReact.Label.Detail,
 								null,
-								startTime.toDateString(),
+								startTime.toDateString() + ' ' + startTime.toTimeString().split(' ')[0],
 								' (',
 								_react2.default.createElement(_util.TimeSince, { date: startTime }),
 								')'

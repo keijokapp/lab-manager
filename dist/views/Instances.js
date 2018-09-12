@@ -131,7 +131,7 @@ class LabRow extends _react2.default.Component {
 				_react2.default.createElement(
 					'p',
 					null,
-					startTime.toDateString()
+					startTime.toDateString() + ' ' + startTime.toTimeString().split(' ')[0]
 				),
 				_react2.default.createElement(
 					'p',
