@@ -105,6 +105,49 @@ function instanceToLabinfo(instance) {
 }
 
 /**
+ * Loads I-Tee compatible instance and I-Tee compatibility object from database
+ * @param labId {integer} lab ID or instance ID
+ * @param userId {integer?} user ID
+ * @returns {object} 2-element array of instance and I-Tee compatibility object
+ */
+async function getInstance(labId, userId) {
+	const docs = await _common.db.query(function (doc) {
+		if ('iTeeCompat' in doc) {
+			emit(doc.iTeeCompat.instanceId);
+			emit([doc.iTeeCompat.labId, doc.iTeeCompat.userId]);
+		}
+	}, {
+		key: userId === undefined ? labId : [labId, userId],
+		include_docs: true
+	});
+
+	let ambiguous = false;
+	let instance;
+	let iTeeCompat;
+
+	for (const row of docs.rows) {
+		if (row.doc._id.startsWith('instance/')) {
+			if (instance) {
+				ambiguous = true;
+			}
+			instance = row.doc;
+		} else if (row.doc._id.startsWith('i-tee-compat/')) {
+			if (iTeeCompat) {
+				ambiguous = true;
+			}
+			iTeeCompat = row.doc;
+		}
+	}
+
+	if (ambiguous) {
+		_common.logger.error('I-Tee compatibility state', { rows: docs.rows });
+		throw new Error('Ambiguous I-Tee compatibility state');
+	}
+
+	return [instance, iTeeCompat];
+}
+
+/**
  * Fetches user from I-Tee
  * @param userId {integer} User ID
  * @returns {string} user
@@ -211,7 +254,8 @@ routes.get('/lab_users.json', (0, _expressOpenapiMiddleware.apiOperation)({
 								},
 								additionalProperties: false,
 								required: ['user_id', 'lab_id']
-							}
+							},
+							required: ['conditions']
 						},
 						additionalProperties: false,
 						required: ['conditions']
@@ -246,26 +290,6 @@ routes.get('/lab_users.json', (0, _expressOpenapiMiddleware.apiOperation)({
 				}
 			}
 		},
-		404: {
-			content: {
-				'application/json': {
-					example: {
-						success: false,
-						message: 'Lab or user was not found'
-					}
-				}
-			}
-		},
-		409: {
-			content: {
-				'application/json': {
-					example: {
-						success: false,
-						message: 'Requested instance is not created via I-Tee compatibility API'
-					}
-				}
-			}
-		},
 		503: {
 			content: {
 				'application/json': {
@@ -278,89 +302,23 @@ routes.get('/lab_users.json', (0, _expressOpenapiMiddleware.apiOperation)({
 		}
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
+	let instance, iTeeCompat;
+
 	if ('id' in req.body.conditions) {
-		const docs = await _common.db.query(function (doc) {
-			if ('iTeeCompat' in doc) {
-				emit(doc.iTeeCompat.instanceId);
-			}
-		}, {
-			key: req.body.conditions.id,
-			include_docs: true
-		});
-
-		let ambiguous = false;
-		let instance;
-		let iTeeCompat;
-
-		for (const row of docs.rows) {
-			if (row.doc._id.startsWith('instance/')) {
-				if (instance) {
-					ambiguous = true;
-				}
-				instance = row.doc;
-			} else if (row.doc._id.startsWith('i-tee-compat/')) {
-				if (iTeeCompat) {
-					ambiguous = true;
-				}
-				iTeeCompat = row.doc;
-			}
-		}
-
-		if (ambiguous) {
-			_common.logger.error('Ambiguous state of I-Tee compatibility', { docs: docs.rows });
-			res.status(500).send({
-				success: false,
-				message: 'Internal Server Error'
-			});
-		} else if (instance) {
-			res.send([instanceToLabUser(instance)]);
-		} else if (iTeeCompat) {
-			res.send([instanceToLabUser(iTeeCompat)]);
-		} else {
-			res.send([]);
-		}
+		[instance, iTeeCompat] = await getInstance(req.body.conditions.id);
 	} else if ('iTee' in _config2.default && 'key' in _config2.default.iTee) {
-		const [lab, user] = await Promise.all([fetchITeeLab(req.body.conditions.lab_id), fetchITeeUser(req.body.conditions.user_id)]);
-
-		if (lab === undefined || user === undefined) {
-			// error happened and it is already logged
-			res.status(500).send({
-				success: false,
-				message: 'Internal Server Error'
-			});
-			return;
-		}
-
-		if (!lab || !user || !/^[a-zA-Z0-9-]+$/.test(lab.name)) {
-			res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
-			return;
-		}
-
-		const docs = await _common.db.allDocs({
-			keys: ['instance/' + lab.name + ':' + user.username, 'i-tee-compat/' + lab.name + ':' + user.username],
-			include_docs: true
-		});
-
-		let instance;
-
-		if (docs.rows[0].error === 'not_found' || docs.rows[0].value.deleted) {
-			if (docs.rows[1].error === 'not_found' || docs.rows[1].value.deleted) {
-				res.send([]);
-				return;
-			} else {
-				instance = docs.rows[1].doc;
-			}
-		} else {
-			instance = docs.rows[0].doc;
-		}
-
-		if (!('iTeeCompat' in instance)) {
-			res.status(409).send(req.apiOperation.responses[409].content['application/json'].example);
-		} else {
-			res.send([instanceToLabUser(instance)]);
-		}
+		[instance, iTeeCompat] = await getInstance(req.body.conditions.lab_id, req.body.conditions.user_id);
 	} else {
 		res.status(503).send(req.apiOperation.responses[503].content['application/json'].example);
+		return;
+	}
+
+	if (instance) {
+		res.send([instanceToLabUser(instance)]);
+	} else if (iTeeCompat) {
+		res.send([instanceToLabUser(iTeeCompat)]);
+	} else {
+		res.send([]);
 	}
 }));
 
@@ -454,29 +412,17 @@ routes.post('/lab_users.json', (0, _expressOpenapiMiddleware.apiOperation)({
 			labId: lab.id,
 			userId: user.id
 		},
+		lab: {
+			_id: lab.name
+		},
 		privateToken: (0, _v2.default)(),
 		publicToken: (0, _v2.default)()
 	};
 
 	try {
-		iTeeCompat.lab = await _common.db.get('lab/' + lab.name);
-	} catch (e) {
-		if (e.name === 'not_found') {
-			res.status(404).send({
-				success: false,
-				message: 'Lab does not exist'
-			});
-			return;
-		}
-		throw e;
-	}
-
-	iTeeCompat.lab._id = iTeeCompat.lab._id.slice(4);
-
-	try {
 		await _common.db.post(iTeeCompat);
 	} catch (e) {
-		if (e.name !== 'conflict') {
+		if (e.name === 'conflict') {
 			res.status(400).send(req.apiOperation.responses[400].content['application/json'].example);
 		} else {
 			_common.logger.error('Error creating I-Tee compatibility object', {
@@ -559,37 +505,16 @@ routes.post('/set_vta_info.json', (0, _expressOpenapiMiddleware.apiOperation)({
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
 
-	const docs = await _common.db.query(function (doc) {
-		if ('iTeeCompat' in doc) {
-			emit(doc.iTeeCompat.instanceId);
-		}
-	}, {
-		key: req.body.id,
-		include_docs: true
-	});
+	const [instance, iTeeCompat] = await getInstance(req.body.id);
 
-	let iTeeCompat;
-
-	for (const row of docs.rows) {
-		if (row.doc._id.startsWith('instance/')) {
-			_common.logger.warn('Unable to set VirtualTA info on running lab', { id: req.body.id, instance: row.doc._id });
-			res.status(400).send(req.apiOperation.responses[400].content['application/json'].example);
-			return;
-		} else if (row.doc._id.startsWith('i-tee-compat/')) {
-			if (iTeeCompat) {
-				_common.logger.error('Ambiguous I-Tee compatibility state', { rows: docs.rows });
-				res.status(500).send({
-					success: false,
-					message: 'Internal Server Error'
-				});
-				return;
-			}
-			iTeeCompat = row.doc;
-		}
+	if (!instance && !iTeeCompat) {
+		res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
+		return;
 	}
 
-	if (!iTeeCompat) {
-		res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
+	if (instance) {
+		_common.logger.warn('Unable to set VirtualTA info on running lab', { id: req.body.id, instance: instance._id });
+		res.status(400).send(req.apiOperation.responses[400].content['application/json'].example);
 		return;
 	}
 
@@ -669,48 +594,45 @@ routes.post('/start_lab_by_id.json', (0, _expressOpenapiMiddleware.apiOperation)
 				'application/json': {
 					example: {
 						success: false,
-						message: 'Lab instance does not exist'
+						message: 'Lab or instance does not exist'
 					}
 				}
 			}
 		}
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
-	const docs = await _common.db.query(function (doc) {
-		if ('iTeeCompat' in doc) {
-			emit(doc.iTeeCompat.instanceId);
-		}
-	}, {
-		key: req.body.labuser_id,
-		include_docs: true
-	});
 
-	let iTeeCompat;
+	let [instance, iTeeCompat] = await getInstance(req.body.labuser_id);
 
-	for (const row of docs.rows) {
-		if (row.doc._id.startsWith('instance/')) {
-			_common.logger.warn('Unable to start already running lab', { id: req.body.id, instance: row.doc._id });
-			res.status(400).send(req.apiOperation.responses[400].content['application/json'].example);
-			return;
-		} else if (row.doc._id.startsWith('i-tee-compat/')) {
-			if (iTeeCompat) {
-				_common.logger.error('Ambiguous I-Tee compatibility state', { rows: docs.rows });
-				res.status(500).send({
-					success: false,
-					message: 'Internal Server Error'
-				});
-				return;
-			}
-			iTeeCompat = row.doc;
-		}
-	}
-
-	if (!iTeeCompat) {
+	if (!instance && !iTeeCompat) {
 		res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
 		return;
 	}
 
-	const instance = await (0, _createInstance2.default)(iTeeCompat);
+	if (instance) {
+		_common.logger.warn('Unable to start already running lab', { id: req.body.id, instance: instance._id });
+		res.status(400).send(req.apiOperation.responses[400].content['application/json'].example);
+		return;
+	}
+
+	try {
+		const lab = await _common.db.get('lab/' + iTeeCompat.lab._id);
+		if ('assistant' in iTeeCompat.lab) {
+			lab.assistant = iTeeCompat.lab.assistant;
+		}
+		lab._id = lab._id.slice(4);
+		iTeeCompat.lab = lab;
+	} catch (e) {
+		if (e.name === 'not_found') {
+			_common.logger.debug('Lab for I-Tee compatibility object was not found', { iTeeCompat });
+			res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
+			return;
+		} else {
+			throw e;
+		}
+	}
+
+	instance = await (0, _createInstance2.default)(iTeeCompat);
 	if (typeof instance === 'string') {
 		res.status(instance === 'Instance already exists' ? 400 : 500).send({
 			success: false,
@@ -721,7 +643,7 @@ routes.post('/start_lab_by_id.json', (0, _expressOpenapiMiddleware.apiOperation)
 			success: true,
 			message: 'Lab has been started',
 			lab_user: instance.iTeeCompat.instanceId,
-			start_time: new Date()
+			start_time: instance.startTime
 		});
 	}
 }));
@@ -790,54 +712,32 @@ routes.post('/end_lab_by_id.json', (0, _expressOpenapiMiddleware.apiOperation)({
 		}
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
-	const docs = await _common.db.query(function (doc) {
-		if ('iTeeCompat' in doc) {
-			emit(doc.iTeeCompat.instanceId);
-		}
-	}, {
-		key: req.body.labuser_id,
-		include_docs: true
-	});
 
-	let iTeeCompat = [];
-	let instance;
+	const [instance, iTeeCompat] = await getInstance(req.body.labuser_id);
 
-	for (const row of docs.rows) {
-		if (row.doc._id.startsWith('instance/')) {
-			if (instance) {
-				_common.logger.warn('I-Tee compatibility is in inconsistent state', {
-					id: req.body.conditions.labuser_id,
-					instance: row.doc._id
-				});
-				res.status(500).send({
-					success: false,
-					message: 'Internal Server Error'
-				});
-				return;
-			}
-			instance = row.doc;
-		} else if (row.doc._id.startsWith('i-tee-compat/')) {
-			iTeeCompat.push(row.doc);
-		}
-	}
-
-	if (!instance) {
+	if (!instance && !iTeeCompat) {
 		res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
 		return;
 	}
 
-	let failed = false;
-	await Promise.all(iTeeCompat.map(doc => _common.db.remove(doc._id, doc._rev).catch(e => {
-		_common.logger.error('Failed to delete I-Tee compatibility object', { id: doc._id, rev: doc._rev, e: e.message });
-		failed = true;
-	})));
-
-	if (failed) {
-		res.status(500).send({
-			success: false,
-			message: 'Internal Server Error'
-		});
+	if (!instance) {
+		_common.logger.warn('Unable to end stopped lab', { id: req.body.id, instance: instance._id });
+		res.status(400).send(req.apiOperation.responses[400].content['application/json'].example);
 		return;
+	}
+
+	if (iTeeCompat) {
+		iTeeCompat.privateToken = (0, _v2.default)();
+		iTeeCompat.publicToken = (0, _v2.default)();
+		try {
+			await _common.db.put(iTeeCompat);
+		} catch (e) {
+			if (e.name === 'conflict') {
+				res.status(409).send(req.apiOperation.responses[409].content['application/json'].example);
+			} else if (e.name !== 'not_found') {
+				throw e;
+			}
+		}
 	}
 
 	try {
@@ -902,18 +802,22 @@ routes.get('/labuser_vms.json', (0, _expressOpenapiMiddleware.apiOperation)({
 		}
 	}
 }), (0, _util.asyncMiddleware)(async (req, res) => {
-	const result = await _common.db.query(function (doc) {
-		if (~doc._id.indexOf('instance/') && 'iTeeCompat' in doc) {
-			emit(doc.iTeeCompat.instanceId);
-		}
-	}, { key: req.body.id, include_docs: true });
 
-	if (result.rows.length !== 1) {
+	const [instance, iTeeCompat] = await getInstance(req.body.id);
+
+	if (!instance && !iTeeCompat) {
 		res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
 		return;
 	}
 
-	const instance = result.rows[0].doc;
+	if (!instance) {
+		res.send({
+			success: true,
+			vms: [],
+			lab_user: iTeeCompat.iTeeCompat.instanceId
+		});
+		return;
+	}
 
 	const vms = [];
 
