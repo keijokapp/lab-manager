@@ -84,8 +84,12 @@ const validationResult = (0, _jsonschema.validate)(config, {
 			required: ['url', 'key']
 		},
 		virtualbox: {
-			type: 'string',
-			minLength: 1
+			type: 'object',
+			properties: {
+				url: { type: 'string', minLength: 1 },
+				key: { type: 'string', minLength: 1 }
+			},
+			required: ['url']
 		},
 		remote: {
 			type: 'string',

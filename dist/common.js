@@ -263,12 +263,13 @@ async function virtualboxRequest(path, options = {}) {
 		path = '/' + path;
 	}
 
-	return await (0, _nodeFetch2.default)(_config2.default.virtualbox + path, {
+	return await (0, _nodeFetch2.default)(_config2.default.virtualbox.url + path, {
 		method: options.method,
 		headers: {
 			accept: 'application/json',
 			'content-type': 'body' in options ? 'application/json' : undefined,
-			'x-request-id': reqid()
+			'x-request-id': reqid(),
+			'authorization': 'key' in _config2.default.virtualbox ? 'Bearer ' + _config2.default.virtualbox.key : undefined
 		},
 		body: JSON.stringify(options.body)
 	});

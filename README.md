@@ -41,7 +41,7 @@ Example configuration is shown in [config_sample.json](config_sample.json). Only
  | `database` | Database URL prefix (CouchDB) or location on disk (LevelDB) |
  | `tokens` | (optional) Array of authorized bearer tokens |
  | `labProxy.url`, `labProxy.key` | (optional) Lab proxy URL prefix and access token |
- | `virtualbox` | (optional) [VirtualBox API service](https://github.com/keijokapp/i-tee-virtualbox) URL |
+ | `virtualbox.url`, `virtualbox.key` | (optional) [VirtualBox API service](https://github.com/keijokapp/i-tee-virtualbox) URL and access token (optional) |
  | `remote` | (optional) [Remote console application](https://github.com/keijokapp/lab-remote) URL |
  | `repositories` | (optional) Directory where Git repositories are located |
  | `lxd.url`, `lxd.certificate`, `lxd.key` | (optional) LXD URL prefix, TLS certificate and key |
