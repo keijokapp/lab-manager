@@ -247,14 +247,13 @@ async function lxdRequest(path, options = {}, wait = true, originalRequest = nul
 	}
 }
 
-const maxInterfaceNameLength = 15;
-
 /**
  * Creates LXD bridge network
  * @param networkName {string} arbitrary network name
  * @returns {string} bridge name
  */
 async function createNetwork(networkName = '') {
+	const maxInterfaceNameLength = 15;
 	const id = (0, _uniqid2.default)();
 	const nic = 'b' + id.slice(id.length - maxInterfaceNameLength + 1);
 
