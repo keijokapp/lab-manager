@@ -7,6 +7,7 @@ exports.db = exports.logger = undefined;
 exports.reqid = reqid;
 exports.authorize = authorize;
 exports.lxdRequest = lxdRequest;
+exports.virtualboxRequest = virtualboxRequest;
 exports.createNetwork = createNetwork;
 exports.deleteNetworks = deleteNetworks;
 exports.deleteMachines = deleteMachines;
@@ -248,6 +249,32 @@ async function lxdRequest(path, options = {}, wait = true, originalRequest = nul
 }
 
 /**
+ * Performs virtualbox request with given parameters
+ * @param path {string} Path of the endpoint
+ * @param options {object} Options: method, body
+ * @returns {object} Fetch response
+ */
+async function virtualboxRequest(path, options = {}) {
+	if (!('virtualbox' in _config2.default)) {
+		throw new Error('VirtualBox is not configured');
+	}
+
+	if (!path.startsWith('/')) {
+		path = '/' + path;
+	}
+
+	return await (0, _nodeFetch2.default)(_config2.default.virtualbox + path, {
+		method: options.method,
+		headers: {
+			accept: 'application/json',
+			'content-type': 'body' in options ? 'application/json' : undefined,
+			'x-request-id': reqid()
+		},
+		body: JSON.stringify(options.body)
+	});
+}
+
+/**
  * Creates LXD bridge network
  * @param networkName {string} arbitrary network name
  * @returns {string} bridge name
@@ -368,9 +395,8 @@ async function lxdDeleteMachine(name) {
 async function virtualboxDeleteMachine(name) {
 	try {
 		if ('virtualbox' in _config2.default) {
-			const response = await (0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(name), {
-				method: 'DELETE',
-				headers: { 'x-request-id': reqid() }
+			const response = await virtualboxRequest('/machine/' + encodeURIComponent(name), {
+				method: 'DELETE'
 			});
 			if (!response.ok) {
 				const body = await response.json();
@@ -649,9 +675,7 @@ async function virtualboxMachineInfo(name, ip = false) {
 		if (!('virtualbox' in _config2.default)) {
 			throw new Error('VirtualBox is not configured');
 		}
-		const response = await (0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(name) + (ip ? '?ip' : ''), {
-			headers: { 'x-request-id': reqid() }
-		});
+		const response = await virtualboxRequest('/machine/' + encodeURIComponent(name) + (ip ? '?ip' : ''));
 		const body = await response.json();
 		if (response.ok) {
 			return body;
@@ -735,10 +759,9 @@ async function virtualboxUpdateMachine(name, state, ip = false) {
 		if (!('virtualbox' in _config2.default)) {
 			throw new Error('VirtualBox is not configured');
 		}
-		const response = await (0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(name) + (ip ? '?ip' : ''), {
+		const response = await virtualboxRequest('/machine/' + encodeURIComponent(name) + (ip ? '?ip' : ''), {
 			method: 'PUT',
-			headers: { 'content-type': 'application/json', 'x-request-id': reqid() },
-			body: JSON.stringify(state)
+			body: state
 		});
 		const body = await response.json();
 		if (response.ok) {

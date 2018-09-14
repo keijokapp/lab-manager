@@ -261,10 +261,9 @@ async function virtualboxCreateMachine(instance, id) {
 	}
 
 	try {
-		const response = await (0, _nodeFetch2.default)(_config2.default.virtualbox + '/machine/' + encodeURIComponent(instance.machines[id].name), {
+		const response = await (0, _common.virtualboxRequest)('/machine/' + encodeURIComponent(instance.machines[id].name), {
 			method: 'PUT',
-			headers: { 'content-type': 'application/json', 'x-request-id': (0, _common.reqid)() },
-			body: JSON.stringify(requestData)
+			body: requestData
 		});
 		if (response.ok) {
 			return true;
