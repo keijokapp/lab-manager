@@ -5,20 +5,19 @@ It provides RESTful API and decent browser-based UI for managing labs, lab insta
 **Features:**
 
  * Managing laboratories and instances
-   * VirtualBox virtual machines via [i-tee-virtualbox](https://github.com/keijokapp/i-tee-virtualbox)
-   * Browser-based remote console support for VirtualBox machines in cooperation with [lab-remote](https://github.com/keijokapp/lab-remote)
+   * VirtualBox virtual machines with [i-tee-virtualbox](https://github.com/keijokapp/i-tee-virtualbox)
+   * Browser-based remote console support for VirtualBox machines with [lab-remote](https://github.com/keijokapp/lab-remote)
    * LXD containers
-   * Git repositories' access control
-   * Lab endpoints in cooperation with [lab-proxy](https://github.com/keijokapp/lab-proxy)
-   * GitLab user and group for instance
+   * Serving Git repositories to lab instances
+   * Lab endpoints with [lab-proxy](https://github.com/keijokapp/lab-proxy)
+   * Creating GitLab user and group for lab instances
    * Virtual Teaching Assistant (proprietary software of RangeForce)
  * Managing VirtualBox machines and templates
-   * Browser-based remote console support for VirtualBox machines via [lab-remote](https://github.com/keijokapp/lab-remote)
+   * Browser-based remote console support for VirtualBox machines with [lab-remote](https://github.com/keijokapp/lab-remote)
    * Retrieving and changing machine state
    * Snapshotting
  * Git repositories
    * Serving Git repositories to authorized clients
-   * Serving configured Git repositories to lab instances
    * API for fetching repositories from remotes (e.g. triggered by webhook)
 
 
@@ -34,13 +33,13 @@ Example configuration is shown in [config_sample.json](config_sample.json). Only
 
  | Option | Description |
  |--------|-------------|
- | `listen` | Listener configuration - `"systemd"` in case of Systemd socket  or `object` |
+ | `listen` | Listener configuration - `"systemd"` in case of Systemd socket or `object` |
  | `listen.port`, `listen.address` | Listen address (optional) and port |
  | `listen.path`, `listen.mode` | UNIX socket path and mode (optional) |
  | `appUrl` | Public (related to other components) URL prefix of the application |
- | `database` | Database URL prefix (CouchDB) or location on disk (LevelDB) |
+ | `database` | Database URL (CouchDB) or location on disk (LevelDB) |
  | `tokens` | (optional) Array of authorized bearer tokens |
- | `labProxy.url`, `labProxy.key` | (optional) Lab proxy URL prefix and access token |
+ | `labProxy.url`, `labProxy.key` | (optional) Lab proxy URL and access token |
  | `virtualbox.url`, `virtualbox.key` | (optional) [VirtualBox API service](https://github.com/keijokapp/i-tee-virtualbox) URL and access token (optional) |
  | `remote` | (optional) [Remote console application](https://github.com/keijokapp/lab-remote) URL |
  | `repositories` | (optional) Directory where Git repositories are located |
@@ -60,7 +59,7 @@ Lab manager does not have concept of *users* and therefore does not provide auth
 
 ## I-Tee compatibility
 
-Lab manager provides few endpoints which emulate some behaviour of I-Tee API. This compatibility layer is not subject to exhaustive documentation and testing and will probably be removed at some point as it is ugly and complicated and as hell.
+Lab manager provides few endpoints which emulate some behaviour of I-Tee API. This layer currently needs actual I-Tee instance to manage users and keep track of lab ID-s.
 
 Take a look at [lib/routes/i-tee-compat.js](lib/routes/i-tee-compat.js) for details.
 
