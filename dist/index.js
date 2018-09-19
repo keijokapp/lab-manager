@@ -86,7 +86,7 @@ if (_config2.default.listen === 'systemd') {
 				(0, _fs.chmodSync)(_config2.default.listen.path, _config2.default.listen.mode);
 			} catch (e) {
 				error = true;
-				_common.logger.error(e.code === 'ERR_INVALID_ARG_VALUE' ? 'Bad socket mode' : 'Error setting socket mode', {
+				_common.logger.error(e.code === 'ERR_INVALID_ARG_VALUE' ? 'Bad socket mode' : 'Failed to set socket mode', {
 					path: _config2.default.listen.path,
 					mode: _config2.default.listen.mode
 				});

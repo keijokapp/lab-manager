@@ -425,7 +425,7 @@ routes.post('/lab_users.json', (0, _expressOpenapiMiddleware.apiOperation)({
 		if (e.name === 'conflict') {
 			res.status(400).send(req.apiOperation.responses[400].content['application/json'].example);
 		} else {
-			_common.logger.error('Error creating I-Tee compatibility object', {
+			_common.logger.error('Failed to create I-Tee compatibility object', {
 				id: iTeeCompat._id,
 				labId: lab.id,
 				userId: user.id,
