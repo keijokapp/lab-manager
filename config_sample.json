@@ -11,7 +11,10 @@
 		"url": "https://lab-host.example.com/lab-proxy",
 		"key": "api-token"
 	},
-	"virtualbox": "http://localhost:3001",
+	"virtualbox": {
+		"url": "http://localhost:3001",
+		"key": "XXX"
+	},
 	"remote": "https://example.com/remote",
 	"lxd": {
 		"url": "https://localhost:9443",
