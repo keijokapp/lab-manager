@@ -1,0 +1,16 @@
+[Unit]
+Description=:Lab manager
+
+[Install]
+WantedBy=multi-user.target
+        
+[Service]
+Environment="NODE_ENV=production"
+WorkingDirectory=/var/lib/lab-manager
+Type=notify
+ExecStart=/usr/bin/env lab-manager /etc/lab-manager/config.json
+User=lab-manager
+Group=lab-manager
+Restart=always
+RestartSec=3
+

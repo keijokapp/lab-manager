@@ -23,6 +23,17 @@ It provides RESTful API and decent browser-based UI for managing labs, lab insta
 
 ## Installation
 
+### Prerequisites
+
+These instructions are based on Ubuntu 18.04.
+
+Install NodeJS and recommended Systemd dependency:
+```
+apt install nodejs npm libsystemd-dev
+```
+
+### Quick start
+
 ```
 npm install https://github.com/keijokapp/lab-manager
 
@@ -46,6 +57,30 @@ Example configuration is shown in [config_sample.json](config_sample.json). Only
  | `lxd.url`, `lxd.certificate`, `lxd.key` | (optional) LXD URL prefix, TLS certificate and key |
  | `iTee.url`, `iTee.key` | (optional) I-Tee URL prefix and access token (not needed for import feature) for lab instance import and I-Tee compatibility layer |
 
+### Installing as Systemd service:
+```
+# Install config file
+mkdir -p /etc/lab-manager
+cp -n "$(npm root -g)/lab-manager/config_sample.json" /etc/lab-manager/config.json
+
+# Create service user
+useradd -d /etc/lab-manager -s /bin/false -r lab-manager
+chmod 640 /etc/lab-manager/*
+chown -R root:lab-manager /etc/lab-manager
+
+# Create database
+mkdir -m 770 -p /var/lib/lab-manager/db
+chown -R lab-manager:lab-manager /var/lib/lab-manager
+
+# Install service file
+mkdir -p /usr/local/lib/systemd/system
+cp "$(npm root -g)/lab-manager/lab-manager.service" /usr/local/lib/systemd/system/lab-manager.service
+
+# Start service
+systemctl daemon-reload
+systemctl enable lab-manager
+systemctl start lab-manager
+```
 
 # Overview
 
