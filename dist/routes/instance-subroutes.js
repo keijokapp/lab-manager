@@ -16,6 +16,10 @@ var _renderLayout2 = _interopRequireDefault(_renderLayout);
 
 var _util = require('../util');
 
+var _config = require('../config');
+
+var _config2 = _interopRequireDefault(_config);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const routes = new _express.Router();
@@ -46,6 +50,32 @@ async function machineInfo(type, machine, ip) {
 			});
 	}
 }
+
+routes.use((req, res, next) => {
+	if (req.instance && req.instance.imported && !req.instanceImported) {
+		const instance = req.instance;
+		('iTee' in _config2.default ? (0, _common.iTeeLabinfo)(instance.privateToken) : Promise.resolve(null)).then(labinfo => {
+			if (labinfo === null) {
+				delete req.instance;
+				delete req.instanceToken;
+				return (0, _common.deleteInstance)(instance);
+			}
+		}).then(() => {
+			_common.logger.debug('Deleted imported instance', {
+				instance: instance._id,
+				privateToken: instance.privateToken
+			});
+		}, e => {
+			_common.logger.debug('Failed to delete imported instance', {
+				instance: instance._id,
+				privateToken: instance.privateToken,
+				e: e.message
+			});
+		}).then(next);
+	} else {
+		next();
+	}
+});
 
 routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
 	tags: ['Instance'],
