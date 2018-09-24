@@ -86,7 +86,7 @@ async function importInstanceFromITee(privateToken) {
 
 	const body = await response.json();
 
-	if (body && body.message === 'Unable to find labuser with given uid') {
+	if (body && (body.message === 'Unable to find labuser with given uid' || body.message === 'Unable to find active labuser with given uid')) {
 		return null;
 	}
 
