@@ -592,7 +592,7 @@ class Machine extends _react2.default.Component {
 		const id = _react2.default.createElement(_semanticUiReact.Input, { fluid: true,
 			defaultValue: this.props.id,
 			autoFocus: this.props.autoFocus,
-			onChange: this.validateRegex('id', /^[a-zA-Z-_]+$/),
+			onChange: this.validateRegex('id', /^[a-zA-Z0-9-_]+$/),
 			error: this.state.errors.id,
 			onFocus: e => e.target.select(),
 			onBlur: e => this.setId(e),
