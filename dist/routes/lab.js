@@ -665,6 +665,7 @@ routes.use('/:lab/instance/:username', (0, _expressOpenapiMiddleware.apiOperatio
 	}]
 }), (req, res, next) => {
 	_common.db.get('instance/' + req.params.lab + ':' + req.params.username).then(instance => {
+		instance._id = instance._id.slice(9);
 		req.instance = instance;
 		req.instanceToken = instance.privateToken;
 		next();
@@ -721,10 +722,9 @@ routes.delete('/:lab/instance/:username', (0, _expressOpenapiMiddleware.apiOpera
 	}
 
 	const instance = req.instance;
+	instance._rev = req.headers['if-match'];
 
-	_common.db.remove(instance._id, req.headers['if-match']).then(() => {
-		// noinspection JSIgnoredPromiseFromCall
-		(0, _common.cleanupInstance)(instance);
+	(0, _common.deleteInstance)(instance).then(() => {
 		res.send({});
 	}).catch(e => {
 		if (e.name === 'conflict') {

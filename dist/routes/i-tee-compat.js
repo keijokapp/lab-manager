@@ -131,11 +131,13 @@ async function getInstance(labId, userId) {
 				ambiguous = true;
 			}
 			instance = row.doc;
+			instance._id = instance._id.slice(9);
 		} else if (row.doc._id.startsWith('i-tee-compat/')) {
 			if (iTeeCompat) {
 				ambiguous = true;
 			}
 			iTeeCompat = row.doc;
+			iTeeCompat._id = iTeeCompat._id.slice(13);
 		}
 	}
 
@@ -530,6 +532,7 @@ routes.post('/set_vta_info.json', (0, _expressOpenapiMiddleware.apiOperation)({
 	};
 
 	try {
+		iTeeCompat._id = 'i-tee-compat/' + iTeeCompat._id;
 		await _common.db.put(iTeeCompat);
 	} catch (e) {
 		if (e.name === 'conflict') {
@@ -741,7 +744,7 @@ routes.post('/end_lab_by_id.json', (0, _expressOpenapiMiddleware.apiOperation)({
 	}
 
 	try {
-		await _common.db.remove(instance._id, instance._rev);
+		await (0, _common.deleteInstance)(instance);
 	} catch (e) {
 		if (e.name === 'conflict') {
 			// TODO: replay request
@@ -751,7 +754,6 @@ routes.post('/end_lab_by_id.json', (0, _expressOpenapiMiddleware.apiOperation)({
 		throw e;
 	}
 
-	(0, _common.cleanupInstance)(instance);
 	res.send({
 		success: true,
 		message: 'Lab has been ended',

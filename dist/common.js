@@ -11,7 +11,7 @@ exports.virtualboxRequest = virtualboxRequest;
 exports.createNetwork = createNetwork;
 exports.deleteNetworks = deleteNetworks;
 exports.deleteMachines = deleteMachines;
-exports.cleanupInstance = cleanupInstance;
+exports.deleteInstance = deleteInstance;
 exports.createGitlabGroup = createGitlabGroup;
 exports.createGitlabUser = createGitlabUser;
 exports.addGitlabUserToGroup = addGitlabUserToGroup;
@@ -455,15 +455,14 @@ async function deleteMachines(instance) {
 }
 
 /**
- * Cleans up resources attached to instance if necessary
- * @nothrow
+ * Deletes instance and cleans up resources attached to instance if necessary
  * @param instance {object}
  * @returns {void}
  */
-async function cleanupInstance(instance) {
+async function deleteInstance(instance) {
+	await db.remove('instance/' + instance._id, instance._rev);
 	if (!instance.imported) {
-		await deleteMachines(instance);
-		await deleteNetworks(instance);
+		Promise.resolve().then(() => deleteMachines(instance)).then(() => deleteNetworks(instance));
 	}
 }
 

@@ -509,7 +509,8 @@ exports.default = async function (instance) {
 		const result = await Promise.all(promises);
 
 		if (result.includes(false)) {
-			(0, _common.cleanupInstance)(instance);
+			await (0, _common.deleteMachines)(instance);
+			await (0, _common.deleteNetworks)(instance);
 			return 'Failed to create machines';
 		}
 	}
@@ -518,6 +519,7 @@ exports.default = async function (instance) {
 		instance.timing = timing;
 		delete instance._rev;
 		const result = await _common.db.post(instance);
+		instance._id = instance._id.slice(9);
 		instance._rev = result.rev;
 
 		for (const i in timing) {
@@ -538,7 +540,10 @@ exports.default = async function (instance) {
 		});
 	} catch (e) {
 		// noinspection JSIgnoredPromiseFromCall
-		(0, _common.cleanupInstance)(instance);
+		if (!instance.imported) {
+			await (0, _common.deleteMachines)(instance);
+			await (0, _common.deleteNetworks)(instance);
+		}
 		if (e.name === 'conflict') {
 			return 'Instance already exists';
 		} else {
