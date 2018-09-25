@@ -739,6 +739,11 @@ exports.default = class extends _react2.default.Component {
 					{ color: 'teal', size: 'huge' },
 					'Instance'
 				),
+				instance.imported && _react2.default.createElement(
+					_semanticUiReact.Header,
+					{ color: 'blue', size: 'medium' },
+					'Imported'
+				),
 				_react2.default.createElement(
 					_semanticUiReact.Segment,
 					null,
