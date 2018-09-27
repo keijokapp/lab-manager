@@ -420,6 +420,86 @@ function Machines(props) {
 	);
 }
 
+function Repositories(props) {
+	const repositories = [];
+	for (const id in props.template) {
+		repositories.push(_react2.default.createElement(
+			_semanticUiReact.Table.Row,
+			{ key: id },
+			_react2.default.createElement(
+				_semanticUiReact.Table.Cell,
+				null,
+				id
+			),
+			_react2.default.createElement(
+				_semanticUiReact.Table.Cell,
+				null,
+				props.template[id].name
+			),
+			_react2.default.createElement(
+				_semanticUiReact.Table.Cell,
+				null,
+				props.template[id].head
+			),
+			_react2.default.createElement(
+				_semanticUiReact.Table.Cell,
+				null,
+				props.repositories[id].link
+			)
+		));
+	}
+
+	if (repositories.length === 0) {
+		return _react2.default.createElement(
+			'i',
+			null,
+			'None'
+		);
+	}
+
+	return _react2.default.createElement(
+		'div',
+		null,
+		_react2.default.createElement(
+			_semanticUiReact.Table,
+			null,
+			_react2.default.createElement(
+				_semanticUiReact.Table.Header,
+				null,
+				_react2.default.createElement(
+					_semanticUiReact.Table.Row,
+					null,
+					_react2.default.createElement(
+						_semanticUiReact.Table.HeaderCell,
+						null,
+						'ID'
+					),
+					_react2.default.createElement(
+						_semanticUiReact.Table.HeaderCell,
+						null,
+						'Repository'
+					),
+					_react2.default.createElement(
+						_semanticUiReact.Table.HeaderCell,
+						null,
+						'Head'
+					),
+					_react2.default.createElement(
+						_semanticUiReact.Table.HeaderCell,
+						null,
+						'Link'
+					)
+				)
+			),
+			_react2.default.createElement(
+				_semanticUiReact.Table.Body,
+				null,
+				repositories
+			)
+		)
+	);
+}
+
 function Endpoints(props) {
 	if (!Array.isArray(props.names)) {
 		return _react2.default.createElement(
@@ -705,6 +785,7 @@ exports.default = class extends _react2.default.Component {
 		const assistant = _react2.default.createElement(Assistant, { assistant: instance.assistant, template: lab.assistant });
 		const machines = _react2.default.createElement(Machines, { machines: instance.machines, templates: lab.machines, machineOrder: lab.machineOrder,
 			primary: lab.primaryMachine, rev: instance._rev });
+		const repositories = _react2.default.createElement(Repositories, { repositories: instance.repositories, template: lab.repositories });
 		const endpoints = _react2.default.createElement(Endpoints, { endpoints: instance.endpoints, names: lab.endpoints });
 		const gitlab = _react2.default.createElement(Gitlab, { gitlab: instance.gitlab, template: lab.gitlab, publicToken: instance.publicToken });
 		let deleteButton;
@@ -854,6 +935,16 @@ exports.default = class extends _react2.default.Component {
 						'Machines'
 					),
 					machines
+				),
+				_react2.default.createElement(
+					_semanticUiReact.Segment,
+					null,
+					_react2.default.createElement(
+						_semanticUiReact.Header,
+						null,
+						'Repositories'
+					),
+					repositories
 				),
 				_react2.default.createElement(
 					_semanticUiReact.Segment,
