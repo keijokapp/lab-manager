@@ -1023,13 +1023,7 @@ class Repositories extends _react2.default.Component {
 		});
 	}
 
-	normalize() {
-		const order = this.state.order.filter(i => this.state.repositories[i].id.length && this.state.repositories[i].name.length);
-		this.setState({ order });
-	}
-
 	getValue() {
-		this.normalize();
 		const repositories = {};
 		let hasRepositories = false;
 		for (const i of this.state.order) {
@@ -1050,6 +1044,17 @@ class Repositories extends _react2.default.Component {
 		const order = [...this.state.order, newIndex];
 		const repositories = { ...this.state.repositories, [newIndex]: { id: '', name: '' } };
 		this.setState({ repositories, order, newIndex });
+	}
+
+	deleteRepository(id) {
+		const repositories = { ...this.state.repositories };
+		const order = [...this.state.order];
+		delete repositories[id];
+		const orderIndex = order.indexOf(id);
+		if (orderIndex >= 0) {
+			order.splice(orderIndex, 1);
+		}
+		this.setState({ repositories, order });
 	}
 
 	setRepository(id, field) {
@@ -1155,6 +1160,15 @@ class Repositories extends _react2.default.Component {
 					onChange: this.validateHead(i),
 					onFocus: loadRepositories,
 					error: this.state.headErrors[i] })
+			),
+			_react2.default.createElement(
+				_semanticUiReact.Table.Cell,
+				null,
+				_react2.default.createElement(
+					_semanticUiReact.Button,
+					{ icon: true, negative: true, onClick: () => this.deleteRepository(i) },
+					_react2.default.createElement(_semanticUiReact.Icon, { name: 'delete' })
+				)
 			)
 		));
 
@@ -1193,7 +1207,8 @@ class Repositories extends _react2.default.Component {
 							_semanticUiReact.Table.HeaderCell,
 							null,
 							'Head'
-						)
+						),
+						_react2.default.createElement(_semanticUiReact.Table.HeaderCell, null)
 					)
 				),
 				_react2.default.createElement(
