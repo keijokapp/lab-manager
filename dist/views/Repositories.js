@@ -72,11 +72,12 @@ class Repository extends _react2.default.Component {
 
 		const commits = {};
 
-		for (const [commit, name] of this.state.refs) {
+		for (const ref in this.state.refs) {
+			const commit = this.state.refs[ref];
 			if (commit in commits) {
-				commits[commit].push(name);
+				commits[commit].push(ref);
 			} else {
-				commits[commit] = [name];
+				commits[commit] = [ref];
 			}
 		}
 
