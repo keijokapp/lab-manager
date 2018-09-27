@@ -94,7 +94,8 @@ class LabRow extends _react2.default.Component {
 				{ key: id },
 				id,
 				' (',
-				lab.repositories[id],
+				lab.repositories[id].name,
+				lab.repositories[id].head && '/' + lab.repositories[id].head,
 				')'
 			));
 		}

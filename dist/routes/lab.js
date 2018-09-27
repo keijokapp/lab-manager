@@ -121,7 +121,14 @@ const labSchema = {
 		repositories: {
 			type: 'object',
 			patternProperties: {
-				'^[a-zA-Z0-9_-]+$': { type: 'string', pattern: '^[a-zA-Z0-9_-]+$' }
+				'^[a-zA-Z0-9_-]+$': {
+					type: 'object',
+					properties: {
+						name: { type: 'string', pattern: '^[a-zA-Z0-9_-]+$' },
+						head: { type: 'string', pattern: '^[a-zA-Z0-9_/-]+$' }
+					},
+					required: ['name']
+				}
 			},
 			minItems: 1
 		},

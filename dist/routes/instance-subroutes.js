@@ -4,6 +4,8 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
+var _child_process = require('child_process');
+
 var _express = require('express');
 
 var _expressOpenapiMiddleware = require('express-openapi-middleware');
@@ -427,6 +429,70 @@ routes.put('/machine/:machine', (0, _expressOpenapiMiddleware.apiOperation)({
 	}
 }));
 
+function setHead(info, commit, ref) {
+	const length = parseInt(info.slice(0, 4), 16);
+	const firstLine = info.slice(0, length);
+	const m = /^[a-z0-9]{44} HEAD\0(.*)\n$/.exec(firstLine);
+	if (m) {
+		const flags = m[1].split(' ').filter(v => !/^symref=HEAD:.*$/.test(v));
+		flags.push('symref=HEAD:' + ref);
+		const newLine = `${commit} HEAD\0${flags.join(' ')}\n`;
+		return `${('0000' + (newLine.length + 4).toString(16)).slice(-4)}${newLine}${info.slice(length)}`;
+	} else {
+		return info;
+	}
+}
+
+routes.get('/repository/:repository/info/refs', (req, res) => {
+	const instance = req.instance;
+	const id = req.params.repository;
+	if (!('repositories' in _config2.default)) {
+		res.status(501).send('Repositories are not available');
+	} else if (req.query.service !== 'git-upload-pack') {
+		res.status(403).send('Unauthorized service');
+	} else if (!instance) {
+		res.status(404).send('Instance does not exist');
+	} else if (req.instanceToken !== instance.privateToken) {
+		res.status(403).send('Forbidden');
+	} else if (!(id in instance.lab.repositories)) {
+		res.status(404).send('Repository does not exist');
+	} else {
+		res.set({
+			'content-type': 'application/x-git-upload-pack-advertisement',
+			'surrogate-control': 'no-store',
+			'cache-control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+			'pragma': 'no-cache',
+			'expires': '0'
+		});
+		const repository = instance.lab.repositories[id];
+		const repositoryLocation = _config2.default.repositories + '/' + repository.name + '.git';
+		(0, _child_process.execFile)('git-upload-pack', ['--stateless-rpc', '--advertise-refs', repositoryLocation], (e, stdout) => {
+			if (e) {
+				_common.logger.error('Failed to execute git-upload-pack service', { e: e.message });
+				res.status(500).send('Internal Server Error');
+			} else {
+				if ('head' in repository) {
+					(0, _child_process.execFile)('git', ['-C', repositoryLocation, 'show-ref', repository.head], (e, ref) => {
+						if (e) {
+							_common.logger.error('Failed to resolve head', { e: e.message });
+							res.status(500).send('Internal Server Error');
+						} else {
+							const [commit, name] = ref.trim().split(' ');
+							res.write('001e# service=git-upload-pack\n');
+							res.write('0000');
+							res.end(setHead(stdout, commit, name));
+						}
+					});
+				} else {
+					res.write('001e# service=git-upload-pack\n');
+					res.write('0000');
+					res.end(stdout);
+				}
+			}
+		});
+	}
+});
+
 routes.use('/repository/:repository', (req, res) => {
 	const instance = req.instance;
 	const id = req.params.repository;
@@ -448,6 +514,6 @@ routes.use('/repository/:repository', (req, res) => {
 		});
 	} else {
 		const repository = instance.lab.repositories[id];
-		(0, _common.serveRepository)(req, res, repository);
+		(0, _common.serveRepository)(req, res, repository.name);
 	}
 });

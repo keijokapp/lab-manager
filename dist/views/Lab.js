@@ -56,7 +56,11 @@ async function loadRepositories() {
 		});
 		if (response.ok) {
 			response.json().then(body => {
-				repositoriesLoadPromiseResolve(body.map(t => t._id));
+				const repositories = {};
+				for (const repository of body) {
+					repositories[repository._id] = Object.keys(repository.refs);
+				}
+				repositoriesLoadPromiseResolve(repositories);
 			}).catch(e => {
 				console.error('Failed to load repositories: ', e);
 			});
@@ -992,8 +996,10 @@ class Repositories extends _react2.default.Component {
 	constructor(props) {
 		super();
 		this.state = {
+			allRepositories: {},
 			idErrors: {},
 			nameErrors: {},
+			headErrors: {},
 			repositories: {},
 			order: [],
 			newIndex: props.repositories.length
@@ -1001,7 +1007,11 @@ class Repositories extends _react2.default.Component {
 
 		let counter = 0;
 		for (const i in props.repositories) {
-			this.state.repositories[counter] = { id: i, name: props.repositories[i] };
+			this.state.repositories[counter] = {
+				id: i,
+				name: props.repositories[i].name,
+				head: props.repositories[i].head
+			};
 			this.state.order.push(counter++);
 		}
 		this.state.newIndex = counter;
@@ -1014,17 +1024,21 @@ class Repositories extends _react2.default.Component {
 	}
 
 	normalize() {
-		const order = this.state.order.filter(i => this.state.repositories[i][0].length && this.state.repositories[i][1].length);
+		const order = this.state.order.filter(i => this.state.repositories[i].id.length && this.state.repositories[i].name.length);
 		this.setState({ order });
 	}
 
 	getValue() {
+		this.normalize();
 		const repositories = {};
 		let hasRepositories = false;
 		for (const i of this.state.order) {
 			const repository = this.state.repositories[i];
 			if (repository.id && repository.name && !(repository.id in repositories)) {
-				repositories[repository.id] = repository.name;
+				repositories[repository.id] = { name: repository.name };
+				if (repository.head) {
+					repositories[repository.id].head = repository.head;
+				}
 				hasRepositories = true;
 			}
 		}
@@ -1087,6 +1101,17 @@ class Repositories extends _react2.default.Component {
 		};
 	}
 
+	validateHead(id) {
+		return e => {
+			this.setState({
+				headErrors: {
+					...this.state.headErrors,
+					[id]: !/^[a-zA-Z0-9_/-]*$/.test(e.target.value)
+				}
+			});
+		};
+	}
+
 	render() {
 		const repositories = this.state.order.map(i => _react2.default.createElement(
 			_semanticUiReact.Table.Row,
@@ -1094,8 +1119,7 @@ class Repositories extends _react2.default.Component {
 			_react2.default.createElement(
 				_semanticUiReact.Table.Cell,
 				null,
-				_react2.default.createElement(_semanticUiReact.Input, { ref: 'repository-id-' + i,
-					list: 'repositories',
+				_react2.default.createElement(_semanticUiReact.Input, { list: 'repositories',
 					defaultValue: this.state.repositories[i].id,
 					onBlur: this.setRepository(i, 'id'),
 					onChange: this.validateId(i),
@@ -1106,13 +1130,31 @@ class Repositories extends _react2.default.Component {
 			_react2.default.createElement(
 				_semanticUiReact.Table.Cell,
 				null,
-				_react2.default.createElement(_semanticUiReact.Input, { ref: 'repository-name-' + i,
-					list: 'repositories',
+				_react2.default.createElement(_semanticUiReact.Input, { list: 'repositories',
 					defaultValue: this.state.repositories[i].name,
 					onBlur: this.setRepository(i, 'name'),
 					onChange: this.validateName(i),
 					onFocus: loadRepositories,
 					error: this.state.nameErrors[i] })
+			),
+			_react2.default.createElement(
+				_semanticUiReact.Table.Cell,
+				null,
+				_react2.default.createElement(
+					'datalist',
+					{ id: 'refs-' + i },
+					(this.state.allRepositories[this.state.repositories[i].name] || []).map(r => _react2.default.createElement(
+						'option',
+						{ key: r },
+						r
+					))
+				),
+				_react2.default.createElement(_semanticUiReact.Input, { list: 'refs-' + i,
+					defaultValue: this.state.repositories[i].head,
+					onBlur: this.setRepository(i, 'head'),
+					onChange: this.validateHead(i),
+					onFocus: loadRepositories,
+					error: this.state.headErrors[i] })
 			)
 		));
 
@@ -1122,7 +1164,7 @@ class Repositories extends _react2.default.Component {
 			_react2.default.createElement(
 				'datalist',
 				{ id: 'repositories' },
-				'allRepositories' in this.state && this.state.allRepositories.map(r => _react2.default.createElement(
+				Object.keys(this.state.allRepositories).map(r => _react2.default.createElement(
 					'option',
 					{ key: r },
 					r
@@ -1146,6 +1188,11 @@ class Repositories extends _react2.default.Component {
 							_semanticUiReact.Table.HeaderCell,
 							null,
 							'Name'
+						),
+						_react2.default.createElement(
+							_semanticUiReact.Table.HeaderCell,
+							null,
+							'Head'
 						)
 					)
 				),
