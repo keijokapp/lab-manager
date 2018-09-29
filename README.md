@@ -59,24 +59,12 @@ Example configuration is shown in [config_sample.json](config_sample.json). Only
 
 ### Installing as Systemd service:
 ```
-# Install config file
-mkdir -p /etc/lab-manager
-cp -n "$(npm root -g)/lab-manager/config_sample.json" /etc/lab-manager/config.json
-
-# Create service user
-useradd -d /etc/lab-manager -s /bin/false -r lab-manager
-chmod 640 /etc/lab-manager/*
-chown -R root:lab-manager /etc/lab-manager
-
-# Create database
-mkdir -m 770 -p /var/lib/lab-manager/db
-chown -R lab-manager:lab-manager /var/lib/lab-manager
-
-# Install service file
-mkdir -p /usr/local/lib/systemd/system
-cp "$(npm root -g)/lab-manager/lab-manager.service" /usr/local/lib/systemd/system/lab-manager.service
-
-# Start service
+useradd -d /var/lib/lab-manager -s /bin/false -r lab-manager
+[ -e /etc/lab-manager/config.json ] || \
+    install -D -m640 --group=lab-manager "$(npm root -g)/lab-manager/config_sample.json" \
+    /etc/lab-manager/config.json
+install -D "$(npm root -g)/lab-manager/lab-manager.service" \
+    /usr/local/lib/systemd/system/lab-manager.service
 systemctl daemon-reload
 systemctl enable lab-manager
 systemctl start lab-manager

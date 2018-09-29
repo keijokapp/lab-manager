@@ -6,11 +6,13 @@ WantedBy=multi-user.target
         
 [Service]
 Environment="NODE_ENV=production"
-WorkingDirectory=/var/lib/lab-manager
+StateDirectory=lab-manager
+WorkingDirectory=~
 Type=notify
 ExecStart=/usr/bin/env lab-manager /etc/lab-manager/config.json
 User=lab-manager
 Group=lab-manager
+UMask=0027
 Restart=always
 RestartSec=3
 
