@@ -326,6 +326,86 @@ class Networks extends _react2.default.Component {
 	}
 }
 
+class MachineLimits extends _react2.default.Component {
+	constructor(props) {
+		super();
+		const limits = props.limits || [];
+		this.state = {
+			cpu: limits.cpu || undefined,
+			cpuAllowance: limits.cpuAllowance || 100,
+			memory: limits.memory || undefined,
+			errors: {}
+		};
+	}
+
+	getValue() {
+		if (this.state.cpu || this.state.cpuAllowance !== 100 || this.state.memory) {
+			return {
+				cpu: this.state.cpu || undefined,
+				cpuAllowance: !this.state.cpuAllowance || this.state.cpuAllowance === 100 ? undefined : this.state.cpuAllowance,
+				memory: this.state.memory || undefined
+			};
+		}
+	}
+
+	render() {
+		return _react2.default.createElement(
+			_semanticUiReact.Table,
+			{ collapsing: true },
+			_react2.default.createElement(
+				_semanticUiReact.Table.Body,
+				null,
+				_react2.default.createElement(
+					_semanticUiReact.Table.Row,
+					null,
+					_react2.default.createElement(
+						_semanticUiReact.Table.Cell,
+						{ collapsing: true },
+						'CPU:'
+					),
+					_react2.default.createElement(
+						_semanticUiReact.Table.Cell,
+						null,
+						_react2.default.createElement(_semanticUiReact.Input, { type: 'number', style: { width: '10em' }, defaultValue: this.state.cpu, onChange: e => this.setState({ cpu: Number(e.target.value) }) })
+					)
+				),
+				_react2.default.createElement(
+					_semanticUiReact.Table.Row,
+					null,
+					_react2.default.createElement(
+						_semanticUiReact.Table.Cell,
+						{ collapsing: true },
+						'CPU Allowance:'
+					),
+					_react2.default.createElement(
+						_semanticUiReact.Table.Cell,
+						null,
+						_react2.default.createElement('input', { type: 'range', min: '1', max: '100', defaultValue: this.state.cpuAllowance || '100', onChange: e => this.setState({ cpuAllowance: Number(e.target.value) }) }),
+						' ',
+						this.state.cpuAllowance,
+						'%'
+					)
+				),
+				_react2.default.createElement(
+					_semanticUiReact.Table.Row,
+					null,
+					_react2.default.createElement(
+						_semanticUiReact.Table.Cell,
+						{ collapsing: true },
+						'Memory:'
+					),
+					_react2.default.createElement(
+						_semanticUiReact.Table.Cell,
+						null,
+						_react2.default.createElement(_semanticUiReact.Input, { type: 'number', style: { width: '10em' }, defaultValue: this.state.memory, onChange: e => this.setState({ memory: Number(e.target.value) }) }),
+						' MiB'
+					)
+				)
+			)
+		);
+	}
+}
+
 class MachineRepositories extends _react2.default.Component {
 	constructor(props) {
 		super();
@@ -603,11 +683,14 @@ class Machine extends _react2.default.Component {
 						_semanticUiReact.Button,
 						{ color: 'teal' },
 						'Configure'
-					), closeIcon: true,
-					closeOnDimmerClick: false, onClose: () => {
-						console.log(this.refs.repositories.getValue());
-						this.setState({ machine: { ...this.state.machine, repositories: this.refs.repositories.getValue() } });
-					} },
+					), closeIcon: true, closeOnDimmerClick: false,
+					onClose: () => this.setState({
+						machine: {
+							...this.state.machine,
+							limits: this.refs.limits.getValue(),
+							repositories: this.refs.repositories.getValue()
+						}
+					}) },
 				_react2.default.createElement(
 					_semanticUiReact.Header,
 					null,
@@ -616,6 +699,16 @@ class Machine extends _react2.default.Component {
 				_react2.default.createElement(
 					_semanticUiReact.Modal.Content,
 					null,
+					_react2.default.createElement(
+						_semanticUiReact.Segment,
+						null,
+						_react2.default.createElement(
+							_semanticUiReact.Header,
+							null,
+							'Limits'
+						),
+						_react2.default.createElement(MachineLimits, { ref: 'limits', limits: machine.limits })
+					),
 					_react2.default.createElement(
 						_semanticUiReact.Segment,
 						null,

@@ -88,6 +88,15 @@ const labSchema = {
 								additionalProperties: false
 							}
 						},
+						limits: {
+							type: 'object',
+							properties: {
+								cpu: { type: 'integer', min: 1 },
+								cpuAllowance: { type: 'integer', min: 1, max: 99 },
+								memory: { type: 'integer', min: 1 }
+							},
+							minProperties: 1
+						},
 						repositories: {
 							type: 'array',
 							items: {
