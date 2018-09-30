@@ -95,11 +95,12 @@ const labSchema = {
 								properties: {
 									name: { type: 'string', pattern: '^[a-zA-Z0-9_-]+$' },
 									location: { type: 'string', pattern: '^/.+$' },
-									ref: { type: 'string', pattern: '^[a-zA-Z0-9_-]+$' }
+									ref: { type: 'string', pattern: '^[a-zA-Z0-9_/-]+$' }
 								},
 								additionalProperties: false,
 								required: ['name', 'location', 'ref']
-							}
+							},
+							minItems: 1
 						}
 					},
 					additionalProperties: false,

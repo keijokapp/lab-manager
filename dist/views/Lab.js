@@ -326,210 +326,193 @@ class Networks extends _react2.default.Component {
 	}
 }
 
-class MachineRepository extends _react2.default.Component {
-	constructor(props) {
-		super(props);
-		this.state = {
-			name: props.name || '',
-			location: props.location || '',
-			ref: props.gitRef || 'master'
-		};
-	}
-
-	getValue() {
-		if (!this.state.name || !this.state.location || !this.state.ref) {
-			return null;
-		}
-
-		return {
-			name: this.state.name,
-			location: this.state.location,
-			ref: this.state.ref
-		};
-	}
-
-	validateName(name) {
-		this.setState({
-			nameInvalid: !/^[a-zA-Z0-9-_]+$/.test(name)
-		});
-	}
-
-	validateLocation(location) {
-		this.setState({
-			locationInvalid: !/^\/.+$/.test(location)
-		});
-	}
-
-	validateRef(ref) {
-		this.setState({
-			refInvalid: !/^[a-zA-Z0-9-_]+$/.test(ref)
-		});
-	}
-
-	render() {
-		return _react2.default.createElement(
-			_semanticUiReact.Table.Row,
-			null,
-			_react2.default.createElement(
-				_semanticUiReact.Table.Cell,
-				null,
-				_react2.default.createElement(_semanticUiReact.Input, { defaultValue: this.state.name, error: this.state.nameInvalid, list: 'repositories',
-					onChange: e => this.validateName(e.target.value),
-					onBlur: e => this.setState({ name: e.target.value }),
-					autoFocus: this.props.autoFocus, onFocus: loadRepositories, fluid: true })
-			),
-			_react2.default.createElement(
-				_semanticUiReact.Table.Cell,
-				null,
-				_react2.default.createElement(_semanticUiReact.Input, { defaultValue: this.state.location, error: this.state.locationInvalid,
-					onChange: e => this.validateLocation(e.target.value),
-					onBlur: e => this.setState({ location: e.target.value }), fluid: true })
-			),
-			_react2.default.createElement(
-				_semanticUiReact.Table.Cell,
-				null,
-				_react2.default.createElement(_semanticUiReact.Input, { defaultValue: this.state.ref, error: this.state.refInvalid,
-					onChange: e => this.validateRef(e.target.value),
-					onBlur: e => this.setState({ ref: e.target.value }), fluid: true })
-			),
-			_react2.default.createElement(
-				_semanticUiReact.Table.Cell,
-				null,
-				_react2.default.createElement(
-					_semanticUiReact.Button,
-					{ negative: true, icon: true, onClick: this.props.onDelete },
-					_react2.default.createElement(_semanticUiReact.Icon, { name: 'delete' })
-				)
-			)
-		);
-	}
-}
-
 class MachineRepositories extends _react2.default.Component {
 	constructor(props) {
 		super();
 		const repositories = props.repositories ? [...props.repositories] : [];
 		this.state = {
-			repositories: repositories,
+			allRepositories: {},
+			nameErrors: {},
+			locationErrors: {},
+			refErrors: {},
+			repositories: { ...repositories },
 			order: repositories.map((n, i) => i),
-			newIndex: repositories.length,
-			open: false,
-			values: {}
+			newIndex: repositories.length
 		};
+
+		repositoriesLoadPromise.then(repositories => {
+			this.setState({
+				allRepositories: repositories
+			});
+		});
 	}
 
 	getValue() {
 		const repositories = [];
-		const values = [];
 		for (const i of this.state.order) {
-			let v;
-			if ('repository-' + i in this.refs) {
-				v = this.refs['repository-' + i].getValue();
-			} else if (i in this.state.values) {
-				v = this.state.values[i];
-			} // else ¯\_(ツ)_/¯
-			values[i] = v;
-			if (v) {
-				repositories.push(v);
-			}
+			repositories.push(this.state.repositories[i]);
 		}
-		this.setState({
-			values
-		});
 		return repositories.length ? repositories : undefined;
 	}
 
 	addRepository() {
-		const index = this.state.newIndex + 1;
-		const newOrder = [...this.state.order, index];
-		const newRepositories = {
-			...this.state.repositories,
-			[index]: {}
-		};
-		this.setState({
-			newIndex: index,
-			order: newOrder,
-			repositories: newRepositories
-		});
+		const newIndex = ++this.state.newIndex;
+		const order = [...this.state.order, newIndex];
+		const repositories = { ...this.state.repositories, [newIndex]: {} };
+		this.setState({ repositories, order, newIndex });
 	}
 
-	deleteRepository(index) {
-		const newOrder = [...this.state.order];
-		const newRepositories = { ...this.state.repositories };
-		const orderIndex = this.state.order.indexOf(index);
-		delete newRepositories[index];
-		if (orderIndex !== -1) {
-			newOrder.splice(orderIndex, 1);
+	deleteRepository(i) {
+		const repositories = { ...this.state.repositories };
+		const order = [...this.state.order];
+		delete repositories[i];
+		const orderIndex = order.indexOf(i);
+		if (orderIndex >= 0) {
+			order.splice(orderIndex, 1);
 		}
-		this.setState({
-			order: newOrder,
-			networks: newRepositories
-		});
+		this.setState({ repositories, order });
+	}
+
+	setRepository(i, field) {
+		return e => {
+			this.setState({
+				repositories: {
+					...this.state.repositories,
+					[i]: {
+						...this.state.repositories[i],
+						[field]: e.target.value
+					}
+				}
+			});
+		};
+	}
+
+	validateName(i) {
+		return e => {
+			this.setState({
+				nameErrors: {
+					...this.state.nameErrors,
+					[i]: !/^[a-zA-Z0-9_-]+$/.test(e.target.value)
+				}
+			});
+		};
+	}
+
+	validateLocation(i) {
+		return e => {
+			this.setState({
+				locationErrors: {
+					...this.state.locationErrors,
+					[i]: !/^\/.+$/.test(e.target.value)
+				}
+			});
+		};
+	}
+
+	validateRef(i) {
+		return e => {
+			this.setState({
+				refErrors: {
+					...this.state.refErrors,
+					[i]: !/^[a-zA-Z0-9_/-]*$/.test(e.target.value)
+				}
+			});
+		};
 	}
 
 	render() {
-		const repositories = this.state.order.map(i => _react2.default.createElement(MachineRepository, {
-			ref: 'repository-' + i, key: i,
-			name: this.state.repositories[i].name,
-			location: this.state.repositories[i].location,
-			gitRef: this.state.repositories[i].ref,
-			autoFocus: i === this.state.newIndex,
-			onDelete: () => this.deleteRepository(i) }));
-
-		return _react2.default.createElement(
-			_semanticUiReact.Modal,
-			{ trigger: _react2.default.createElement(
-					_semanticUiReact.Button,
-					{ color: 'teal' },
-					'Repositories'
-				), closeIcon: true, closeOnDimmerClick: false,
-				onClose: () => this.getValue() },
+		const repositories = this.state.order.map(i => _react2.default.createElement(
+			_semanticUiReact.Table.Row,
+			{ key: i },
 			_react2.default.createElement(
-				_semanticUiReact.Header,
+				_semanticUiReact.Table.Cell,
 				null,
-				'Repositories'
+				_react2.default.createElement(_semanticUiReact.Input, { fluid: true, list: 'repositories',
+					defaultValue: this.state.repositories[i].name,
+					onBlur: this.setRepository(i, 'name'),
+					onChange: this.validateName(i),
+					autoFocus: i === this.state.newIndex,
+					onFocus: loadRepositories,
+					error: this.state.nameErrors[i] })
 			),
 			_react2.default.createElement(
-				_semanticUiReact.Modal.Content,
+				_semanticUiReact.Table.Cell,
+				null,
+				_react2.default.createElement(_semanticUiReact.Input, { fluid: true, defaultValue: this.state.repositories[i].location,
+					onBlur: this.setRepository(i, 'location'),
+					onChange: this.validateLocation(i),
+					error: this.state.locationErrors[i] })
+			),
+			_react2.default.createElement(
+				_semanticUiReact.Table.Cell,
 				null,
 				_react2.default.createElement(
-					_semanticUiReact.Table,
+					'datalist',
+					{ id: 'refs-' + i },
+					(this.state.allRepositories[this.state.repositories[i].name] || []).map(r => _react2.default.createElement(
+						'option',
+						{ key: r },
+						r
+					))
+				),
+				_react2.default.createElement(_semanticUiReact.Input, { fluid: true, list: 'refs-' + i,
+					defaultValue: this.state.repositories[i].ref,
+					onBlur: this.setRepository(i, 'ref'),
+					onChange: this.validateRef(i),
+					onFocus: loadRepositories,
+					error: this.state.refErrors[i] })
+			),
+			_react2.default.createElement(
+				_semanticUiReact.Table.Cell,
+				{ collapsing: true },
+				_react2.default.createElement(
+					_semanticUiReact.Button,
+					{ icon: true, negative: true, onClick: () => this.deleteRepository(i) },
+					_react2.default.createElement(_semanticUiReact.Icon, { name: 'delete' })
+				)
+			)
+		));
+
+		return _react2.default.createElement(
+			'div',
+			null,
+			_react2.default.createElement(
+				_semanticUiReact.Table,
+				null,
+				_react2.default.createElement(
+					_semanticUiReact.Table.Header,
 					null,
 					_react2.default.createElement(
-						_semanticUiReact.Table.Header,
+						_semanticUiReact.Table.Row,
 						null,
 						_react2.default.createElement(
-							_semanticUiReact.Table.Row,
+							_semanticUiReact.Table.HeaderCell,
 							null,
-							_react2.default.createElement(
-								_semanticUiReact.Table.HeaderCell,
-								null,
-								'Repository name'
-							),
-							_react2.default.createElement(
-								_semanticUiReact.Table.HeaderCell,
-								null,
-								'Repository location in machine'
-							),
-							_react2.default.createElement(
-								_semanticUiReact.Table.HeaderCell,
-								null,
-								'Ref'
-							),
-							_react2.default.createElement(_semanticUiReact.Table.HeaderCell, null)
-						)
-					),
-					_react2.default.createElement(
-						_semanticUiReact.Table.Body,
-						null,
-						repositories
+							'Repository name'
+						),
+						_react2.default.createElement(
+							_semanticUiReact.Table.HeaderCell,
+							null,
+							'Repository location in machine'
+						),
+						_react2.default.createElement(
+							_semanticUiReact.Table.HeaderCell,
+							null,
+							'Ref'
+						),
+						_react2.default.createElement(_semanticUiReact.Table.HeaderCell, null)
 					)
 				),
 				_react2.default.createElement(
-					_semanticUiReact.Button,
-					{ positive: true, onClick: () => this.addRepository(), autoFocus: true },
-					'New'
+					_semanticUiReact.Table.Body,
+					null,
+					repositories
 				)
+			),
+			_react2.default.createElement(
+				_semanticUiReact.Button,
+				{ positive: true, onClick: () => this.addRepository(), autoFocus: true },
+				'New'
 			)
 		);
 	}
@@ -552,8 +535,7 @@ class Machine extends _react2.default.Component {
 	getValue() {
 		return {
 			...this.state.machine,
-			networks: this.refs.networks.getValue(),
-			repositories: 'repositories' in this.refs ? this.refs.repositories.getValue() : undefined
+			networks: this.refs.networks.getValue()
 		};
 	}
 
@@ -612,6 +594,41 @@ class Machine extends _react2.default.Component {
 			error: this.state.errors.base,
 			onChange: this.validateRegex('base', /[a-zA-Z0-9-_]+-template$/),
 			onBlur: e => this.setMachineField('base', e.target.value), onFocus: loadTemplates });
+
+		let containerConfigiration;
+		if (machine.type === 'lxd') {
+			containerConfigiration = _react2.default.createElement(
+				_semanticUiReact.Modal,
+				{ trigger: _react2.default.createElement(
+						_semanticUiReact.Button,
+						{ color: 'teal' },
+						'Configure'
+					), closeIcon: true,
+					closeOnDimmerClick: false, onClose: () => {
+						console.log(this.refs.repositories.getValue());
+						this.setState({ machine: { ...this.state.machine, repositories: this.refs.repositories.getValue() } });
+					} },
+				_react2.default.createElement(
+					_semanticUiReact.Header,
+					null,
+					'Container configuration'
+				),
+				_react2.default.createElement(
+					_semanticUiReact.Modal.Content,
+					null,
+					_react2.default.createElement(
+						_semanticUiReact.Segment,
+						null,
+						_react2.default.createElement(
+							_semanticUiReact.Header,
+							null,
+							'Repositories'
+						),
+						_react2.default.createElement(MachineRepositories, { ref: 'repositories', repositories: machine.repositories })
+					)
+				)
+			);
+		}
 
 		const createButton = (field, disabled = false) => {
 			if (machine[field]) {
@@ -692,7 +709,7 @@ class Machine extends _react2.default.Component {
 			_react2.default.createElement(
 				_semanticUiReact.Table.Cell,
 				{ collapsing: true },
-				machine.type === 'lxd' && _react2.default.createElement(MachineRepositories, { ref: 'repositories', repositories: machine.repositories })
+				containerConfigiration
 			),
 			_react2.default.createElement(
 				_semanticUiReact.Table.Cell,
