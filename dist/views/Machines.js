@@ -24,14 +24,11 @@ class Machine extends _react2.default.Component {
 		if (!this.state.machine.id.endsWith('-template')) {
 			return '';
 		}
-
-		if (!this.state.machine.snapshot) {
-			return this.state.machine.id + '-' + 1 + '-template';
-		}
-
 		const basename = this.state.machine.id.replace(/-template$/, '');
+		if (!this.state.machine.snapshot) {
+			return basename + '-1-template';
+		}
 		const snapshotIndex = Number(this.state.machine.snapshot.replace(basename + '-', '').replace('-template', ''));
-
 		if (Number.isInteger(snapshotIndex)) {
 			return basename + '-' + (snapshotIndex + 1) + '-template';
 		} else {
