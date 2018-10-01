@@ -299,7 +299,7 @@ routes.post('/:lab', (0, _expressOpenapiMiddleware.apiOperation)({
 		res.send(lab);
 	} catch (e) {
 		if (e.name === 'conflict') {
-			res.status(409).send(req.apiOperation.responses[409]['application/json']);
+			res.status(409).send(req.apiOperation.responses[409].content['application/json'].example);
 		} else {
 			throw e;
 		}
