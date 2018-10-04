@@ -32,6 +32,8 @@ Install NodeJS and recommended Systemd dependency:
 apt install nodejs npm libsystemd-dev
 ```
 
+**Note:** Systemd development files need to be installed before application installation to make Systemd notifications work. Otherwise installation gives an error regarding to `sd-notify` which can be ignored if Systemd notifications are not needed.
+
 ### Quick start
 
 ```
