@@ -233,7 +233,7 @@ class Machine extends _react2.default.Component {
 				' Power on'
 			);
 		} else if (machine.state === 'running') {
-			if (machine.type === 'virtualbox') {
+			if (this.props.template.type === 'virtualbox') {
 				stateButton = _react2.default.createElement(
 					_semanticUiReact.Button.Group,
 					null,
