@@ -242,6 +242,7 @@ routes.get('/lab_users.json', (0, _expressOpenapiMiddleware.apiOperation)({
 	tags: ['I-Tee compatibility'],
 	summary: 'Fetch matching instances converted to I-Tee `labuser` objects',
 	requestBody: {
+		required: true,
 		content: {
 			'application/json': {
 				schema: {
@@ -256,8 +257,7 @@ routes.get('/lab_users.json', (0, _expressOpenapiMiddleware.apiOperation)({
 								},
 								additionalProperties: false,
 								required: ['user_id', 'lab_id']
-							},
-							required: ['conditions']
+							}
 						},
 						additionalProperties: false,
 						required: ['conditions']
@@ -328,22 +328,25 @@ routes.post('/lab_users.json', (0, _expressOpenapiMiddleware.apiOperation)({
 	tags: ['I-Tee compatibility'],
 	summary: 'Create I-Tee `labuser` object',
 	requestBody: {
+		required: true,
 		content: {
 			'application/json': {
-				type: 'object',
-				properties: {
-					lab_user: {
-						type: 'object',
-						properties: {
-							user_id: { type: 'integer', minValue: 1 },
-							lab_id: { type: 'integer', minValue: 1 }
-						},
-						additionalProperties: false,
-						required: ['user_id', 'lab_id']
-					}
-				},
-				additionalProperties: false,
-				required: ['lab_user']
+				schema: {
+					type: 'object',
+					properties: {
+						lab_user: {
+							type: 'object',
+							properties: {
+								user_id: { type: 'integer', minValue: 1 },
+								lab_id: { type: 'integer', minValue: 1 }
+							},
+							additionalProperties: false,
+							required: ['user_id', 'lab_id']
+						}
+					},
+					additionalProperties: false,
+					required: ['lab_user']
+				}
 			}
 		}
 	},
@@ -451,6 +454,7 @@ routes.post('/set_vta_info.json', (0, _expressOpenapiMiddleware.apiOperation)({
 	tags: ['I-Tee compatibility'],
 	summary: 'Set VirtualTA info on I-Tee `labuser`',
 	requestBody: {
+		required: true,
 		content: {
 			'application/json': {
 				schema: {
@@ -555,6 +559,7 @@ routes.post('/start_lab_by_id.json', (0, _expressOpenapiMiddleware.apiOperation)
 	tags: ['I-Tee compatibility'],
 	summary: 'Start lab referenced by given I-Tee `labuser`',
 	requestBody: {
+		required: true,
 		content: {
 			'application/json': {
 				schema: {
@@ -655,6 +660,7 @@ routes.post('/end_lab_by_id.json', (0, _expressOpenapiMiddleware.apiOperation)({
 	tags: ['I-Tee compatibility'],
 	summary: 'End lab referenced by given I-Tee `labuser`',
 	requestBody: {
+		required: true,
 		content: {
 			'application/json': {
 				schema: {
@@ -766,6 +772,7 @@ routes.get('/labuser_vms.json', (0, _expressOpenapiMiddleware.apiOperation)({
 	tags: ['I-Tee compatibility'],
 	summary: 'Fetch machines attached to I-Tee `labuser`',
 	requestBody: {
+		required: true,
 		content: {
 			'application/json': {
 				schema: {
@@ -881,6 +888,7 @@ routes.get('/open_guacamole.json', (0, _expressOpenapiMiddleware.apiOperation)({
 	tags: ['I-Tee compatibility'],
 	summary: 'Get remote console connection string',
 	requestBody: {
+		required: true,
 		content: {
 			'application/json': {
 				schema: {
@@ -994,6 +1002,7 @@ routes.get('/start_vm.json', (0, _expressOpenapiMiddleware.apiOperation)({
 	tags: ['I-Tee compatibility'],
 	summary: 'Start virtual machine',
 	requestBody: {
+		required: true,
 		content: {
 			'application/json': {
 				schema: {
@@ -1104,6 +1113,7 @@ routes.get('/stop_vm.json', (0, _expressOpenapiMiddleware.apiOperation)({
 	tags: ['I-Tee compatibility'],
 	summary: 'Stop virtual machine',
 	requestBody: {
+		required: true,
 		content: {
 			'application/json': {
 				schema: {

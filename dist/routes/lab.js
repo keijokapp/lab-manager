@@ -543,6 +543,7 @@ routes.post('/:lab/instance/:username', (0, _expressOpenapiMiddleware.apiOperati
 		schema: labSchema.properties._rev
 	}],
 	requestBody: {
+		required: true,
 		content: {
 			'application/json': {
 				schema: {
