@@ -2,7 +2,7 @@
 	"name": "lab-manager",
 	"version": "0.0.1",
 	"description": "Virtual laboratory management API",
-	"author": "Keijo Kapp <keijo.kapp@rangeforce.com>",
+	"author": "Keijo Kapp <keijo.kapp@gmail.com>",
 	"license": "MIT",
 	"bin": "./dist/index.js",
 	"scripts": {
