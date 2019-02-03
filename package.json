@@ -6,12 +6,13 @@
 	"license": "MIT",
 	"bin": "./dist/index.js",
 	"scripts": {
-		"build": "babel lib --out-dir dist"
+		"build": "BABEL_ENV=production babel lib --out-dir dist"
 	},
 	"browser": {
 		"./lib/config.js": "./lib/config-browser.js"
 	},
 	"dependencies": {
+		"babel-preset-minify": "^0.5.0",
 		"browserify-middleware": "^8.1.1",
 		"copy-to-clipboard": "^3.0.8",
 		"express": "^4.16.3",
