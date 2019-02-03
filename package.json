@@ -16,7 +16,7 @@
 		"copy-to-clipboard": "^3.0.8",
 		"express": "^4.16.3",
 		"express-bearer-token": "^2.2.0",
-		"express-openapi-middleware": "git+https://github.com/keijokapp/express-openapi-middleware.git",
+		"express-openapi-middleware": "git+https://github.com/keijokapp/express-openapi-middleware.git#1.0.0",
 		"express-winston": "^3.0.0",
 		"jsonschema": "^1.2.4",
 		"node-fetch": "^2.2.0",

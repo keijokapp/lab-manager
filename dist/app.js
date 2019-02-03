@@ -92,19 +92,17 @@ app.use((req, res, next) => {
 });
 
 app.use((e, req, res, next) => {
-	if (e instanceof Error) {
-		if (e.name === 'OpenAPIValidation') {
-			res.status(400).send({
-				error: 'Bad Request',
-				validations: e.validations
-			});
-		} else {
-			_common.logger.error('Application error ', { e: e.message, stack: e.stack });
-			res.status(500).send({
-				error: 'Internal Server Error',
-				message: 'Something has gone wrong'
-			});
-		}
+	if (e instanceof _expressOpenapiMiddleware.OpenAPIValidationError) {
+		res.status(400).send({
+			error: 'Bad Request',
+			errors: e.errors
+		});
+	} else if (e instanceof Error) {
+		_common.logger.error('Application error ', { e: e.message, stack: e.stack });
+		res.status(500).send({
+			error: 'Internal Server Error',
+			message: 'Something has gone wrong'
+		});
 	} else {
 		_common.logger.error('Unknown application error ', { e });
 		res.status(500).send();
