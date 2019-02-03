@@ -36,10 +36,11 @@
 		"sd-notify": "^2.3.0"
 	},
 	"devDependencies": {
-		"babel-cli": "^6.26.0",
-		"babel-plugin-syntax-object-rest-spread": "^6.13.0",
-		"babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
-		"babel-preset-react": "^6.24.1",
-		"babelify": "^8.0.0"
+		"@babel/cli": "^7.2.3",
+		"@babel/core": "^7.2.2",
+		"@babel/plugin-syntax-object-rest-spread": "^7.2.0",
+		"@babel/plugin-transform-modules-commonjs": "^7.2.0",
+		"@babel/preset-react": "^7.0.0",
+		"babelify": "^10.0.0"
 	}
 }

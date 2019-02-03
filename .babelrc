@@ -1,4 +1,4 @@
 {
-	"plugins": [ "transform-es2015-modules-commonjs", "syntax-object-rest-spread" ],
-	"presets": [ "react" ]
+	"plugins": [ "@babel/transform-modules-commonjs", "@babel/syntax-object-rest-spread" ],
+	"presets": [ "@babel/react" ]
 }
