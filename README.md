@@ -76,7 +76,7 @@ systemctl start lab-manager
 
 ## API documentaiton
 
-Swagger-based API documentation is available at `/docs/api/` (note the slash at the end) on running application.
+Application serves OpenAPI document at pathname `/openapi.json`. This document can be plugged into existing Swagger UI instance, e.g. [https://petstore.swagger.io/?url=http://localhost:3000/openapi.json](https://petstore.swagger.io/?url=http://localhost:3000/openapi.json).
 
 ## Authentication and authorization
 
