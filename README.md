@@ -34,6 +34,10 @@ apt install nodejs npm libsystemd-dev
 
 **Note:** Systemd development files need to be installed before application installation to make Systemd notifications work. Otherwise installation gives an error regarding to `sd-notify` which can be ignored if Systemd notifications are not needed.
 
+##### Running behind proxy
+
+If application is served under some non-root HTTP pathname, reverse proxy server should add `X-Forwarded-Path` header to requests amongst other typical proxy headers. Also `trustProxy` configuration option has to have appropriate value - see [Express behind proxies](https://expressjs.com/en/guide/behind-proxies.html).
+
 ### Quick start
 
 ```
@@ -50,7 +54,7 @@ Example configuration is shown in [config_sample.json](config_sample.json). Only
  | `listen.port`, `listen.address` | Listen address (optional) and port |
  | `listen.path`, `listen.mode` | UNIX socket path and mode (optional) |
  | `trustProxy` | (optional) Policy used to handle proxy headers; See [Express behind proxies](https://expressjs.com/en/guide/behind-proxies.html) for possible values. |
- | `appUrl` | Public (related to other components) URL prefix of the application |
+ | `appUrl` | URL prefix of the application used for advertising to VM-s |
  | `database` | Database URL (CouchDB) or location on disk (LevelDB) |
  | `tokens` | (optional) Array of authorized bearer tokens |
  | `labProxy.url`, `labProxy.key` | (optional) Lab proxy URL and access token |
