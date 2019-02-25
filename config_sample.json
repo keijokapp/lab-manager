@@ -5,6 +5,7 @@
 		"address": "::",
 		"port": 3000
 	},
+	"trustProxy": true,
 	"tokens": [ "bearer-token" ],
 	"repositories": "repositories",
 	"labProxy": {

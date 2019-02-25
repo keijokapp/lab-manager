@@ -49,6 +49,7 @@ Example configuration is shown in [config_sample.json](config_sample.json). Only
  | `listen` | Listener configuration - `"systemd"` in case of Systemd socket or `object` |
  | `listen.port`, `listen.address` | Listen address (optional) and port |
  | `listen.path`, `listen.mode` | UNIX socket path and mode (optional) |
+ | `trustProxy` | (optional) Policy used to handle proxy headers; See [Express behind proxies](https://expressjs.com/en/guide/behind-proxies.html) for possible values. |
  | `appUrl` | Public (related to other components) URL prefix of the application |
  | `database` | Database URL (CouchDB) or location on disk (LevelDB) |
  | `tokens` | (optional) Array of authorized bearer tokens |
