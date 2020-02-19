@@ -3,31 +3,23 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.routes = undefined;
+exports.default = exports.routes = void 0;
 
-var _nodeFetch = require("node-fetch");
+var _nodeFetch = _interopRequireDefault(require("node-fetch"));
 
-var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
-
-var _v = require("uuid/v4");
-
-var _v2 = _interopRequireDefault(_v);
+var _v = _interopRequireDefault(require("uuid/v4"));
 
 var _express = require("express");
 
 var _expressOpenapiMiddleware = require("express-openapi-middleware");
 
-var _config = require("../config");
-
-var _config2 = _interopRequireDefault(_config);
+var _config = _interopRequireDefault(require("../config"));
 
 var _util = require("../util");
 
 var _common = require("../common");
 
-var _createInstance = require("../create-instance");
-
-var _createInstance2 = _interopRequireDefault(_createInstance);
+var _createInstance = _interopRequireDefault(require("../create-instance"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -161,7 +153,7 @@ async function getInstance(labId, userId) {
 
 
 async function fetchITeeUser(userId) {
-  const response = await (0, _nodeFetch2.default)(_config2.default.iTee.url + '/users.json' + '?conditions[id]=' + encodeURIComponent(userId) + '&auth_token=' + encodeURIComponent(_config2.default.iTee.key), {
+  const response = await (0, _nodeFetch.default)(_config.default.iTee.url + '/users.json' + '?conditions[id]=' + encodeURIComponent(userId) + '&auth_token=' + encodeURIComponent(_config.default.iTee.key), {
     headers: {
       'x-request-id': (0, _common.reqid)()
     }
@@ -192,7 +184,7 @@ async function fetchITeeUser(userId) {
 
 
 async function fetchITeeLab(labId) {
-  const response = await (0, _nodeFetch2.default)(_config2.default.iTee.url + '/labs.json' + '?conditions[id]=' + encodeURIComponent(labId) + '&auth_token=' + encodeURIComponent(_config2.default.iTee.key), {
+  const response = await (0, _nodeFetch.default)(_config.default.iTee.url + '/labs.json' + '?conditions[id]=' + encodeURIComponent(labId) + '&auth_token=' + encodeURIComponent(_config.default.iTee.key), {
     headers: {
       'x-request-id': (0, _common.reqid)()
     }
@@ -216,9 +208,10 @@ async function fetchITeeLab(labId) {
   return body[0];
 }
 
-const routes = exports.routes = new _express.Router();
+const routes = new _express.Router();
+exports.routes = routes;
 
-exports.default = (req, res, next) => {
+var _default = (req, res, next) => {
   let authorized = false;
 
   if ('auth_token' in req.query) {
@@ -243,6 +236,7 @@ exports.default = (req, res, next) => {
   }
 };
 
+exports.default = _default;
 routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
   tags: ['I-Tee compatibility'],
   responses: {
@@ -281,8 +275,7 @@ routes.get('/lab_users.json', (0, _expressOpenapiMiddleware.apiOperation)({
                 },
                 additionalProperties: false,
                 required: ['user_id', 'lab_id']
-              },
-              required: ['conditions']
+              }
             },
             additionalProperties: false,
             required: ['conditions']
@@ -338,7 +331,7 @@ routes.get('/lab_users.json', (0, _expressOpenapiMiddleware.apiOperation)({
 
   if ('id' in req.body.conditions) {
     [instance, iTeeCompat] = await getInstance(req.body.conditions.id);
-  } else if ('iTee' in _config2.default && 'key' in _config2.default.iTee) {
+  } else if ('iTee' in _config.default && 'key' in _config.default.iTee) {
     [instance, iTeeCompat] = await getInstance(req.body.conditions.lab_id, req.body.conditions.user_id);
   } else {
     res.status(503).send(req.apiOperation.responses[503].content['application/json'].example);
@@ -359,26 +352,28 @@ routes.post('/lab_users.json', (0, _expressOpenapiMiddleware.apiOperation)({
   requestBody: {
     content: {
       'application/json': {
-        type: 'object',
-        properties: {
-          lab_user: {
-            type: 'object',
-            properties: {
-              user_id: {
-                type: 'integer',
-                minValue: 1
+        schema: {
+          type: 'object',
+          properties: {
+            lab_user: {
+              type: 'object',
+              properties: {
+                user_id: {
+                  type: 'integer',
+                  minValue: 1
+                },
+                lab_id: {
+                  type: 'integer',
+                  minValue: 1
+                }
               },
-              lab_id: {
-                type: 'integer',
-                minValue: 1
-              }
-            },
-            additionalProperties: false,
-            required: ['user_id', 'lab_id']
-          }
-        },
-        additionalProperties: false,
-        required: ['lab_user']
+              additionalProperties: false,
+              required: ['user_id', 'lab_id']
+            }
+          },
+          additionalProperties: false,
+          required: ['lab_user']
+        }
       }
     }
   },
@@ -416,7 +411,7 @@ routes.post('/lab_users.json', (0, _expressOpenapiMiddleware.apiOperation)({
     }
   }
 }), (0, _util.asyncMiddleware)(async (req, res) => {
-  if (!('iTee' in _config2.default && 'key' in _config2.default.iTee)) {
+  if (!('iTee' in _config.default && 'key' in _config.default.iTee)) {
     res.status(503).send({
       success: false,
       message: 'I-Tee integration is not fully configured'
@@ -451,8 +446,8 @@ routes.post('/lab_users.json', (0, _expressOpenapiMiddleware.apiOperation)({
     lab: {
       _id: lab.name
     },
-    privateToken: (0, _v2.default)(),
-    publicToken: (0, _v2.default)()
+    privateToken: (0, _v.default)(),
+    publicToken: (0, _v.default)()
   };
 
   try {
@@ -707,7 +702,7 @@ routes.post('/start_lab_by_id.json', (0, _expressOpenapiMiddleware.apiOperation)
     }
   }
 
-  instance = await (0, _createInstance2.default)(iTeeCompat);
+  instance = await (0, _createInstance.default)(iTeeCompat);
 
   if (typeof instance === 'string') {
     res.status(instance === 'Instance already exists' ? 400 : 500).send({
@@ -808,8 +803,8 @@ routes.post('/end_lab_by_id.json', (0, _expressOpenapiMiddleware.apiOperation)({
   }
 
   if (iTeeCompat) {
-    iTeeCompat.privateToken = (0, _v2.default)();
-    iTeeCompat.publicToken = (0, _v2.default)();
+    iTeeCompat.privateToken = (0, _v.default)();
+    iTeeCompat.publicToken = (0, _v.default)();
 
     try {
       await _common.db.put(iTeeCompat);
@@ -1032,7 +1027,7 @@ routes.get('/open_guacamole.json', (0, _expressOpenapiMiddleware.apiOperation)({
     }
   }
 }), (0, _util.asyncMiddleware)(async (req, res) => {
-  if (!('remote' in _config2.default)) {
+  if (!('remote' in _config.default)) {
     res.status(501).send({
       success: false,
       message: 'Remote console is not available'
@@ -1070,7 +1065,7 @@ routes.get('/open_guacamole.json', (0, _expressOpenapiMiddleware.apiOperation)({
   } else {
     res.send({
       success: true,
-      url: _config2.default.remote + '/' + encodeURIComponent(instance.publicToken) + ':' + encodeURIComponent(instance.lab.machineOrder[machineIndex])
+      url: _config.default.remote + '/' + encodeURIComponent(instance.publicToken) + ':' + encodeURIComponent(instance.lab.machineOrder[machineIndex])
     });
   }
 }));

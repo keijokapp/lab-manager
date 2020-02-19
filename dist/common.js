@@ -3,7 +3,6 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.db = exports.logger = undefined;
 exports.reqid = reqid;
 exports.authorize = authorize;
 exports.lxdRequest = lxdRequest;
@@ -21,52 +20,35 @@ exports.lxdUpdateMachine = lxdUpdateMachine;
 exports.virtualboxUpdateMachine = virtualboxUpdateMachine;
 exports.serveRepository = serveRepository;
 exports.iTeeLabinfo = iTeeLabinfo;
+exports.db = exports.logger = void 0;
 
 var _url = require("url");
 
-var _async_hooks = require("async_hooks");
-
-var _async_hooks2 = _interopRequireDefault(_async_hooks);
+var _async_hooks = _interopRequireDefault(require("async_hooks"));
 
 var _crypto = require("crypto");
 
-var _https = require("https");
+var _https = _interopRequireDefault(require("https"));
 
-var _https2 = _interopRequireDefault(_https);
+var _nodeFetch = _interopRequireDefault(require("node-fetch"));
 
-var _nodeFetch = require("node-fetch");
+var _uniqid = _interopRequireDefault(require("uniqid"));
 
-var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
+var _winston = _interopRequireDefault(require("winston"));
 
-var _uniqid = require("uniqid");
+var _pouchdb = _interopRequireDefault(require("pouchdb"));
 
-var _uniqid2 = _interopRequireDefault(_uniqid);
+var _pouchdbSeedDesign = _interopRequireDefault(require("pouchdb-seed-design"));
 
-var _winston = require("winston");
+var _config = _interopRequireDefault(require("./config"));
 
-var _winston2 = _interopRequireDefault(_winston);
-
-var _pouchdb = require("pouchdb");
-
-var _pouchdb2 = _interopRequireDefault(_pouchdb);
-
-var _pouchdbSeedDesign = require("pouchdb-seed-design");
-
-var _pouchdbSeedDesign2 = _interopRequireDefault(_pouchdbSeedDesign);
-
-var _config = require("./config");
-
-var _config2 = _interopRequireDefault(_config);
-
-var _pushover = require("pushover");
-
-var _pushover2 = _interopRequireDefault(_pushover);
+var _pushover = _interopRequireDefault(require("pushover"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const requestNamespace = {};
 
-const asyncHook = _async_hooks2.default.createHook({
+const asyncHook = _async_hooks.default.createHook({
   init(asyncId, type, triggerId, resource) {
     if (requestNamespace[triggerId]) {
       requestNamespace[asyncId] = requestNamespace[triggerId];
@@ -82,12 +64,12 @@ const asyncHook = _async_hooks2.default.createHook({
 asyncHook.enable();
 
 function reqid(req, res, next) {
-  const eid = _async_hooks2.default.executionAsyncId();
+  const eid = _async_hooks.default.executionAsyncId();
 
   if (req) {
     if (!(eid in requestNamespace)) {
       requestNamespace[eid] = {
-        id: req.headers['x-request-id'] || (0, _uniqid2.default)()
+        id: req.headers['x-request-id'] || (0, _uniqid.default)()
       };
     }
 
@@ -107,8 +89,8 @@ function reqid(req, res, next) {
   }
 }
 
-const reqidFormat = _winston2.default.format(info => {
-  const eid = _async_hooks2.default.executionAsyncId();
+const reqidFormat = _winston.default.format(info => {
+  const eid = _async_hooks.default.executionAsyncId();
 
   if (eid in requestNamespace && 'id' in requestNamespace[eid]) {
     info.reqid = requestNamespace[eid].id;
@@ -117,16 +99,18 @@ const reqidFormat = _winston2.default.format(info => {
   return info;
 });
 
-const logger = exports.logger = _winston2.default.createLogger({
-  format: _winston2.default.format.combine(reqidFormat(), _winston2.default.format.simple()),
-  transports: [new _winston2.default.transports.Console({
+const logger = _winston.default.createLogger({
+  format: _winston.default.format.combine(reqidFormat(), _winston.default.format.simple()),
+  transports: [new _winston.default.transports.Console({
     level: 'debug'
   })]
 });
 
-const db = exports.db = new _pouchdb2.default(_config2.default.database); // TODO: make application stop on fail
+exports.logger = logger;
+const db = new _pouchdb.default(_config.default.database); // TODO: make application stop on fail
 
-(0, _pouchdbSeedDesign2.default)(db, {
+exports.db = db;
+(0, _pouchdbSeedDesign.default)(db, {
   instance: {
     views: {
       uuid: {
@@ -157,11 +141,11 @@ const db = exports.db = new _pouchdb2.default(_config2.default.database); // TOD
  */
 
 function authorize(token) {
-  if (!('tokens' in _config2.default)) {
+  if (!('tokens' in _config.default)) {
     return true;
   }
 
-  return _config2.default.tokens.includes(token);
+  return _config.default.tokens.includes(token);
 }
 /**
  * Performs LXD request with given parameters
@@ -174,7 +158,7 @@ function authorize(token) {
 
 
 async function lxdRequest(path, options = {}, wait = true, originalRequest = null) {
-  if (!('lxd' in _config2.default)) {
+  if (!('lxd' in _config.default)) {
     throw new Error('LXD is not configured');
   }
 
@@ -182,11 +166,11 @@ async function lxdRequest(path, options = {}, wait = true, originalRequest = nul
     path = '/' + path;
   }
 
-  const opts = (0, _url.parse)(_config2.default.lxd.url + '/1.0' + path);
+  const opts = (0, _url.parse)(_config.default.lxd.url + '/1.0' + path);
   opts.method = options.method;
   opts.headers = options.headers;
-  opts.key = _config2.default.lxd.key;
-  opts.cert = _config2.default.lxd.certificate;
+  opts.key = _config.default.lxd.key;
+  opts.cert = _config.default.lxd.certificate;
   opts.rejectUnauthorized = false; // TODO:
 
   if (!originalRequest) {
@@ -198,7 +182,7 @@ async function lxdRequest(path, options = {}, wait = true, originalRequest = nul
   }
 
   const response = await new Promise((resolve, reject) => {
-    const req = _https2.default.request(opts, res => {
+    const req = _https.default.request(opts, res => {
       if (res.statusCode === 202 && wait) {
         resolve({
           status: res.statusCode,
@@ -272,7 +256,7 @@ async function lxdRequest(path, options = {}, wait = true, originalRequest = nul
 
 
 async function virtualboxRequest(path, options = {}) {
-  if (!('virtualbox' in _config2.default)) {
+  if (!('virtualbox' in _config.default)) {
     throw new Error('VirtualBox is not configured');
   }
 
@@ -280,13 +264,13 @@ async function virtualboxRequest(path, options = {}) {
     path = '/' + path;
   }
 
-  return await (0, _nodeFetch2.default)(_config2.default.virtualbox.url + path, {
+  return await (0, _nodeFetch.default)(_config.default.virtualbox.url + path, {
     method: options.method,
     headers: {
       accept: 'application/json',
       'content-type': 'body' in options ? 'application/json' : undefined,
       'x-request-id': reqid(),
-      'authorization': 'key' in _config2.default.virtualbox ? 'Bearer ' + _config2.default.virtualbox.key : undefined
+      'authorization': 'key' in _config.default.virtualbox ? 'Bearer ' + _config.default.virtualbox.key : undefined
     },
     body: JSON.stringify(options.body)
   });
@@ -300,7 +284,7 @@ async function virtualboxRequest(path, options = {}) {
 
 async function createNetwork(networkName = '') {
   const maxInterfaceNameLength = 15;
-  const id = (0, _uniqid2.default)();
+  const id = (0, _uniqid.default)();
   const nic = 'b' + id.slice(id.length - maxInterfaceNameLength + 1);
   logger.debug('Creating network', {
     network: nic
@@ -432,7 +416,7 @@ async function lxdDeleteMachine(name) {
 
 async function virtualboxDeleteMachine(name) {
   try {
-    if ('virtualbox' in _config2.default) {
+    if ('virtualbox' in _config.default) {
       const response = await virtualboxRequest('/machine/' + encodeURIComponent(name), {
         method: 'DELETE'
       });
@@ -530,7 +514,7 @@ async function deleteInstance(instance) {
 
 async function createGitlabGroup(gitlab, publicToken) {
   try {
-    const response = await (0, _nodeFetch2.default)(gitlab.url + '/api/v4/groups?private_token=' + encodeURIComponent(gitlab.key), {
+    const response = await (0, _nodeFetch.default)(gitlab.url + '/api/v4/groups?private_token=' + encodeURIComponent(gitlab.key), {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -555,7 +539,7 @@ async function createGitlabGroup(gitlab, publicToken) {
       logger.debug('GitLab group already exists');
 
       try {
-        const response = await (0, _nodeFetch2.default)(gitlab.url + '/api/v4/groups/' + 'lab-' + encodeURIComponent(publicToken) + '?private_token=' + encodeURIComponent(gitlab.key), {
+        const response = await (0, _nodeFetch.default)(gitlab.url + '/api/v4/groups/' + 'lab-' + encodeURIComponent(publicToken) + '?private_token=' + encodeURIComponent(gitlab.key), {
           headers: {
             'accept': 'application/json',
             'x-request-id': reqid()
@@ -603,7 +587,7 @@ async function createGitlabGroup(gitlab, publicToken) {
 
 async function createGitlabUser(gitlab, publicToken) {
   try {
-    const response = await (0, _nodeFetch2.default)(gitlab.url + '/api/v4/users?private_token=' + encodeURIComponent(gitlab.key), {
+    const response = await (0, _nodeFetch.default)(gitlab.url + '/api/v4/users?private_token=' + encodeURIComponent(gitlab.key), {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -633,7 +617,7 @@ async function createGitlabUser(gitlab, publicToken) {
       logger.debug('GitLab user already exists');
 
       try {
-        const response = await (0, _nodeFetch2.default)(gitlab.url + '/api/v4/users' + '?username=user-' + encodeURIComponent(publicToken) + '&private_token=' + encodeURIComponent(gitlab.key), {
+        const response = await (0, _nodeFetch.default)(gitlab.url + '/api/v4/users' + '?username=user-' + encodeURIComponent(publicToken) + '&private_token=' + encodeURIComponent(gitlab.key), {
           headers: {
             'accept': 'application/json',
             'x-request-id': reqid()
@@ -689,7 +673,7 @@ async function createGitlabUser(gitlab, publicToken) {
 
 async function addGitlabUserToGroup(gitlab, group, user) {
   try {
-    const response = await (0, _nodeFetch2.default)(gitlab.url + '/api/v4/groups/' + encodeURIComponent(group.id) + '/members?private_token=' + encodeURIComponent(gitlab.key), {
+    const response = await (0, _nodeFetch.default)(gitlab.url + '/api/v4/groups/' + encodeURIComponent(group.id) + '/members?private_token=' + encodeURIComponent(gitlab.key), {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -775,7 +759,7 @@ async function lxdMachineInfo(name) {
 
 async function virtualboxMachineInfo(name, ip = false) {
   try {
-    if (!('virtualbox' in _config2.default)) {
+    if (!('virtualbox' in _config.default)) {
       throw new Error('VirtualBox is not configured');
     }
 
@@ -872,7 +856,7 @@ async function lxdUpdateMachine(name, state) {
 
 async function virtualboxUpdateMachine(name, state, ip = false) {
   try {
-    if (!('virtualbox' in _config2.default)) {
+    if (!('virtualbox' in _config.default)) {
       throw new Error('VirtualBox is not configured');
     }
 
@@ -902,7 +886,7 @@ async function virtualboxUpdateMachine(name, state, ip = false) {
   return null;
 }
 
-const repos = 'repositories' in _config2.default ? (0, _pushover2.default)(_config2.default.repositories) : null;
+const repos = 'repositories' in _config.default ? (0, _pushover.default)(_config.default.repositories) : null;
 
 if (repos) {
   repos.on('error', e => {
@@ -943,11 +927,11 @@ function serveRepository(req, res, repository) {
 
 async function iTeeLabinfo(privateToken) {
   try {
-    if (!('iTee' in _config2.default)) {
+    if (!('iTee' in _config.default)) {
       throw new Error('I-Tee is not configured');
     }
 
-    const response = await (0, _nodeFetch2.default)(_config2.default.iTee.url + '/labinfo.json' + '?uuid=' + encodeURIComponent(privateToken), {
+    const response = await (0, _nodeFetch.default)(_config.default.iTee.url + '/labinfo.json' + '?uuid=' + encodeURIComponent(privateToken), {
       headers: {
         'x-request-id': reqid()
       }

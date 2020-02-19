@@ -3,18 +3,13 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = void 0;
 
-var _react = require("react");
+var _react = _interopRequireDefault(require("react"));
 
-var _react2 = _interopRequireDefault(_react);
+var _reactDom = _interopRequireDefault(require("react-dom"));
 
-var _reactDom = require("react-dom");
-
-var _reactDom2 = _interopRequireDefault(_reactDom);
-
-var _tableDragger = require("table-dragger");
-
-var _tableDragger2 = _interopRequireDefault(_tableDragger);
+var _tableDragger = _interopRequireDefault(require("table-dragger"));
 
 var _semanticUiReact = require("semantic-ui-react");
 
@@ -80,7 +75,7 @@ async function loadRepositories() {
  */
 
 
-class Assistant extends _react2.default.Component {
+class Assistant extends _react.default.Component {
   constructor(props) {
     super();
     this.state = {
@@ -133,12 +128,12 @@ class Assistant extends _react2.default.Component {
 
   render() {
     if (typeof this.state.assistant !== 'object' || !this.state.assistant) {
-      return _react2.default.createElement(_semanticUiReact.Button, {
+      return _react.default.createElement(_semanticUiReact.Button, {
         color: "yellow",
         onClick: () => this.createAssistant()
       }, "Add");
     } else {
-      return _react2.default.createElement("div", null, _react2.default.createElement("div", null, _react2.default.createElement(_semanticUiReact.Input, {
+      return _react.default.createElement("div", null, _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Input, {
         label: "URL",
         defaultValue: this.state.assistant.url,
         error: this.state.errors.url,
@@ -147,13 +142,13 @@ class Assistant extends _react2.default.Component {
         style: {
           width: '28.5em'
         }
-      })), _react2.default.createElement("div", null, _react2.default.createElement(_semanticUiReact.Input, {
+      })), _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Input, {
         label: "Lab ID",
         defaultValue: this.state.assistant.lab,
         error: this.state.errors.lab,
         onChange: this.validateNotEmpty('lab', 'Lab ID must not be empty'),
         onBlur: this.setField('lab')
-      })), _react2.default.createElement("div", null, _react2.default.createElement(_semanticUiReact.Input, {
+      })), _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Input, {
         label: "Key",
         defaultValue: this.state.assistant.key,
         error: this.state.errors.key,
@@ -162,7 +157,7 @@ class Assistant extends _react2.default.Component {
         style: {
           width: '23.5em'
         }
-      })), _react2.default.createElement(_semanticUiReact.Button, {
+      })), _react.default.createElement(_semanticUiReact.Button, {
         negative: true,
         onClick: () => this.deleteAssistant()
       }, "Remove"));
@@ -175,7 +170,7 @@ class Assistant extends _react2.default.Component {
  */
 
 
-class Network extends _react2.default.Component {
+class Network extends _react.default.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -227,7 +222,7 @@ class Network extends _react2.default.Component {
   }
 
   render() {
-    const trigger = _react2.default.createElement(_semanticUiReact.Input, {
+    const trigger = _react.default.createElement(_semanticUiReact.Input, {
       defaultValue: this.state.name,
       icon: "setting",
       error: this.state.errors.name,
@@ -238,7 +233,7 @@ class Network extends _react2.default.Component {
       autoFocus: this.props.autoFocus
     });
 
-    const settings = this.props.machineType === 'virtualbox' ? _react2.default.createElement("div", null, _react2.default.createElement(_semanticUiReact.Dropdown, {
+    const settings = this.props.machineType === 'virtualbox' ? _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Dropdown, {
       selection: true,
       fluid: true,
       defaultValue: this.state.type,
@@ -254,13 +249,13 @@ class Network extends _react2.default.Component {
           type: data.value
         });
       }
-    }), _react2.default.createElement(_semanticUiReact.Input, {
+    }), _react.default.createElement(_semanticUiReact.Input, {
       label: "IP:",
       defaultValue: this.state.ip,
       onBlur: e => this.setState({
         ip: e.target.value
       })
-    }), _react2.default.createElement(_semanticUiReact.Checkbox, {
+    }), _react.default.createElement(_semanticUiReact.Checkbox, {
       toggle: true,
       label: "Promiscuous",
       defaultChecked: this.state.promiscuous,
@@ -269,14 +264,14 @@ class Network extends _react2.default.Component {
           promiscuous: data.checked
         });
       }
-    }), _react2.default.createElement(_semanticUiReact.Checkbox, {
+    }), _react.default.createElement(_semanticUiReact.Checkbox, {
       toggle: true,
       label: "Reset MAC",
       defaultChecked: this.state.resetMac,
       onChange: (e, data) => this.setState({
         resetMac: data.checked
       })
-    })) : _react2.default.createElement(_semanticUiReact.Dropdown, {
+    })) : _react.default.createElement(_semanticUiReact.Dropdown, {
       selection: true,
       fluid: true,
       value: "bridged",
@@ -286,17 +281,17 @@ class Network extends _react2.default.Component {
         value: 'bridged'
       }]
     });
-    return _react2.default.createElement("div", null, _react2.default.createElement(_semanticUiReact.Popup, {
+    return _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Popup, {
       hideOnScroll: true,
       trigger: trigger,
       content: settings,
       on: "click",
       position: "right center"
-    }), _react2.default.createElement(_semanticUiReact.Button, {
+    }), _react.default.createElement(_semanticUiReact.Button, {
       negative: true,
       icon: true,
       onClick: this.props.onDelete
-    }, _react2.default.createElement(_semanticUiReact.Icon, {
+    }, _react.default.createElement(_semanticUiReact.Icon, {
       name: "delete",
       style: {
         verticalAlign: 'middle'
@@ -308,7 +303,7 @@ class Network extends _react2.default.Component {
 
 }
 
-class Networks extends _react2.default.Component {
+class Networks extends _react.default.Component {
   constructor(props) {
     super();
     this.state = {
@@ -354,7 +349,7 @@ class Networks extends _react2.default.Component {
   }
 
   render() {
-    const networks = this.state.order.map(i => _react2.default.createElement(Network, {
+    const networks = this.state.order.map(i => _react.default.createElement(Network, {
       ref: 'network-' + i,
       key: i,
       network: this.state.networks[i],
@@ -362,11 +357,11 @@ class Networks extends _react2.default.Component {
       autoFocus: i === this.state.newIndex,
       machineType: this.props.machineType
     }));
-    return _react2.default.createElement("div", null, networks, _react2.default.createElement(_semanticUiReact.Button, {
+    return _react.default.createElement("div", null, networks, _react.default.createElement(_semanticUiReact.Button, {
       positive: true,
       icon: true,
       onClick: () => this.addNetwork()
-    }, _react2.default.createElement(_semanticUiReact.Icon, {
+    }, _react.default.createElement(_semanticUiReact.Icon, {
       name: "plus",
       size: "large"
     })));
@@ -374,7 +369,7 @@ class Networks extends _react2.default.Component {
 
 }
 
-class MachineLimits extends _react2.default.Component {
+class MachineLimits extends _react.default.Component {
   constructor(props) {
     super();
     const limits = props.limits || [];
@@ -397,11 +392,11 @@ class MachineLimits extends _react2.default.Component {
   }
 
   render() {
-    return _react2.default.createElement(_semanticUiReact.Table, {
+    return _react.default.createElement(_semanticUiReact.Table, {
       collapsing: true
-    }, _react2.default.createElement(_semanticUiReact.Table.Body, null, _react2.default.createElement(_semanticUiReact.Table.Row, null, _react2.default.createElement(_semanticUiReact.Table.Cell, {
+    }, _react.default.createElement(_semanticUiReact.Table.Body, null, _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.Cell, {
       collapsing: true
-    }, "CPU:"), _react2.default.createElement(_semanticUiReact.Table.Cell, null, _react2.default.createElement(_semanticUiReact.Input, {
+    }, "CPU:"), _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement(_semanticUiReact.Input, {
       type: "number",
       style: {
         width: '10em'
@@ -410,9 +405,9 @@ class MachineLimits extends _react2.default.Component {
       onChange: e => this.setState({
         cpu: Number(e.target.value)
       })
-    }))), _react2.default.createElement(_semanticUiReact.Table.Row, null, _react2.default.createElement(_semanticUiReact.Table.Cell, {
+    }))), _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.Cell, {
       collapsing: true
-    }, "CPU Allowance:"), _react2.default.createElement(_semanticUiReact.Table.Cell, null, _react2.default.createElement("input", {
+    }, "CPU Allowance:"), _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement("input", {
       type: "range",
       min: "1",
       max: "100",
@@ -420,9 +415,9 @@ class MachineLimits extends _react2.default.Component {
       onChange: e => this.setState({
         cpuAllowance: Number(e.target.value)
       })
-    }), " ", this.state.cpuAllowance, "%")), _react2.default.createElement(_semanticUiReact.Table.Row, null, _react2.default.createElement(_semanticUiReact.Table.Cell, {
+    }), " ", this.state.cpuAllowance, "%")), _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.Cell, {
       collapsing: true
-    }, "Memory:"), _react2.default.createElement(_semanticUiReact.Table.Cell, null, _react2.default.createElement(_semanticUiReact.Input, {
+    }, "Memory:"), _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement(_semanticUiReact.Input, {
       type: "number",
       style: {
         width: '10em'
@@ -436,7 +431,7 @@ class MachineLimits extends _react2.default.Component {
 
 }
 
-class MachineRepositories extends _react2.default.Component {
+class MachineRepositories extends _react.default.Component {
   constructor(props) {
     super();
     const repositories = props.repositories ? [...props.repositories] : [];
@@ -540,9 +535,9 @@ class MachineRepositories extends _react2.default.Component {
   }
 
   render() {
-    const repositories = this.state.order.map(i => _react2.default.createElement(_semanticUiReact.Table.Row, {
+    const repositories = this.state.order.map(i => _react.default.createElement(_semanticUiReact.Table.Row, {
       key: i
-    }, _react2.default.createElement(_semanticUiReact.Table.Cell, null, _react2.default.createElement(_semanticUiReact.Input, {
+    }, _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement(_semanticUiReact.Input, {
       fluid: true,
       list: "repositories",
       defaultValue: this.state.repositories[i].name,
@@ -551,17 +546,17 @@ class MachineRepositories extends _react2.default.Component {
       autoFocus: i === this.state.newIndex,
       onFocus: loadRepositories,
       error: this.state.nameErrors[i]
-    })), _react2.default.createElement(_semanticUiReact.Table.Cell, null, _react2.default.createElement(_semanticUiReact.Input, {
+    })), _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement(_semanticUiReact.Input, {
       fluid: true,
       defaultValue: this.state.repositories[i].location,
       onBlur: this.setRepository(i, 'location'),
       onChange: this.validateLocation(i),
       error: this.state.locationErrors[i]
-    })), _react2.default.createElement(_semanticUiReact.Table.Cell, null, _react2.default.createElement("datalist", {
+    })), _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement("datalist", {
       id: 'refs-' + i
-    }, (this.state.allRepositories[this.state.repositories[i].name] || []).map(r => _react2.default.createElement("option", {
+    }, (this.state.allRepositories[this.state.repositories[i].name] || []).map(r => _react.default.createElement("option", {
       key: r
-    }, r))), _react2.default.createElement(_semanticUiReact.Input, {
+    }, r))), _react.default.createElement(_semanticUiReact.Input, {
       fluid: true,
       list: 'refs-' + i,
       defaultValue: this.state.repositories[i].ref,
@@ -569,16 +564,16 @@ class MachineRepositories extends _react2.default.Component {
       onChange: this.validateRef(i),
       onFocus: loadRepositories,
       error: this.state.refErrors[i]
-    })), _react2.default.createElement(_semanticUiReact.Table.Cell, {
+    })), _react.default.createElement(_semanticUiReact.Table.Cell, {
       collapsing: true
-    }, _react2.default.createElement(_semanticUiReact.Button, {
+    }, _react.default.createElement(_semanticUiReact.Button, {
       icon: true,
       negative: true,
       onClick: () => this.deleteRepository(i)
-    }, _react2.default.createElement(_semanticUiReact.Icon, {
+    }, _react.default.createElement(_semanticUiReact.Icon, {
       name: "delete"
     })))));
-    return _react2.default.createElement("div", null, _react2.default.createElement(_semanticUiReact.Table, null, _react2.default.createElement(_semanticUiReact.Table.Header, null, _react2.default.createElement(_semanticUiReact.Table.Row, null, _react2.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Repository name"), _react2.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Repository location in machine"), _react2.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Ref"), _react2.default.createElement(_semanticUiReact.Table.HeaderCell, null))), _react2.default.createElement(_semanticUiReact.Table.Body, null, repositories)), _react2.default.createElement(_semanticUiReact.Button, {
+    return _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Table, null, _react.default.createElement(_semanticUiReact.Table.Header, null, _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Repository name"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Repository location in machine"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Ref"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null))), _react.default.createElement(_semanticUiReact.Table.Body, null, repositories)), _react.default.createElement(_semanticUiReact.Button, {
       positive: true,
       onClick: () => this.addRepository(),
       autoFocus: true
@@ -587,7 +582,7 @@ class MachineRepositories extends _react2.default.Component {
 
 }
 
-class Machine extends _react2.default.Component {
+class Machine extends _react.default.Component {
   constructor(props) {
     super();
     this.state = {
@@ -645,7 +640,7 @@ class Machine extends _react2.default.Component {
   render() {
     const machine = this.state.machine;
 
-    const id = _react2.default.createElement(_semanticUiReact.Input, {
+    const id = _react.default.createElement(_semanticUiReact.Input, {
       fluid: true,
       defaultValue: this.props.id,
       autoFocus: this.props.autoFocus,
@@ -656,7 +651,7 @@ class Machine extends _react2.default.Component {
       icon: machine.type === 'lxd' ? 'box' : 'desktop'
     });
 
-    const description = _react2.default.createElement(_semanticUiReact.Input, {
+    const description = _react.default.createElement(_semanticUiReact.Input, {
       fluid: true,
       defaultValue: machine.description,
       onChange: this.validateRegex('description', /./),
@@ -664,7 +659,7 @@ class Machine extends _react2.default.Component {
       onBlur: e => this.setMachineField('description', e.target.value)
     });
 
-    const base = _react2.default.createElement(_semanticUiReact.Input, {
+    const base = _react.default.createElement(_semanticUiReact.Input, {
       fluid: true,
       list: machine.type === 'virtualbox' ? 'virtualbox-templates' : undefined,
       defaultValue: machine.base,
@@ -677,8 +672,8 @@ class Machine extends _react2.default.Component {
     let containerConfigiration;
 
     if (machine.type === 'lxd') {
-      containerConfigiration = _react2.default.createElement(_semanticUiReact.Modal, {
-        trigger: _react2.default.createElement(_semanticUiReact.Button, {
+      containerConfigiration = _react.default.createElement(_semanticUiReact.Modal, {
+        trigger: _react.default.createElement(_semanticUiReact.Button, {
           color: "teal"
         }, "Configure"),
         closeIcon: true,
@@ -689,10 +684,10 @@ class Machine extends _react2.default.Component {
             repositories: this.refs.repositories.getValue()
           }
         })
-      }, _react2.default.createElement(_semanticUiReact.Header, null, "Container configuration"), _react2.default.createElement(_semanticUiReact.Modal.Content, null, _react2.default.createElement(_semanticUiReact.Segment, null, _react2.default.createElement(_semanticUiReact.Header, null, "Limits"), _react2.default.createElement(MachineLimits, {
+      }, _react.default.createElement(_semanticUiReact.Header, null, "Container configuration"), _react.default.createElement(_semanticUiReact.Modal.Content, null, _react.default.createElement(_semanticUiReact.Segment, null, _react.default.createElement(_semanticUiReact.Header, null, "Limits"), _react.default.createElement(MachineLimits, {
         ref: "limits",
         limits: machine.limits
-      })), _react2.default.createElement(_semanticUiReact.Segment, null, _react2.default.createElement(_semanticUiReact.Header, null, "Repositories"), _react2.default.createElement(MachineRepositories, {
+      })), _react.default.createElement(_semanticUiReact.Segment, null, _react.default.createElement(_semanticUiReact.Header, null, "Repositories"), _react.default.createElement(MachineRepositories, {
         ref: "repositories",
         repositories: machine.repositories
       }))));
@@ -700,20 +695,20 @@ class Machine extends _react2.default.Component {
 
     const createButton = (field, disabled = false) => {
       if (machine[field]) {
-        return _react2.default.createElement(_semanticUiReact.Button, {
+        return _react.default.createElement(_semanticUiReact.Button, {
           onClick: () => this.setMachineField(field, false),
           primary: true,
           icon: true,
           disabled: disabled
-        }, _react2.default.createElement(_semanticUiReact.Icon, {
+        }, _react.default.createElement(_semanticUiReact.Icon, {
           name: "check"
         }));
       } else {
-        return _react2.default.createElement(_semanticUiReact.Button, {
+        return _react.default.createElement(_semanticUiReact.Button, {
           onClick: () => this.setMachineField(field, true),
           icon: true,
           disabled: disabled
-        }, _react2.default.createElement(_semanticUiReact.Icon, {
+        }, _react.default.createElement(_semanticUiReact.Icon, {
           name: "circle"
         }));
       }
@@ -722,32 +717,32 @@ class Machine extends _react2.default.Component {
     let primary;
 
     if (this.props.primary) {
-      primary = _react2.default.createElement(_semanticUiReact.Icon, {
+      primary = _react.default.createElement(_semanticUiReact.Icon, {
         name: "star",
         size: "big"
       });
     }
 
-    return _react2.default.createElement(_semanticUiReact.Table.Row, null, _react2.default.createElement(_semanticUiReact.Table.Cell, {
+    return _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.Cell, {
       className: "table-dragger-handle",
       collapsing: true
-    }, _react2.default.createElement(_semanticUiReact.Icon, {
+    }, _react.default.createElement(_semanticUiReact.Icon, {
       name: "sort",
       size: "big"
-    })), _react2.default.createElement(_semanticUiReact.Table.Cell, {
+    })), _react.default.createElement(_semanticUiReact.Table.Cell, {
       onClick: this.props.onPrimary,
       collapsing: true
-    }, primary), _react2.default.createElement(_semanticUiReact.Table.Cell, null, id), _react2.default.createElement(_semanticUiReact.Table.Cell, null, description), _react2.default.createElement(_semanticUiReact.Table.Cell, null, base), _react2.default.createElement(_semanticUiReact.Table.Cell, null, createButton('enable_autostart')), _react2.default.createElement(_semanticUiReact.Table.Cell, null, createButton('enable_private')), _react2.default.createElement(_semanticUiReact.Table.Cell, null, createButton('enable_remote', machine.type === 'lxd')), _react2.default.createElement(_semanticUiReact.Table.Cell, null, createButton('enable_restart')), _react2.default.createElement(_semanticUiReact.Table.Cell, {
+    }, primary), _react.default.createElement(_semanticUiReact.Table.Cell, null, id), _react.default.createElement(_semanticUiReact.Table.Cell, null, description), _react.default.createElement(_semanticUiReact.Table.Cell, null, base), _react.default.createElement(_semanticUiReact.Table.Cell, null, createButton('enable_autostart')), _react.default.createElement(_semanticUiReact.Table.Cell, null, createButton('enable_private')), _react.default.createElement(_semanticUiReact.Table.Cell, null, createButton('enable_remote', machine.type === 'lxd')), _react.default.createElement(_semanticUiReact.Table.Cell, null, createButton('enable_restart')), _react.default.createElement(_semanticUiReact.Table.Cell, {
       collapsing: true
-    }, _react2.default.createElement(Networks, {
+    }, _react.default.createElement(Networks, {
       ref: "networks",
       networks: machine.networks,
       machineType: machine.type
-    })), _react2.default.createElement(_semanticUiReact.Table.Cell, {
+    })), _react.default.createElement(_semanticUiReact.Table.Cell, {
       collapsing: true
-    }, containerConfigiration), _react2.default.createElement(_semanticUiReact.Table.Cell, {
+    }, containerConfigiration), _react.default.createElement(_semanticUiReact.Table.Cell, {
       collapsing: true
-    }, _react2.default.createElement(_semanticUiReact.Button, {
+    }, _react.default.createElement(_semanticUiReact.Button, {
       negative: true,
       onClick: this.props.onDelete
     }, "Delete")));
@@ -755,7 +750,7 @@ class Machine extends _react2.default.Component {
 
 }
 
-class Machines extends _react2.default.Component {
+class Machines extends _react.default.Component {
   constructor(props) {
     super();
     this.state = {
@@ -797,9 +792,9 @@ class Machines extends _react2.default.Component {
     }
 
     try {
-      const el = _reactDom2.default.findDOMNode(this).querySelector('table');
+      const el = _reactDom.default.findDOMNode(this).querySelector('table');
 
-      this.tableDragger = (0, _tableDragger2.default)(el, {
+      this.tableDragger = (0, _tableDragger.default)(el, {
         mode: 'row',
         dragHandler: '.table-dragger-handle',
         onlyBody: true,
@@ -942,16 +937,16 @@ class Machines extends _react2.default.Component {
 
   render() {
     if (this.state.machineOrder.length === 0) {
-      return _react2.default.createElement("div", null, _react2.default.createElement(_semanticUiReact.Button, {
+      return _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Button, {
         positive: true,
         onClick: () => this.newMachine('virtualbox')
-      }, "New machine"), _react2.default.createElement(_semanticUiReact.Button, {
+      }, "New machine"), _react.default.createElement(_semanticUiReact.Button, {
         positive: true,
         onClick: () => this.newMachine('lxd')
       }, "New container"));
     }
 
-    const machines = this.state.machineOrder.map(id => _react2.default.createElement(Machine, {
+    const machines = this.state.machineOrder.map(id => _react.default.createElement(Machine, {
       ref: 'machine-' + id,
       key: this.state.keys[id],
       id: id,
@@ -962,28 +957,28 @@ class Machines extends _react2.default.Component {
       primary: this.state.primary === id,
       autoFocus: this.state.newMachine === id
     }));
-    return _react2.default.createElement("div", null, _react2.default.createElement("datalist", {
+    return _react.default.createElement("div", null, _react.default.createElement("datalist", {
       id: "virtualbox-templates"
-    }, 'templates' in this.state && this.state.templates.map(t => _react2.default.createElement("option", {
+    }, 'templates' in this.state && this.state.templates.map(t => _react.default.createElement("option", {
       key: t
-    }, t))), _react2.default.createElement(_semanticUiReact.Table, null, _react2.default.createElement(_semanticUiReact.Table.Header, null, _react2.default.createElement(_semanticUiReact.Table.Row, null, _react2.default.createElement(_semanticUiReact.Table.HeaderCell, {
+    }, t))), _react.default.createElement(_semanticUiReact.Table, null, _react.default.createElement(_semanticUiReact.Table.Header, null, _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.HeaderCell, {
       collapsing: true
-    }), _react2.default.createElement(_semanticUiReact.Table.HeaderCell, {
+    }), _react.default.createElement(_semanticUiReact.Table.HeaderCell, {
       collapsing: true
-    }, "Primary"), _react2.default.createElement(_semanticUiReact.Table.HeaderCell, null, "ID"), _react2.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Description"), _react2.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Base template"), _react2.default.createElement(_semanticUiReact.Table.HeaderCell, {
+    }, "Primary"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "ID"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Description"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Base template"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, {
       width: 1
-    }, "Autostart"), _react2.default.createElement(_semanticUiReact.Table.HeaderCell, {
+    }, "Autostart"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, {
       width: 1
-    }, "Private details"), _react2.default.createElement(_semanticUiReact.Table.HeaderCell, {
+    }, "Private details"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, {
       width: 1
-    }, "Remote console"), _react2.default.createElement(_semanticUiReact.Table.HeaderCell, {
+    }, "Remote console"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, {
       width: 1
-    }, "Power control"), _react2.default.createElement(_semanticUiReact.Table.HeaderCell, {
+    }, "Power control"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, {
       collapsing: true
-    }, "Networks"), _react2.default.createElement(_semanticUiReact.Table.HeaderCell, null), _react2.default.createElement(_semanticUiReact.Table.HeaderCell, null))), _react2.default.createElement(_semanticUiReact.Table.Body, null, machines)), _react2.default.createElement(_semanticUiReact.Button, {
+    }, "Networks"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null))), _react.default.createElement(_semanticUiReact.Table.Body, null, machines)), _react.default.createElement(_semanticUiReact.Button, {
       positive: true,
       onClick: () => this.newMachine('virtualbox')
-    }, "New machine"), _react2.default.createElement(_semanticUiReact.Button, {
+    }, "New machine"), _react.default.createElement(_semanticUiReact.Button, {
       positive: true,
       onClick: () => this.newMachine('lxd')
     }, "New container"));
@@ -995,7 +990,7 @@ class Machines extends _react2.default.Component {
  */
 
 
-class Repositories extends _react2.default.Component {
+class Repositories extends _react.default.Component {
   constructor(props) {
     super();
     this.state = {
@@ -1140,9 +1135,9 @@ class Repositories extends _react2.default.Component {
   }
 
   render() {
-    const repositories = this.state.order.map(i => _react2.default.createElement(_semanticUiReact.Table.Row, {
+    const repositories = this.state.order.map(i => _react.default.createElement(_semanticUiReact.Table.Row, {
       key: i
-    }, _react2.default.createElement(_semanticUiReact.Table.Cell, null, _react2.default.createElement(_semanticUiReact.Input, {
+    }, _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement(_semanticUiReact.Input, {
       list: "repositories",
       defaultValue: this.state.repositories[i].id,
       onBlur: this.setRepository(i, 'id'),
@@ -1150,38 +1145,38 @@ class Repositories extends _react2.default.Component {
       autoFocus: i === this.state.newIndex,
       onFocus: loadRepositories,
       error: this.state.idErrors[i]
-    })), _react2.default.createElement(_semanticUiReact.Table.Cell, null, _react2.default.createElement(_semanticUiReact.Input, {
+    })), _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement(_semanticUiReact.Input, {
       list: "repositories",
       defaultValue: this.state.repositories[i].name,
       onBlur: this.setRepository(i, 'name'),
       onChange: this.validateName(i),
       onFocus: loadRepositories,
       error: this.state.nameErrors[i]
-    })), _react2.default.createElement(_semanticUiReact.Table.Cell, null, _react2.default.createElement("datalist", {
+    })), _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement("datalist", {
       id: 'refs-' + i
-    }, (this.state.allRepositories[this.state.repositories[i].name] || []).map(r => _react2.default.createElement("option", {
+    }, (this.state.allRepositories[this.state.repositories[i].name] || []).map(r => _react.default.createElement("option", {
       key: r
-    }, r))), _react2.default.createElement(_semanticUiReact.Input, {
+    }, r))), _react.default.createElement(_semanticUiReact.Input, {
       list: 'refs-' + i,
       defaultValue: this.state.repositories[i].head,
       onBlur: this.setRepository(i, 'head'),
       onChange: this.validateHead(i),
       onFocus: loadRepositories,
       error: this.state.headErrors[i]
-    })), _react2.default.createElement(_semanticUiReact.Table.Cell, null, _react2.default.createElement(_semanticUiReact.Button, {
+    })), _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement(_semanticUiReact.Button, {
       icon: true,
       negative: true,
       onClick: () => this.deleteRepository(i)
-    }, _react2.default.createElement(_semanticUiReact.Icon, {
+    }, _react.default.createElement(_semanticUiReact.Icon, {
       name: "delete"
     })))));
-    return _react2.default.createElement("div", null, _react2.default.createElement("datalist", {
+    return _react.default.createElement("div", null, _react.default.createElement("datalist", {
       id: "repositories"
-    }, Object.keys(this.state.allRepositories).map(r => _react2.default.createElement("option", {
+    }, Object.keys(this.state.allRepositories).map(r => _react.default.createElement("option", {
       key: r
-    }, r))), this.state.order.length ? _react2.default.createElement(_semanticUiReact.Table, {
+    }, r))), this.state.order.length ? _react.default.createElement(_semanticUiReact.Table, {
       collapsing: true
-    }, _react2.default.createElement(_semanticUiReact.Table.Header, null, _react2.default.createElement(_semanticUiReact.Table.Row, null, _react2.default.createElement(_semanticUiReact.Table.HeaderCell, null, "ID"), _react2.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Name"), _react2.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Head"), _react2.default.createElement(_semanticUiReact.Table.HeaderCell, null))), _react2.default.createElement(_semanticUiReact.Table.Body, null, repositories)) : undefined, _react2.default.createElement(_semanticUiReact.Button, {
+    }, _react.default.createElement(_semanticUiReact.Table.Header, null, _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "ID"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Name"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Head"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null))), _react.default.createElement(_semanticUiReact.Table.Body, null, repositories)) : undefined, _react.default.createElement(_semanticUiReact.Button, {
       positive: true,
       onClick: () => this.addRepository()
     }, "New"));
@@ -1194,7 +1189,7 @@ class Repositories extends _react2.default.Component {
  */
 
 
-class Endpoints extends _react2.default.Component {
+class Endpoints extends _react.default.Component {
   constructor(props) {
     super();
     this.state = {
@@ -1257,15 +1252,15 @@ class Endpoints extends _react2.default.Component {
   }
 
   render() {
-    const endpoints = this.state.order.map(i => _react2.default.createElement("div", {
+    const endpoints = this.state.order.map(i => _react.default.createElement("div", {
       key: i
-    }, _react2.default.createElement(_semanticUiReact.Input, {
+    }, _react.default.createElement(_semanticUiReact.Input, {
       ref: 'endpoint-' + i,
       defaultValue: this.state.endpoints[i],
       onBlur: this.setEndpoint(i),
       autoFocus: i === this.state.newIndex
     })));
-    return _react2.default.createElement("div", null, endpoints, _react2.default.createElement(_semanticUiReact.Button, {
+    return _react.default.createElement("div", null, endpoints, _react.default.createElement(_semanticUiReact.Button, {
       positive: true,
       onClick: () => this.addEndpoint()
     }, "New"));
@@ -1277,7 +1272,7 @@ class Endpoints extends _react2.default.Component {
  */
 
 
-class Gitlab extends _react2.default.Component {
+class Gitlab extends _react.default.Component {
   constructor(props) {
     super();
     this.state = {
@@ -1317,23 +1312,23 @@ class Gitlab extends _react2.default.Component {
 
   render() {
     if (typeof this.state.gitlab !== 'object' || !this.state.gitlab) {
-      return _react2.default.createElement(_semanticUiReact.Button, {
+      return _react.default.createElement(_semanticUiReact.Button, {
         color: "yellow",
         onClick: () => this.createGitlab()
       }, "Add");
     } else {
-      return _react2.default.createElement("div", null, _react2.default.createElement("div", null, _react2.default.createElement(_semanticUiReact.Input, {
+      return _react.default.createElement("div", null, _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Input, {
         label: "URL",
         defaultValue: this.state.gitlab.url,
         onBlur: this.setField('url'),
         style: {
           width: '28.5em'
         }
-      })), _react2.default.createElement("div", null, _react2.default.createElement(_semanticUiReact.Input, {
+      })), _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Input, {
         label: "Key",
         defaultValue: this.state.gitlab.key,
         onBlur: this.setField('key')
-      })), _react2.default.createElement(_semanticUiReact.Button, {
+      })), _react.default.createElement(_semanticUiReact.Button, {
         negative: true,
         onClick: () => this.deleteGitlab()
       }, "Remove"));
@@ -1342,7 +1337,7 @@ class Gitlab extends _react2.default.Component {
 
 }
 
-exports.default = class extends _react2.default.Component {
+class _default extends _react.default.Component {
   constructor() {
     super();
     this.state = {
@@ -1393,59 +1388,61 @@ exports.default = class extends _react2.default.Component {
   render() {
     const lab = this.props.lab;
 
-    const assistant = _react2.default.createElement(Assistant, {
+    const assistant = _react.default.createElement(Assistant, {
       ref: "assistant",
       assistant: lab.assistant
     });
 
-    const machines = _react2.default.createElement(Machines, {
+    const machines = _react.default.createElement(Machines, {
       ref: "machines",
       machines: 'machines' in lab ? lab.machines : {},
       machineOrder: 'machineOrder' in lab ? lab.machineOrder : [],
       primary: lab.primaryMachine
     });
 
-    const repositories = _react2.default.createElement(Repositories, {
+    const repositories = _react.default.createElement(Repositories, {
       ref: "repositories",
       repositories: 'repositories' in lab ? lab.repositories : {}
     });
 
-    const endpoints = _react2.default.createElement(Endpoints, {
+    const endpoints = _react.default.createElement(Endpoints, {
       ref: "endpoints",
       endpoints: 'endpoints' in lab ? lab.endpoints : []
     });
 
-    const gitlab = _react2.default.createElement(Gitlab, {
+    const gitlab = _react.default.createElement(Gitlab, {
       ref: "gitlab",
       gitlab: lab.gitlab
     });
 
-    return _react2.default.createElement(_semanticUiReact.Grid, null, _react2.default.createElement(_semanticUiReact.Grid.Column, null, _react2.default.createElement(_semanticUiReact.Header, {
+    return _react.default.createElement(_semanticUiReact.Grid, null, _react.default.createElement(_semanticUiReact.Grid.Column, null, _react.default.createElement(_semanticUiReact.Header, {
       color: "teal",
       size: "huge"
-    }, "Lab: ", lab._id), _react2.default.createElement(_semanticUiReact.Segment, null, _react2.default.createElement(_semanticUiReact.Header, null, "Assistant ", _react2.default.createElement(_semanticUiReact.Popup, {
-      trigger: _react2.default.createElement(_semanticUiReact.Icon, {
+    }, "Lab: ", lab._id), _react.default.createElement(_semanticUiReact.Segment, null, _react.default.createElement(_semanticUiReact.Header, null, "Assistant ", _react.default.createElement(_semanticUiReact.Popup, {
+      trigger: _react.default.createElement(_semanticUiReact.Icon, {
         color: "blue",
         name: "info circle",
         size: "tiny"
       })
-    }, _react2.default.createElement("p", null, "Virtual Teaching Assistant is proprietary software used to directly interact with end user."), _react2.default.createElement("p", null, "Lab manager can create VirtualTA lab instance and provide access to that instance to integrated applications."))), assistant), _react2.default.createElement(_semanticUiReact.Segment, null, _react2.default.createElement(_semanticUiReact.Header, null, "Machines"), machines), _react2.default.createElement(_semanticUiReact.Segment, null, _react2.default.createElement(_semanticUiReact.Header, null, "Repositories ", _react2.default.createElement(_semanticUiReact.Popup, {
-      trigger: _react2.default.createElement(_semanticUiReact.Icon, {
+    }, _react.default.createElement("p", null, "Virtual Teaching Assistant is proprietary software used to directly interact with end user."), _react.default.createElement("p", null, "Lab manager can create VirtualTA lab instance and provide access to that instance to integrated applications."))), assistant), _react.default.createElement(_semanticUiReact.Segment, null, _react.default.createElement(_semanticUiReact.Header, null, "Machines"), machines), _react.default.createElement(_semanticUiReact.Segment, null, _react.default.createElement(_semanticUiReact.Header, null, "Repositories ", _react.default.createElement(_semanticUiReact.Popup, {
+      trigger: _react.default.createElement(_semanticUiReact.Icon, {
         color: "blue",
         name: "info circle",
         size: "tiny"
       })
-    }, _react2.default.createElement("p", null, "Repositories which this lab has access to. ID is alias to repo (often equal to name), different labs can access to different repositories with same ID. Name is on-disk repository name."))), repositories), _react2.default.createElement(_semanticUiReact.Segment, null, _react2.default.createElement(_semanticUiReact.Header, null, "Endpoints ", _react2.default.createElement(_semanticUiReact.Popup, {
-      trigger: _react2.default.createElement(_semanticUiReact.Icon, {
+    }, _react.default.createElement("p", null, "Repositories which this lab has access to. ID is alias to repo (often equal to name), different labs can access to different repositories with same ID. Name is on-disk repository name."))), repositories), _react.default.createElement(_semanticUiReact.Segment, null, _react.default.createElement(_semanticUiReact.Header, null, "Endpoints ", _react.default.createElement(_semanticUiReact.Popup, {
+      trigger: _react.default.createElement(_semanticUiReact.Icon, {
         color: "blue",
         name: "info circle",
         size: "tiny"
       })
-    }, _react2.default.createElement("p", null, "This section configures endpoints exposed to user via lab proxy"))), endpoints), _react2.default.createElement(_semanticUiReact.Segment, null, _react2.default.createElement(_semanticUiReact.Header, null, "Gitlab"), gitlab), _react2.default.createElement(_semanticUiReact.Button, {
+    }, _react.default.createElement("p", null, "This section configures endpoints exposed to user via lab proxy"))), endpoints), _react.default.createElement(_semanticUiReact.Segment, null, _react.default.createElement(_semanticUiReact.Header, null, "Gitlab"), gitlab), _react.default.createElement(_semanticUiReact.Button, {
       primary: true,
       onClick: () => this.save(),
       disabled: !!this.state.loading
     }, "Save")));
   }
 
-};
+}
+
+exports.default = _default;

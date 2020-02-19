@@ -3,23 +3,15 @@
 
 var _fs = require("fs");
 
-var _http = require("http");
+var _http = _interopRequireDefault(require("http"));
 
-var _http2 = _interopRequireDefault(_http);
-
-var _cleanup = require("./cleanup");
-
-var _cleanup2 = _interopRequireDefault(_cleanup);
+var _cleanup = _interopRequireDefault(require("./cleanup"));
 
 var _common = require("./common");
 
-var _config = require("./config");
+var _config = _interopRequireDefault(require("./config"));
 
-var _config2 = _interopRequireDefault(_config);
-
-var _app = require("./app");
-
-var _app2 = _interopRequireDefault(_app);
+var _app = _interopRequireDefault(require("./app"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -34,16 +26,16 @@ try {
   _common.logger.debug('Systemd notifications are disabled');
 }
 
-const server = _http2.default.createServer(_app2.default);
+const server = _http.default.createServer(_app.default);
 
 server.on('error', e => {
   _common.logger.error('Server error', {
     e
   });
 
-  (0, _cleanup2.default)(1);
+  (0, _cleanup.default)(1);
 });
-(0, _cleanup2.default)((exit, callback) => {
+(0, _cleanup.default)((exit, callback) => {
   server.close();
 
   _common.logger.on('finish', callback);
@@ -54,9 +46,9 @@ server.on('error', e => {
 
   _common.logger.end();
 
-  if (_config2.default.listen.path) {
+  if (_config.default.listen.path) {
     try {
-      (0, _fs.unlinkSync)(_config2.default.listen.path);
+      (0, _fs.unlinkSync)(_config.default.listen.path);
     } catch (e) {
       if (e.code !== 'ENOENT') {
         throw e;
@@ -65,7 +57,7 @@ server.on('error', e => {
   }
 });
 
-if (_config2.default.listen === 'systemd') {
+if (_config.default.listen === 'systemd') {
   const socketCount = parseInt(process.env.LISTEN_FDS, 10);
 
   if (socketCount !== 1) {
@@ -91,27 +83,27 @@ if (_config2.default.listen === 'systemd') {
 
     notify.ready();
   }
-} else if ('port' in _config2.default.listen) {
-  server.listen(_config2.default.listen.port, _config2.default.listen.address, () => {
+} else if ('port' in _config.default.listen) {
+  server.listen(_config.default.listen.port, _config.default.listen.address, () => {
     const address = server.address();
 
     _common.logger.info('Listening', address);
 
     notify.ready();
   });
-} else if ('path' in _config2.default.listen) {
-  server.listen(_config2.default.listen.path, () => {
+} else if ('path' in _config.default.listen) {
+  server.listen(_config.default.listen.path, () => {
     let error = false;
 
-    if ('mode' in _config2.default.listen) {
+    if ('mode' in _config.default.listen) {
       try {
-        (0, _fs.chmodSync)(_config2.default.listen.path, _config2.default.listen.mode);
+        (0, _fs.chmodSync)(_config.default.listen.path, _config.default.listen.mode);
       } catch (e) {
         error = true;
 
         _common.logger.error(e.code === 'ERR_INVALID_ARG_VALUE' ? 'Bad socket mode' : 'Failed to set socket mode', {
-          path: _config2.default.listen.path,
-          mode: _config2.default.listen.mode
+          path: _config.default.listen.path,
+          mode: _config.default.listen.mode
         });
 
         server.close();
@@ -120,7 +112,7 @@ if (_config2.default.listen === 'systemd') {
 
     if (!error) {
       _common.logger.info('Listening', {
-        path: _config2.default.listen.path
+        path: _config.default.listen.path
       });
 
       notify.ready();

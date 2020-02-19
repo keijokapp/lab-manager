@@ -3,39 +3,31 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = void 0;
 
-var _nodeFetch = require("node-fetch");
-
-var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
+var _nodeFetch = _interopRequireDefault(require("node-fetch"));
 
 var _express = require("express");
 
 var _expressOpenapiMiddleware = require("express-openapi-middleware");
 
-var _config = require("../config");
-
-var _config2 = _interopRequireDefault(_config);
+var _config = _interopRequireDefault(require("../config"));
 
 var _common = require("../common");
 
-var _renderLayout = require("../render-layout");
-
-var _renderLayout2 = _interopRequireDefault(_renderLayout);
+var _renderLayout = _interopRequireDefault(require("../render-layout"));
 
 var _util = require("../util");
 
-var _createInstance = require("../create-instance");
+var _createInstance = _interopRequireDefault(require("../create-instance"));
 
-var _createInstance2 = _interopRequireDefault(_createInstance);
-
-var _instanceSubroutes = require("./instance-subroutes");
-
-var _instanceSubroutes2 = _interopRequireDefault(_instanceSubroutes);
+var _instanceSubroutes = _interopRequireDefault(require("./instance-subroutes"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const routes = new _express.Router();
-exports.default = routes;
+var _default = routes;
+exports.default = _default;
 routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
   tags: ['Instance'],
   summary: 'List instances',
@@ -65,7 +57,7 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
   await syncITee(instances);
   res.format({
     html: function () {
-      res.send((0, _renderLayout2.default)('Lab instances', {
+      res.send((0, _renderLayout.default)('Lab instances', {
         instances
       }, '<script src="bundle/instance.js"></script>'));
     },
@@ -76,14 +68,14 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
 }));
 
 async function syncITee(instances) {
-  if (!('iTee' in _config2.default) || !('key' in _config2.default.iTee)) {
+  if (!('iTee' in _config.default) || !('key' in _config.default.iTee)) {
     return;
   }
 
   let iTeeInstances;
 
   try {
-    const response = await (0, _nodeFetch2.default)(_config2.default.iTee.url + '/lab_users.json?condition[end]=null&auth_token=' + encodeURIComponent(_config2.default.iTee.key), {
+    const response = await (0, _nodeFetch.default)(_config.default.iTee.url + '/lab_users.json?condition[end]=null&auth_token=' + encodeURIComponent(_config.default.iTee.key), {
       headers: {
         'x-request-id': (0, _common.reqid)()
       }
@@ -210,8 +202,8 @@ async function importInstanceFromITee(privateToken) {
     privateToken: labinfo.labuser.uuid
   };
 
-  if ('labProxy' in _config2.default) {
-    instance.labProxy = _config2.default.labProxy;
+  if ('labProxy' in _config.default) {
+    instance.labProxy = _config.default.labProxy;
   }
 
   if ('assistant' in lab) {
@@ -274,7 +266,7 @@ async function importInstanceFromITee(privateToken) {
     return consistencyErrors;
   }
 
-  return (0, _createInstance2.default)(instance);
+  return (0, _createInstance.default)(instance);
 }
 
 routes.use('/:token', (0, _expressOpenapiMiddleware.apiOperation)({
@@ -295,7 +287,7 @@ routes.use('/:token', (0, _expressOpenapiMiddleware.apiOperation)({
     include_docs: true
   });
 
-  if (result.rows.length === 0 && 'iTee' in _config2.default) {
+  if (result.rows.length === 0 && 'iTee' in _config.default) {
     _common.logger.debug('Trying to import lab instance from I-Tee', {
       privateToken: req.params.token
     });
@@ -327,4 +319,4 @@ routes.use('/:token', (0, _expressOpenapiMiddleware.apiOperation)({
     req.instanceToken = req.params.token;
   }
 }));
-routes.use('/:token', _instanceSubroutes2.default);
+routes.use('/:token', _instanceSubroutes.default);

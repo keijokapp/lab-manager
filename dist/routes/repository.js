@@ -3,37 +3,30 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = void 0;
 
 var _fs = require("fs");
 
 var _child_process = require("child_process");
 
-var _express = require("express");
+var _express = _interopRequireDefault(require("express"));
 
-var _express2 = _interopRequireDefault(_express);
-
-var _react = require("react");
-
-var _react2 = _interopRequireDefault(_react);
+var _react = _interopRequireDefault(require("react"));
 
 var _expressOpenapiMiddleware = require("express-openapi-middleware");
 
-var _config = require("../config");
-
-var _config2 = _interopRequireDefault(_config);
+var _config = _interopRequireDefault(require("../config"));
 
 var _common = require("../common");
 
-var _renderLayout = require("../render-layout");
-
-var _renderLayout2 = _interopRequireDefault(_renderLayout);
+var _renderLayout = _interopRequireDefault(require("../render-layout"));
 
 var _util = require("../util");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const routes = new _express2.default.Router();
-exports.default = routes;
+const routes = new _express.default.Router();
+var _default = routes;
 /**
  * Reads refs of give repository
  * @nothrow
@@ -41,10 +34,12 @@ exports.default = routes;
  * @returns {string[]} commit & ref name pairs or null on error
  */
 
+exports.default = _default;
+
 async function getRepositoryRefs(repository) {
   try {
     return new Promise(resolve => {
-      (0, _child_process.execFile)('git', ['-C', _config2.default.repositories + '/' + repository + '.git', 'show-ref'], (e, stdout) => {
+      (0, _child_process.execFile)('git', ['-C', _config.default.repositories + '/' + repository + '.git', 'show-ref'], (e, stdout) => {
         if (e) {
           _common.logger.error('Failed to read refs of repository', {
             repository,
@@ -90,7 +85,7 @@ async function getRepositoryRefs(repository) {
 async function fetchRepository(repository) {
   try {
     return new Promise(resolve => {
-      (0, _child_process.execFile)('git', ['-C', _config2.default.repositories + '/' + repository + '.git', 'fetch', '-a', '--prune'], e => {
+      (0, _child_process.execFile)('git', ['-C', _config.default.repositories + '/' + repository + '.git', 'fetch', '-a', '--prune'], e => {
         if (e) {
           _common.logger.error('Failed to fetch remote refs', {
             repository,
@@ -167,14 +162,14 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
     return;
   }
 
-  if (!('repositories' in _config2.default)) {
+  if (!('repositories' in _config.default)) {
     res.status(501).send(req.apiOperation.responses[501].content['application/json'].example);
     return;
   }
 
   let failed = false;
   const repositories = await new Promise((resolve, reject) => {
-    (0, _fs.readdir)(_config2.default.repositories, (e, files) => {
+    (0, _fs.readdir)(_config.default.repositories, (e, files) => {
       if (e) {
         reject(e);
       } else {
@@ -190,7 +185,7 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
                 return {
                   _id: repository,
                   refs,
-                  link: _config2.default.appUrl + '/repository/' + repository + '.git'
+                  link: _config.default.appUrl + '/repository/' + repository + '.git'
                 };
               }
             }));
@@ -212,7 +207,7 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
 
   res.format({
     html: function () {
-      res.send((0, _renderLayout2.default)('Repositories', {
+      res.send((0, _renderLayout.default)('Repositories', {
         repositories
       }, '<script src="bundle/repository.js"></script>'));
     },
@@ -260,7 +255,7 @@ routes.get('/:repository', (0, _expressOpenapiMiddleware.apiOperation)({
       error: 'Permission Denied',
       message: 'Client is not authorized'
     });
-  } else if (!('repositories' in _config2.default)) {
+  } else if (!('repositories' in _config.default)) {
     res.status(501).send({
       error: 'Not Implemented',
       message: 'Repositories are not available'
@@ -311,7 +306,7 @@ routes.post('/:repository/fetch', (0, _expressOpenapiMiddleware.apiOperation)({
   }
 }), (req, res) => {
   // No authorization
-  if (!('repositories' in _config2.default)) {
+  if (!('repositories' in _config.default)) {
     res.status(501).send({
       error: 'Not Implemented',
       message: 'Repositories are not available'

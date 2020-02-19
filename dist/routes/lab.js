@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = void 0;
 
 var _express = require("express");
 
@@ -14,22 +15,17 @@ var _util = require("../util");
 
 var _common = require("../common");
 
-var _renderLayout = require("../render-layout");
+var _renderLayout = _interopRequireDefault(require("../render-layout"));
 
-var _renderLayout2 = _interopRequireDefault(_renderLayout);
+var _createInstance = _interopRequireDefault(require("../create-instance"));
 
-var _createInstance = require("../create-instance");
-
-var _createInstance2 = _interopRequireDefault(_createInstance);
-
-var _instanceSubroutes = require("./instance-subroutes");
-
-var _instanceSubroutes2 = _interopRequireDefault(_instanceSubroutes);
+var _instanceSubroutes = _interopRequireDefault(require("./instance-subroutes"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const routes = new _express.Router();
-exports.default = routes;
+var _default = routes;
+exports.default = _default;
 const labSchema = {
   type: 'object',
   properties: {
@@ -329,7 +325,7 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
   });
   res.format({
     html: function () {
-      res.send((0, _renderLayout2.default)('Labs', {
+      res.send((0, _renderLayout.default)('Labs', {
         labs
       }, '<script src="bundle/lab.js"></script>'));
     },
@@ -535,7 +531,7 @@ routes.get('/:lab', (0, _expressOpenapiMiddleware.apiOperation)({
     res.set('etag', lab._rev);
     res.format({
       html: function () {
-        res.send((0, _renderLayout2.default)('Lab', {
+        res.send((0, _renderLayout.default)('Lab', {
           lab
         }, '<script src="bundle/lab.js"></script>'));
       },
@@ -732,7 +728,7 @@ routes.post('/:lab/instance/:username', (0, _expressOpenapiMiddleware.apiOperati
     }
   }
 
-  const instance = await (0, _createInstance2.default)({
+  const instance = await (0, _createInstance.default)({
     _id: 'instance/' + lab._id + ':' + username,
     lab,
     username
@@ -842,4 +838,4 @@ routes.delete('/:lab/instance/:username', (0, _expressOpenapiMiddleware.apiOpera
     }
   });
 });
-routes.use('/:lab/instance/:username', _instanceSubroutes2.default);
+routes.use('/:lab/instance/:username', _instanceSubroutes.default);

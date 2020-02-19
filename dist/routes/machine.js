@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = void 0;
 
 var _express = require("express");
 
@@ -10,14 +11,13 @@ var _expressOpenapiMiddleware = require("express-openapi-middleware");
 
 var _common = require("../common");
 
-var _renderLayout = require("../render-layout");
-
-var _renderLayout2 = _interopRequireDefault(_renderLayout);
+var _renderLayout = _interopRequireDefault(require("../render-layout"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const routes = new _express.Router();
-exports.default = routes;
+var _default = routes;
+exports.default = _default;
 routes.use((req, res, next) => {
   if ((0, _common.authorize)(req.token)) {
     next();
@@ -118,7 +118,7 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
   res.format({
     html: function () {
       getMachines(true).then(body => {
-        res.send((0, _renderLayout2.default)(title, {
+        res.send((0, _renderLayout.default)(title, {
           machines: body,
           activeTab
         }, '<script src="bundle/machine.js"></script>'));

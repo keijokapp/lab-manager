@@ -3,11 +3,9 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.SecretKey = exports.TimeSince = undefined;
+exports.SecretKey = exports.TimeSince = void 0;
 
-var _react = require("react");
-
-var _react2 = _interopRequireDefault(_react);
+var _react = _interopRequireDefault(require("react"));
 
 var _semanticUiReact = require("semantic-ui-react");
 
@@ -53,7 +51,7 @@ function timeSince(date) {
   return seconds + ' seconds';
 }
 
-class TimeSince extends _react2.default.Component {
+class TimeSince extends _react.default.Component {
   render() {
     const t = timeSince(this.props.date);
     setTimeout(() => {
@@ -66,7 +64,7 @@ class TimeSince extends _react2.default.Component {
 
 exports.TimeSince = TimeSince;
 
-class SecretKey extends _react2.default.Component {
+class SecretKey extends _react.default.Component {
   constructor() {
     super();
     this.state = {};
@@ -78,9 +76,9 @@ class SecretKey extends _react2.default.Component {
     delete c.as;
     delete c.children;
 
-    const child = _react2.default.createElement('as' in this.props ? this.props.as : 'span', c, this.state.visible ? this.props.children : 'XXX');
+    const child = _react.default.createElement('as' in this.props ? this.props.as : 'span', c, this.state.visible ? this.props.children : 'XXX');
 
-    return _react2.default.createElement("span", null, child, " ", _react2.default.createElement(_semanticUiReact.Icon, {
+    return _react.default.createElement("span", null, child, " ", _react.default.createElement(_semanticUiReact.Icon, {
       name: this.state.visible ? 'eye slash' : 'eye',
       onClick: () => {
         this.setState({

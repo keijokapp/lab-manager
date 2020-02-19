@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = void 0;
 
 var _child_process = require("child_process");
 
@@ -12,20 +13,16 @@ var _expressOpenapiMiddleware = require("express-openapi-middleware");
 
 var _common = require("../common");
 
-var _renderLayout = require("../render-layout");
-
-var _renderLayout2 = _interopRequireDefault(_renderLayout);
+var _renderLayout = _interopRequireDefault(require("../render-layout"));
 
 var _util = require("../util");
 
-var _config = require("../config");
-
-var _config2 = _interopRequireDefault(_config);
+var _config = _interopRequireDefault(require("../config"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const routes = new _express.Router();
-exports.default = routes;
+var _default = routes;
 /**
  * Populates machine object with state properties
  * @nothrow
@@ -34,6 +31,8 @@ exports.default = routes;
  * @param ip {boolean} whether to ask IP-s from VirtualBox
  * @returns {void}
  */
+
+exports.default = _default;
 
 async function machineInfo(type, machine, ip) {
   switch (type) {
@@ -58,7 +57,7 @@ async function machineInfo(type, machine, ip) {
 routes.use((req, res, next) => {
   if (req.instance && req.instance.imported && !req.instanceImported) {
     const instance = req.instance;
-    ('iTee' in _config2.default ? (0, _common.iTeeLabinfo)(instance.privateToken) : Promise.resolve(null)).then(labinfo => {
+    ('iTee' in _config.default ? (0, _common.iTeeLabinfo)(instance.privateToken) : Promise.resolve(null)).then(labinfo => {
       if (labinfo === null) {
         delete req.instance;
         delete req.instanceToken;
@@ -196,7 +195,7 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
 
   res.format({
     html: function () {
-      res.send((0, _renderLayout2.default)('Lab instance', {
+      res.send((0, _renderLayout.default)('Lab instance', {
         instance,
         instanceToken: req.instanceToken
       }, '<script src="bundle/instance.js"></script>'));
@@ -466,7 +465,7 @@ routes.get('/repository/:repository/info/refs', (req, res) => {
   const instance = req.instance;
   const id = req.params.repository;
 
-  if (!('repositories' in _config2.default)) {
+  if (!('repositories' in _config.default)) {
     res.status(501).send('Repositories are not available');
   } else if (req.query.service !== 'git-upload-pack') {
     res.status(403).send('Unauthorized service');
@@ -485,7 +484,7 @@ routes.get('/repository/:repository/info/refs', (req, res) => {
       'expires': '0'
     });
     const repository = instance.lab.repositories[id];
-    const repositoryLocation = _config2.default.repositories + '/' + repository.name + '.git';
+    const repositoryLocation = _config.default.repositories + '/' + repository.name + '.git';
     (0, _child_process.execFile)('git-upload-pack', ['--stateless-rpc', '--advertise-refs', repositoryLocation], (e, stdout) => {
       if (e) {
         _common.logger.error('Failed to execute git-upload-pack service', {

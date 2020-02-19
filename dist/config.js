@@ -3,10 +3,9 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.default = void 0;
 
-var _fs = require("fs");
-
-var _fs2 = _interopRequireDefault(_fs);
+var _fs = _interopRequireDefault(require("fs"));
 
 var _jsonschema = require("jsonschema");
 
@@ -17,7 +16,7 @@ let jsonConfig, config;
 if (process.argv.length >= 3) {
   try {
     console.log('Reading configuration from %s', process.argv[2]);
-    jsonConfig = _fs2.default.readFileSync(process.argv[2]);
+    jsonConfig = _fs.default.readFileSync(process.argv[2]);
   } catch (e) {
     console.error('Failed to read configuration file: ', e.message);
     process.exit(1);
@@ -25,7 +24,7 @@ if (process.argv.length >= 3) {
 } else {
   try {
     console.log('Reading configuration from standard input');
-    jsonConfig = _fs2.default.readFileSync(0);
+    jsonConfig = _fs.default.readFileSync(0);
   } catch (e) {
     console.error('Failed to read configuration from standard input: ', e.message);
     process.exit(1);
@@ -178,4 +177,5 @@ if (validationResult.errors.length) {
   process.exit(1);
 }
 
-exports.default = config;
+var _default = config;
+exports.default = _default;
