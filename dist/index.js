@@ -21,6 +21,7 @@ let notify = {
 };
 
 try {
+  // eslint-disable-next-line global-require,import/no-extraneous-dependencies
   notify = require('sd-notify');
 } catch (e) {
   _common.logger.debug('Systemd notifications are disabled');
@@ -66,14 +67,17 @@ if (_config.default.listen === 'systemd') {
     });
   } else {
     const PipeWrap = process.binding('pipe_wrap');
+    let handle;
 
     if (PipeWrap.constants && typeof PipeWrap.constants.SOCKET !== 'undefined') {
-      server._handle = new PipeWrap.Pipe(PipeWrap.constants.SOCKET);
+      handle = new PipeWrap.Pipe(PipeWrap.constants.SOCKET);
     } else {
-      server._handle = new PipeWrap.Pipe();
+      handle = new PipeWrap.Pipe();
     }
 
-    server._handle.open(3);
+    handle.open(3); // eslint-disable-next-line no-underscore-dangle
+
+    server._handle = handle; // eslint-disable-next-line no-underscore-dangle
 
     server._listen2(null, -1, -1);
 

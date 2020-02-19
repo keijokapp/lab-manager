@@ -23,7 +23,7 @@ var _createInstance = _interopRequireDefault(require("../create-instance"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const MACHINE_ID_MULTIPLIER = Math.pow(2, 48);
+const MACHINE_ID_MULTIPLIER = 2 ** 48;
 
 function instanceToLabUser(instance) {
   return {
@@ -104,9 +104,11 @@ function instanceToLabinfo(instance) {
 
 
 async function getInstance(labId, userId) {
-  const docs = await _common.db.query(function (doc) {
+  const docs = await _common.db.query(doc => {
     if ('iTeeCompat' in doc) {
-      emit(doc.iTeeCompat.instanceId);
+      // eslint-disable-next-line no-undef
+      emit(doc.iTeeCompat.instanceId); // eslint-disable-next-line no-undef
+
       emit([doc.iTeeCompat.labId, doc.iTeeCompat.userId]);
     }
   }, {
@@ -153,7 +155,7 @@ async function getInstance(labId, userId) {
 
 
 async function fetchITeeUser(userId) {
-  const response = await (0, _nodeFetch.default)(_config.default.iTee.url + '/users.json' + '?conditions[id]=' + encodeURIComponent(userId) + '&auth_token=' + encodeURIComponent(_config.default.iTee.key), {
+  const response = await (0, _nodeFetch.default)(`${_config.default.iTee.url}/users.json?conditions[id]=${encodeURIComponent(userId)}&auth_token=${encodeURIComponent(_config.default.iTee.key)}`, {
     headers: {
       'x-request-id': (0, _common.reqid)()
     }
@@ -184,7 +186,7 @@ async function fetchITeeUser(userId) {
 
 
 async function fetchITeeLab(labId) {
-  const response = await (0, _nodeFetch.default)(_config.default.iTee.url + '/labs.json' + '?conditions[id]=' + encodeURIComponent(labId) + '&auth_token=' + encodeURIComponent(_config.default.iTee.key), {
+  const response = await (0, _nodeFetch.default)(`${_config.default.iTee.url}/labs.json?conditions[id]=${encodeURIComponent(labId)}&auth_token=${encodeURIComponent(_config.default.iTee.key)}`, {
     headers: {
       'x-request-id': (0, _common.reqid)()
     }
@@ -327,21 +329,21 @@ routes.get('/lab_users.json', (0, _expressOpenapiMiddleware.apiOperation)({
     }
   }
 }), (0, _util.asyncMiddleware)(async (req, res) => {
-  let instance, iTeeCompat;
+  let result;
 
   if ('id' in req.body.conditions) {
-    [instance, iTeeCompat] = await getInstance(req.body.conditions.id);
+    result = await getInstance(req.body.conditions.id);
   } else if ('iTee' in _config.default && 'key' in _config.default.iTee) {
-    [instance, iTeeCompat] = await getInstance(req.body.conditions.lab_id, req.body.conditions.user_id);
+    result = await getInstance(req.body.conditions.lab_id, req.body.conditions.user_id);
   } else {
     res.status(503).send(req.apiOperation.responses[503].content['application/json'].example);
     return;
   }
 
-  if (instance) {
-    res.send([instanceToLabUser(instance)]);
-  } else if (iTeeCompat) {
-    res.send([instanceToLabUser(iTeeCompat)]);
+  if (result[0]) {
+    res.send([instanceToLabUser(result[0])]);
+  } else if (result[1]) {
+    res.send([instanceToLabUser(result[1])]);
   } else {
     res.send([]);
   }
@@ -436,7 +438,7 @@ routes.post('/lab_users.json', (0, _expressOpenapiMiddleware.apiOperation)({
   }
 
   const iTeeCompat = {
-    _id: 'i-tee-compat/' + lab.name + ':' + user.username,
+    _id: `i-tee-compat/${lab.name}:${user.username}`,
     username: user.username,
     iTeeCompat: {
       instanceId: Date.now(),
@@ -581,11 +583,11 @@ routes.post('/set_vta_info.json', (0, _expressOpenapiMiddleware.apiOperation)({
   };
   iTeeCompat.assistant = {
     userKey: req.body.user_key,
-    link: iTeeCompat.lab.assistant.url + '/' + encodeURIComponent(iTeeCompat.lab.assistant.lab) + '/' + encodeURIComponent(req.body.user_key)
+    link: `${iTeeCompat.lab.assistant.url}/${encodeURIComponent(iTeeCompat.lab.assistant.lab)}/${encodeURIComponent(req.body.user_key)}`
   };
 
   try {
-    iTeeCompat._id = 'i-tee-compat/' + iTeeCompat._id;
+    iTeeCompat._id = `i-tee-compat/${iTeeCompat._id}`;
     await _common.db.put(iTeeCompat);
   } catch (e) {
     if (e.name === 'conflict') {
@@ -600,9 +602,9 @@ routes.post('/set_vta_info.json', (0, _expressOpenapiMiddleware.apiOperation)({
         message: 'Concurrency problems, eh?'
       });
       return;
-    } else {
-      throw e;
     }
+
+    throw e;
   }
 
   res.send(req.apiOperation.responses[200].content['application/json'].example);
@@ -663,7 +665,9 @@ routes.post('/start_lab_by_id.json', (0, _expressOpenapiMiddleware.apiOperation)
     }
   }
 }), (0, _util.asyncMiddleware)(async (req, res) => {
-  let [instance, iTeeCompat] = await getInstance(req.body.labuser_id);
+  const result = await getInstance(req.body.labuser_id);
+  let instance = result[0];
+  const iTeeCompat = result[1];
 
   if (!instance && !iTeeCompat) {
     res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
@@ -681,7 +685,7 @@ routes.post('/start_lab_by_id.json', (0, _expressOpenapiMiddleware.apiOperation)
   }
 
   try {
-    const lab = await _common.db.get('lab/' + iTeeCompat.lab._id);
+    const lab = await _common.db.get(`lab/${iTeeCompat.lab._id}`);
 
     if ('assistant' in iTeeCompat.lab) {
       lab.assistant = iTeeCompat.lab.assistant;
@@ -697,9 +701,9 @@ routes.post('/start_lab_by_id.json', (0, _expressOpenapiMiddleware.apiOperation)
 
       res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
       return;
-    } else {
-      throw e;
     }
+
+    throw e;
   }
 
   instance = await (0, _createInstance.default)(iTeeCompat);
@@ -929,7 +933,7 @@ routes.get('/labuser_vms.json', (0, _expressOpenapiMiddleware.apiOperation)({
 
         default:
           _common.logger.error('Failed to get machine info', {
-            type: type,
+            type: machine.type,
             machine: instanceMachine.name,
             e: 'Unknown machine type'
           });
@@ -1037,8 +1041,9 @@ routes.get('/open_guacamole.json', (0, _expressOpenapiMiddleware.apiOperation)({
 
   const instanceId = req.body.id % MACHINE_ID_MULTIPLIER;
   const machineIndex = Math.floor(req.body.id / MACHINE_ID_MULTIPLIER) - 1;
-  const result = await _common.db.query(function (doc) {
+  const result = await _common.db.query(doc => {
     if (~doc._id.indexOf('instance/') && 'iTeeCompat' in doc) {
+      // eslint-disable-next-line no-undef
       emit(doc.iTeeCompat.instanceId);
     }
   }, {
@@ -1065,7 +1070,7 @@ routes.get('/open_guacamole.json', (0, _expressOpenapiMiddleware.apiOperation)({
   } else {
     res.send({
       success: true,
-      url: _config.default.remote + '/' + encodeURIComponent(instance.publicToken) + ':' + encodeURIComponent(instance.lab.machineOrder[machineIndex])
+      url: `${_config.default.remote}/${encodeURIComponent(instance.publicToken)}:${encodeURIComponent(instance.lab.machineOrder[machineIndex])}`
     });
   }
 }));
@@ -1134,8 +1139,9 @@ routes.get('/start_vm.json', (0, _expressOpenapiMiddleware.apiOperation)({
 }), (0, _util.asyncMiddleware)(async (req, res) => {
   const instanceId = req.body.id % MACHINE_ID_MULTIPLIER;
   const machineIndex = Math.floor(req.body.id / MACHINE_ID_MULTIPLIER) - 1;
-  const result = await _common.db.query(function (doc) {
+  const result = await _common.db.query(doc => {
     if (~doc._id.indexOf('instance/') && 'iTeeCompat' in doc) {
+      // eslint-disable-next-line no-undef
       emit(doc.iTeeCompat.instanceId);
     }
   }, {
@@ -1253,8 +1259,9 @@ routes.get('/stop_vm.json', (0, _expressOpenapiMiddleware.apiOperation)({
 }), (0, _util.asyncMiddleware)(async (req, res) => {
   const instanceId = req.body.id % MACHINE_ID_MULTIPLIER;
   const machineIndex = Math.floor(req.body.id / MACHINE_ID_MULTIPLIER) - 1;
-  const result = await _common.db.query(function (doc) {
+  const result = await _common.db.query(doc => {
     if (~doc._id.indexOf('instance/') && 'iTeeCompat' in doc) {
+      // eslint-disable-next-line no-undef
       emit(doc.iTeeCompat.instanceId);
     }
   }, {

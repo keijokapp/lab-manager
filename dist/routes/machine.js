@@ -76,7 +76,7 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
     }
 
     if ('templates' in req.query) {
-      params.push('filter=' + encodeURIComponent('-template$'));
+      params.push(`filter=${encodeURIComponent('-template$')}`);
     }
 
     if ('detailed' in req.query || html) {
@@ -87,7 +87,7 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
       params.push('ip');
     }
 
-    return (0, _common.virtualboxRequest)('/machine?' + params.join('&')).then(response => {
+    return (0, _common.virtualboxRequest)(`/machine?${params.join('&')}`).then(response => {
       if (!response.ok) {
         return response.text().then(body => {
           _common.logger.error('Failed to request machines', {
@@ -97,9 +97,9 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
           res.status(response.status).send(body);
           return Promise.reject(new Error('Failed to request machines'));
         });
-      } else {
-        return response.json();
       }
+
+      return response.json();
     });
   }
 
@@ -116,7 +116,7 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
   }
 
   res.format({
-    html: function () {
+    html() {
       getMachines(true).then(body => {
         res.send((0, _renderLayout.default)(title, {
           machines: body,
@@ -124,11 +124,13 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
         }, '<script src="bundle/machine.js"></script>'));
       }).catch(next);
     },
-    json: function () {
+
+    json() {
       getMachines().then(body => {
         res.send(body);
       }).catch(next);
     }
+
   });
 });
 routes.get('/:machine', (0, _expressOpenapiMiddleware.apiOperation)({
@@ -160,16 +162,16 @@ routes.get('/:machine', (0, _expressOpenapiMiddleware.apiOperation)({
     }
   }
 }), (req, res, next) => {
-  (0, _common.virtualboxRequest)('/machine/' + encodeURIComponent(req.params.machine) + ('ip' in req.query ? '?ip' : '')).then(response => {
+  (0, _common.virtualboxRequest)(`/machine/${encodeURIComponent(req.params.machine)}${'ip' in req.query ? '?ip' : ''}`).then(response => {
     if (response.ok) {
       return response.json().then(body => {
         res.status(response.status).send(body);
       });
-    } else {
-      return response.text().then(body => {
-        res.status(response.status).send(body);
-      });
     }
+
+    return response.text().then(body => {
+      res.status(response.status).send(body);
+    });
   }).catch(next);
 });
 routes.put('/:machine', (0, _expressOpenapiMiddleware.apiOperation)({
@@ -212,7 +214,7 @@ routes.put('/:machine', (0, _expressOpenapiMiddleware.apiOperation)({
     }
   }
 }), (req, res, next) => {
-  (0, _common.virtualboxRequest)('/machine/' + encodeURIComponent(req.params.machine) + ('ip' in req.query ? '?ip' : ''), {
+  (0, _common.virtualboxRequest)(`/machine/${encodeURIComponent(req.params.machine)}${'ip' in req.query ? '?ip' : ''}`, {
     method: 'PUT',
     body: req.body
   }).then(response => {
@@ -220,11 +222,11 @@ routes.put('/:machine', (0, _expressOpenapiMiddleware.apiOperation)({
       return response.json().then(body => {
         res.status(response.status).send(body);
       });
-    } else {
-      return response.text().then(body => {
-        res.status(response.status).send(body);
-      });
     }
+
+    return response.text().then(body => {
+      res.status(response.status).send(body);
+    });
   }).catch(next);
 });
 routes.post('/:machine/snapshot/:snapshot', (0, _expressOpenapiMiddleware.apiOperation)({
@@ -254,17 +256,17 @@ routes.post('/:machine/snapshot/:snapshot', (0, _expressOpenapiMiddleware.apiOpe
     }
   }
 }), (req, res, next) => {
-  (0, _common.virtualboxRequest)('/machine/' + encodeURIComponent(req.params.machine) + '/snapshot/' + encodeURIComponent(req.params.snapshot), {
+  (0, _common.virtualboxRequest)(`/machine/${encodeURIComponent(req.params.machine)}/snapshot/${encodeURIComponent(req.params.snapshot)}`, {
     method: 'POST'
   }).then(response => {
     if (response.ok) {
       return response.json().then(body => {
         res.status(response.status).send(body);
       });
-    } else {
-      return response.text().then(body => {
-        res.status(response.status).send(body);
-      });
     }
+
+    return response.text().then(body => {
+      res.status(response.status).send(body);
+    });
   }).catch(next);
 });

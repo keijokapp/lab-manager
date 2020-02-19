@@ -58,6 +58,6 @@ function _default(callback) {
       process.exit(callback);
     }
   } else {
-    throw new Error('Bad exit code: ' + callback);
+    throw new Error(`Bad exit code: ${callback}`);
   }
 }

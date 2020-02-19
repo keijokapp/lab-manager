@@ -56,14 +56,16 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
   });
   await syncITee(instances);
   res.format({
-    html: function () {
+    html() {
       res.send((0, _renderLayout.default)('Lab instances', {
         instances
       }, '<script src="bundle/instance.js"></script>'));
     },
-    json: function () {
+
+    json() {
       res.send(instances);
     }
+
   });
 }));
 
@@ -75,7 +77,7 @@ async function syncITee(instances) {
   let iTeeInstances;
 
   try {
-    const response = await (0, _nodeFetch.default)(_config.default.iTee.url + '/lab_users.json?condition[end]=null&auth_token=' + encodeURIComponent(_config.default.iTee.key), {
+    const response = await (0, _nodeFetch.default)(`${_config.default.iTee.url}/lab_users.json?condition[end]=null&auth_token=${encodeURIComponent(_config.default.iTee.key)}`, {
       headers: {
         'x-request-id': (0, _common.reqid)()
       }
@@ -130,6 +132,7 @@ async function syncITee(instances) {
   }
 
   for (const privateToken in privateTokens) {
+    // eslint-disable-next-line no-loop-func
     promises.push(importInstanceFromITee(privateToken).then(instance => {
       if (instance instanceof Object && '_id' in instance) {
         let i;
@@ -175,7 +178,7 @@ async function importInstanceFromITee(privateToken) {
   let lab;
 
   try {
-    lab = await _common.db.get('lab/' + labinfo.lab.name);
+    lab = await _common.db.get(`lab/${labinfo.lab.name}`);
   } catch (e) {
     if (e.name === 'not_found') {
       return ['Lab does not exist'];
@@ -188,7 +191,7 @@ async function importInstanceFromITee(privateToken) {
 
   const consistencyErrors = [];
   const instance = {
-    _id: labinfo.lab.name + ':' + labinfo.user.username,
+    _id: `${labinfo.lab.name}:${labinfo.user.username}`,
     username: labinfo.user.username,
     imported: true,
     startTime: labinfo.labuser.start,
@@ -224,7 +227,7 @@ async function importInstanceFromITee(privateToken) {
     } else {
       instance.assistant = {
         userKey: labinfo.user.user_key,
-        link: labinfo.assistant.uri + '/lab/' + encodeURIComponent(labinfo.lab.lab_hash) + '/' + encodeURIComponent(labinfo.user.user_key)
+        link: `${labinfo.assistant.uri}/lab/${encodeURIComponent(labinfo.lab.lab_hash)}/${encodeURIComponent(labinfo.user.user_key)}`
       };
     }
   }
@@ -276,8 +279,8 @@ routes.use('/:token', (0, _expressOpenapiMiddleware.apiOperation)({
     description: 'Public or private token of instance',
     required: true,
     schema: {
-      'type': 'string',
-      'minLength': 1
+      type: 'string',
+      minLength: 1
     }
   }]
 }), (0, _util.asyncMiddleware)(async (req, res) => {

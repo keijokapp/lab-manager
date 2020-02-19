@@ -11,7 +11,8 @@ var _jsonschema = require("jsonschema");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-let jsonConfig, config;
+/* eslint-disable no-console */
+let jsonConfig;
 
 if (process.argv.length >= 3) {
   try {
@@ -29,12 +30,15 @@ if (process.argv.length >= 3) {
     console.error('Failed to read configuration from standard input: ', e.message);
     process.exit(1);
   }
-}
+} // eslint-disable-next-line import/no-mutable-exports
+
+
+let config;
 
 try {
   config = JSON.parse(jsonConfig);
 } catch (e) {
-  console.error('Failed to parse configuration: ' + e.message);
+  console.error(`Failed to parse configuration: ${e.message}`);
   process.exit(1);
 }
 

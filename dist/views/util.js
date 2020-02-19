@@ -17,43 +17,46 @@ function timeSince(date) {
   let reminder = seconds % 31536000;
 
   if (interval >= 1) {
-    return Math.floor(interval) + ' years ' + Math.round(reminder / 86400) + ' months';
+    return `${Math.floor(interval)} years ${Math.round(reminder / 86400)} months`;
   }
 
   interval = seconds / 2592000;
   reminder = seconds % 2592000;
 
   if (interval >= 1) {
-    return Math.floor(interval) + ' months ' + Math.round(reminder / 86400) + ' days';
+    return `${Math.floor(interval)} months ${Math.round(reminder / 86400)} days`;
   }
 
   interval = seconds / 86400;
   reminder = seconds % 86400;
 
   if (interval >= 1) {
-    return Math.floor(interval) + ' days ' + Math.round(reminder / 3600) + ' hours';
+    return `${Math.floor(interval)} days ${Math.round(reminder / 3600)} hours`;
   }
 
   interval = seconds / 3600;
   reminder = seconds % 3600;
 
   if (interval >= 1) {
-    return Math.floor(interval) + ' hours ' + Math.round(reminder / 60) + ' minutes';
+    return `${Math.floor(interval)} hours ${Math.round(reminder / 60)} minutes`;
   }
 
   interval = seconds / 60;
   reminder = seconds % 60;
 
   if (interval >= 1) {
-    return Math.floor(interval) + ' minutes ' + reminder + ' seconds';
+    return `${Math.floor(interval)} minutes ${reminder} seconds`;
   }
 
-  return seconds + ' seconds';
+  return `${seconds} seconds`;
 }
 
 class TimeSince extends _react.default.Component {
   render() {
-    const t = timeSince(this.props.date);
+    const {
+      date
+    } = this.props;
+    const t = timeSince(date);
     setTimeout(() => {
       this.forceUpdate();
     }, 6000);
@@ -67,25 +70,34 @@ exports.TimeSince = TimeSince;
 class SecretKey extends _react.default.Component {
   constructor() {
     super();
-    this.state = {};
+    this.state = {
+      visible: false
+    };
   }
 
   render() {
-    const c = { ...this.props
-    };
-    delete c.as;
-    delete c.children;
+    const {
+      children,
+      as,
+      ...c
+    } = this.props;
+    const {
+      visible
+    } = this.state;
 
-    const child = _react.default.createElement('as' in this.props ? this.props.as : 'span', c, this.state.visible ? this.props.children : 'XXX');
+    const child = _react.default.createElement(typeof as !== 'undefined' ? as : 'span', c, visible ? children : 'XXX');
 
-    return _react.default.createElement("span", null, child, " ", _react.default.createElement(_semanticUiReact.Icon, {
-      name: this.state.visible ? 'eye slash' : 'eye',
+    return _react.default.createElement("span", null, child, _react.default.createElement(_semanticUiReact.Icon, {
+      link: true,
+      name: visible ? 'eye slash' : 'eye',
+      style: {
+        margin: '0 0 0 .5em'
+      },
       onClick: () => {
         this.setState({
-          visible: !this.state.visible
+          visible: !visible
         });
-      },
-      link: true
+      }
     }));
   }
 

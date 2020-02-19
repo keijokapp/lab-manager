@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
+exports.default = _default;
 
 var _react = _interopRequireDefault(require("react"));
 
@@ -20,38 +20,86 @@ class Machine extends _react.default.Component {
   }
 
   getNextSnapshot() {
-    if (!this.state.machine.id.endsWith('-template')) {
+    const {
+      machine
+    } = this.state;
+
+    if (!machine.id.endsWith('-template')) {
       return '';
     }
 
-    const basename = this.state.machine.id.replace(/-template$/, '');
+    const basename = machine.id.replace(/-template$/, '');
 
-    if (!this.state.machine.snapshot) {
-      return basename + '-1-template';
+    if (!machine.snapshot) {
+      return `${basename}-1-template`;
     }
 
-    const snapshotIndex = Number(this.state.machine.snapshot.replace(basename + '-', '').replace('-template', ''));
+    const snapshotIndex = Number(machine.snapshot.replace(`${basename}-`, '').replace('-template', ''));
 
     if (Number.isInteger(snapshotIndex)) {
-      return basename + '-' + (snapshotIndex + 1) + '-template';
-    } else {
-      return '';
+      return `${basename}-${snapshotIndex + 1}-template`;
     }
+
+    return '';
   }
 
-  openRdp() {
-    window.open(config.remote + '/' + encodeURIComponent(this.state.machine.id));
+  setMachineState(state) {
+    const {
+      machine,
+      loading
+    } = this.state;
+
+    if (loading) {
+      return;
+    }
+
+    this.setState({
+      loading: state
+    });
+    fetch(`machine/${encodeURIComponent(machine.id)}?ip`, {
+      method: 'PUT',
+      headers: {
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        state
+      })
+    }).then(response => {
+      if (response.ok) {
+        return response.json().then(body => {
+          this.setState({
+            machine: { ...machine,
+              ...body
+            },
+            loading: null
+          });
+        });
+      }
+
+      this.setState({
+        loading: null
+      });
+    }).catch(e => {
+      this.setState({
+        loading: null
+      });
+    });
   }
 
   createSnapshot(snapshotName) {
-    if (this.state.loading) {
+    const {
+      machine,
+      loading
+    } = this.state;
+
+    if (loading) {
       return;
     }
 
     this.setState({
       loading: 'snapshot'
     });
-    fetch('machine/' + encodeURIComponent(this.state.machine.id) + '/snapshot/' + encodeURIComponent(snapshotName), {
+    fetch(`machine/${encodeURIComponent(machine.id)}/snapshot/${encodeURIComponent(snapshotName)}`, {
       method: 'POST'
     }).then(response => {
       if (response.ok) {
@@ -68,53 +116,27 @@ class Machine extends _react.default.Component {
     });
   }
 
-  setMachineState(state) {
-    if (this.state.loading) {
-      return;
-    }
-
-    this.setState({
-      loading: state
-    });
-    fetch('machine/' + encodeURIComponent(this.state.machine.id) + '?ip', {
-      method: 'PUT',
-      headers: {
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify({
-        state
-      })
-    }).then(response => {
-      if (response.ok) {
-        return response.json().then(body => {
-          this.setState({
-            machine: { ...this.state.machine,
-              ...body
-            },
-            loading: null
-          });
-        });
-      } else {
-        this.setState({
-          loading: null
-        });
-      }
-    }).catch(e => {
-      this.setState({
-        loading: null
-      });
-    });
+  openRdp() {
+    const {
+      machine
+    } = this.state;
+    window.open(`${config.remote}/${encodeURIComponent(machine.id)}`);
   }
 
   reload(force) {
-    if (!force && this.state.loading) {
+    const {
+      machine,
+      loading
+    } = this.state;
+
+    if (!force && loading) {
       return;
     }
 
     this.setState({
       loading: 'reload'
     });
-    fetch('machine/' + encodeURIComponent(this.state.machine.id) + '?ip').then(response => {
+    fetch(`machine/${encodeURIComponent(machine.id)}?ip`).then(response => {
       if (response.ok) {
         return response.json().then(body => {
           this.setState({
@@ -122,11 +144,11 @@ class Machine extends _react.default.Component {
             loading: null
           });
         });
-      } else {
-        this.setState({
-          loading: null
-        });
       }
+
+      this.setState({
+        loading: null
+      });
     }).catch(e => {
       this.setState({
         loading: null
@@ -135,7 +157,10 @@ class Machine extends _react.default.Component {
   }
 
   render() {
-    const machine = this.state.machine;
+    const {
+      machine,
+      loading
+    } = this.state;
     let rdpOrSnapshotButton;
 
     if (machine.state === 'running') {
@@ -145,23 +170,23 @@ class Machine extends _react.default.Component {
           color: "blue",
           basic: true,
           onClick: () => this.openRdp()
-        }, "RDP: ", machine['rdp-port'], " ", _react.default.createElement(_semanticUiReact.Icon, {
+        }, `RDP: ${machine['rdp-port']}`, _react.default.createElement(_semanticUiReact.Icon, {
           name: "external alternate"
         }));
       }
-    } else if (this.state.machine.state === 'poweroff' && this.state.machine.id.endsWith('-template')) {
+    } else if (machine.state === 'poweroff' && machine.id.endsWith('-template')) {
       rdpOrSnapshotButton = _react.default.createElement(_semanticUiReact.Popup, {
         on: "click",
         hideOnScroll: true,
         trigger: _react.default.createElement(_semanticUiReact.Button, {
           icon: true,
           color: "violet",
-          loading: this.state.loading === 'snapshot',
-          disabled: !!this.state.loading
+          loading: loading === 'snapshot',
+          disabled: !!loading
         }, _react.default.createElement(_semanticUiReact.Icon, {
           name: "save"
-        }), " Snapshot"),
-        onOpen: () => setTimeout(() => this.refs['snapshotName'].focus(), 1)
+        }), ' Snapshot'),
+        onOpen: () => setTimeout(() => this.refs.snapshotName.focus(), 1)
       }, _react.default.createElement(_semanticUiReact.Form, {
         style: {
           marginBottom: '0px'
@@ -172,7 +197,7 @@ class Machine extends _react.default.Component {
         defaultValue: this.getNextSnapshot()
       }), _react.default.createElement(_semanticUiReact.Button, {
         positive: true,
-        onClick: () => this.createSnapshot(this.refs.snapshotName.inputRef.value)
+        onClick: () => this.createSnapshot(this.refs.snapshotName.inputRef.current.value)
       }, "Create")));
     }
 
@@ -182,30 +207,30 @@ class Machine extends _react.default.Component {
       stateButton = _react.default.createElement(_semanticUiReact.Button, {
         icon: true,
         primary: true,
-        disabled: !!this.state.loading,
-        loading: this.state.loading === 'running',
+        disabled: !!loading,
+        loading: loading === 'running',
         onClick: () => this.setMachineState('running')
       }, _react.default.createElement(_semanticUiReact.Icon, {
         name: "bolt"
-      }), " Power on");
+      }), ' Power on');
     } else if (machine.state === 'running') {
       stateButton = _react.default.createElement(_semanticUiReact.Button.Group, null, _react.default.createElement(_semanticUiReact.Button, {
         icon: true,
         color: "yellow",
-        disabled: !!this.state.loading,
-        loading: this.state.loading === 'acpipowerbutton',
+        disabled: !!loading,
+        loading: loading === 'acpipowerbutton',
         onClick: () => this.setMachineState('acpipowerbutton')
       }, _react.default.createElement(_semanticUiReact.Icon, {
         name: "power off"
-      }), " Shutdown"), _react.default.createElement(_semanticUiReact.Button.Or, null), _react.default.createElement(_semanticUiReact.Button, {
+      }), ' Shutdown'), _react.default.createElement(_semanticUiReact.Button.Or, null), _react.default.createElement(_semanticUiReact.Button, {
         icon: true,
         negative: true,
-        disabled: !!this.state.loading,
-        loading: this.state.loading === 'poweroff',
+        disabled: !!loading,
+        loading: loading === 'poweroff',
         onClick: () => this.setMachineState('poweroff')
       }, _react.default.createElement(_semanticUiReact.Icon, {
         name: "plug"
-      }), " Power off"));
+      }), ' Power off'));
     } else {
       stateButton = _react.default.createElement(_semanticUiReact.Button, {
         disabled: true
@@ -240,8 +265,8 @@ class Machine extends _react.default.Component {
       collapsing: true
     }, _react.default.createElement(_semanticUiReact.Button, {
       icon: true,
-      loading: this.state.loading === 'reload',
-      disabled: !!this.state.loading,
+      loading: loading === 'reload',
+      disabled: !!loading,
       onClick: () => this.reload()
     }, _react.default.createElement(_semanticUiReact.Icon, {
       name: "sync alternate"
@@ -250,16 +275,15 @@ class Machine extends _react.default.Component {
 
 }
 
-var _default = props => {
+function _default({
+  machines,
+  activeTab
+}) {
   const tabs = [['machine', 'All machines'], ['machine?templates', 'Templates'], ['machine?running', 'Running machines']].map((link, i) => _react.default.createElement("a", {
     key: i,
-    className: props.activeTab === i ? 'active item' : 'item',
+    className: activeTab === i ? 'active item' : 'item',
     href: link[0]
   }, link[1]));
-  const machines = props.machines.map(machine => _react.default.createElement(Machine, {
-    key: machine.id,
-    machine: machine
-  }));
   return _react.default.createElement(_semanticUiReact.Grid, null, _react.default.createElement(_semanticUiReact.Grid.Column, null, _react.default.createElement(_semanticUiReact.Header, {
     size: "large",
     color: "teal"
@@ -273,7 +297,8 @@ var _default = props => {
     colSpan: 2
   }, "State"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, {
     colSpan: 2
-  }, "Snapshot"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "IP-s"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null))), _react.default.createElement("tbody", null, machines)))));
-};
-
-exports.default = _default;
+  }, "Snapshot"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "IP-s"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null))), _react.default.createElement("tbody", null, machines.map(machine => _react.default.createElement(Machine, {
+    key: machine.id,
+    machine: machine
+  })))))));
+}

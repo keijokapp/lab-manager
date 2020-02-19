@@ -11,8 +11,6 @@ var _child_process = require("child_process");
 
 var _express = _interopRequireDefault(require("express"));
 
-var _react = _interopRequireDefault(require("react"));
-
 var _expressOpenapiMiddleware = require("express-openapi-middleware");
 
 var _config = _interopRequireDefault(require("../config"));
@@ -39,7 +37,7 @@ exports.default = _default;
 async function getRepositoryRefs(repository) {
   try {
     return new Promise(resolve => {
-      (0, _child_process.execFile)('git', ['-C', _config.default.repositories + '/' + repository + '.git', 'show-ref'], (e, stdout) => {
+      (0, _child_process.execFile)('git', ['-C', `${_config.default.repositories}/${repository}.git`, 'show-ref'], (e, stdout) => {
         if (e) {
           _common.logger.error('Failed to read refs of repository', {
             repository,
@@ -85,7 +83,7 @@ async function getRepositoryRefs(repository) {
 async function fetchRepository(repository) {
   try {
     return new Promise(resolve => {
-      (0, _child_process.execFile)('git', ['-C', _config.default.repositories + '/' + repository + '.git', 'fetch', '-a', '--prune'], e => {
+      (0, _child_process.execFile)('git', ['-C', `${_config.default.repositories}/${repository}.git`, 'fetch', '-a', '--prune'], e => {
         if (e) {
           _common.logger.error('Failed to fetch remote refs', {
             repository,
@@ -177,7 +175,8 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
 
         for (const file of files) {
           if (file.endsWith('.git')) {
-            const repository = file.slice(0, -4);
+            const repository = file.slice(0, -4); // eslint-disable-next-line no-loop-func
+
             promises.push(getRepositoryRefs(repository).then(refs => {
               if (refs === null) {
                 failed = true;
@@ -185,7 +184,7 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
                 return {
                   _id: repository,
                   refs,
-                  link: _config.default.appUrl + '/repository/' + repository + '.git'
+                  link: `${_config.default.appUrl}/repository/${repository}.git`
                 };
               }
             }));
@@ -206,14 +205,16 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
   }
 
   res.format({
-    html: function () {
+    html() {
       res.send((0, _renderLayout.default)('Repositories', {
         repositories
       }, '<script src="bundle/repository.js"></script>'));
     },
-    json: function () {
+
+    json() {
       res.send(repositories);
     }
+
   });
 }));
 routes.get('/:repository', (0, _expressOpenapiMiddleware.apiOperation)({

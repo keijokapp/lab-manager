@@ -26,8 +26,6 @@ var _url = require("url");
 
 var _async_hooks = _interopRequireDefault(require("async_hooks"));
 
-var _crypto = require("crypto");
-
 var _https = _interopRequireDefault(require("https"));
 
 var _nodeFetch = _interopRequireDefault(require("node-fetch"));
@@ -40,9 +38,9 @@ var _pouchdb = _interopRequireDefault(require("pouchdb"));
 
 var _pouchdbSeedDesign = _interopRequireDefault(require("pouchdb-seed-design"));
 
-var _config = _interopRequireDefault(require("./config"));
-
 var _pushover = _interopRequireDefault(require("pushover"));
+
+var _config = _interopRequireDefault(require("./config"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -80,13 +78,13 @@ function reqid(req, res, next) {
     }
 
     return requestNamespace[eid].id;
-  } else {
-    if (typeof next === 'function') {
-      next();
-    }
-
-    return eid in requestNamespace ? requestNamespace[eid].id : null;
   }
+
+  if (typeof next === 'function') {
+    next();
+  }
+
+  return eid in requestNamespace ? requestNamespace[eid].id : null;
 }
 
 const reqidFormat = _winston.default.format(info => {
@@ -107,7 +105,8 @@ const logger = _winston.default.createLogger({
 });
 
 exports.logger = logger;
-const db = new _pouchdb.default(_config.default.database); // TODO: make application stop on fail
+const db = new _pouchdb.default(_config.default.database);
+/* eslint-disable */
 
 exports.db = db;
 (0, _pouchdbSeedDesign.default)(db, {
@@ -123,7 +122,9 @@ exports.db = db;
       }
     }
   }
-}).then(updated => {
+})
+/* eslint-enable */
+.then(updated => {
   if (updated) {
     logger.info('Design documents updated');
   } else {
@@ -163,10 +164,10 @@ async function lxdRequest(path, options = {}, wait = true, originalRequest = nul
   }
 
   if (!path.startsWith('/')) {
-    path = '/' + path;
+    path = `/${path}`;
   }
 
-  const opts = (0, _url.parse)(_config.default.lxd.url + '/1.0' + path);
+  const opts = (0, _url.parse)(`${_config.default.lxd.url}/1.0${path}`);
   opts.method = options.method;
   opts.headers = options.headers;
   opts.key = _config.default.lxd.key;
@@ -214,10 +215,10 @@ async function lxdRequest(path, options = {}, wait = true, originalRequest = nul
   });
 
   if (!('body' in response)) {
-    const result = await lxdRequest(response.headers['location'].replace(/^\/1\.0(?=\/)/, '') + '/wait', {}, true, originalRequest);
+    const result = await lxdRequest(`${response.headers.location.replace(/^\/1\.0(?=\/)/, '')}/wait`, {}, true, originalRequest);
 
     if (result.body.status_code !== 200) {
-      throw new Error('LXD operation failed with (' + result.body.status_code + ') ' + result.body.err);
+      throw new Error(`LXD operation failed with (${result.body.status_code}) ${result.body.err}`);
     }
 
     return result.body.metadata;
@@ -234,18 +235,17 @@ async function lxdRequest(path, options = {}, wait = true, originalRequest = nul
     try {
       response.body = JSON.parse(response.body).metadata;
     } catch (e) {
-      throw new Error('Bad response body: ' + e.message);
+      throw new Error(`Bad response body: ${e.message}`);
     }
   }
 
   if (response.ok) {
     return response;
-  } else {
-    const e = new Error('Bad response status: ' + response.status); // noinspection JSUndefinedPropertyAssignment
-
-    e.response = response;
-    throw e;
   }
+
+  const e = new Error(`Bad response status: ${response.status}`);
+  e.response = response;
+  throw e;
 }
 /**
  * Performs virtualbox request with given parameters
@@ -261,16 +261,16 @@ async function virtualboxRequest(path, options = {}) {
   }
 
   if (!path.startsWith('/')) {
-    path = '/' + path;
+    path = `/${path}`;
   }
 
-  return await (0, _nodeFetch.default)(_config.default.virtualbox.url + path, {
+  return (0, _nodeFetch.default)(_config.default.virtualbox.url + path, {
     method: options.method,
     headers: {
       accept: 'application/json',
       'content-type': 'body' in options ? 'application/json' : undefined,
       'x-request-id': reqid(),
-      'authorization': 'key' in _config.default.virtualbox ? 'Bearer ' + _config.default.virtualbox.key : undefined
+      authorization: 'key' in _config.default.virtualbox ? `Bearer ${_config.default.virtualbox.key}` : undefined
     },
     body: JSON.stringify(options.body)
   });
@@ -285,7 +285,7 @@ async function virtualboxRequest(path, options = {}) {
 async function createNetwork(networkName = '') {
   const maxInterfaceNameLength = 15;
   const id = (0, _uniqid.default)();
-  const nic = 'b' + id.slice(id.length - maxInterfaceNameLength + 1);
+  const nic = `b${id.slice(id.length - maxInterfaceNameLength + 1)}`;
   logger.debug('Creating network', {
     network: nic
   });
@@ -340,7 +340,7 @@ async function deleteNetworks(instance) {
     }); // now delete dangling bridged networks
 
     const networkDeletePromise = danglingNetworks.map(network => {
-      return lxdRequest('/networks/' + encodeURIComponent(network), {
+      return lxdRequest(`/networks/${encodeURIComponent(network)}`, {
         method: 'DELETE'
       }).catch(e => {
         if (e.response instanceof Object && e.error === 'not found') {
@@ -371,7 +371,7 @@ async function deleteNetworks(instance) {
 async function lxdDeleteMachine(name) {
   try {
     try {
-      await lxdRequest('/containers/' + encodeURIComponent(name) + '/state', {
+      await lxdRequest(`/containers/${encodeURIComponent(name)}/state`, {
         method: 'PUT',
         headers: {
           'content-type': 'application/json'
@@ -381,12 +381,13 @@ async function lxdDeleteMachine(name) {
         })
       });
     } catch (e) {
+      // eslint-disable-next-line no-underscore-dangle
       if (e._message !== 'The container is already stopped') {
         throw e;
       }
     }
 
-    await lxdRequest('/containers/' + encodeURIComponent(name), {
+    await lxdRequest(`/containers/${encodeURIComponent(name)}`, {
       method: 'DELETE'
     });
   } catch (e) {
@@ -417,7 +418,7 @@ async function lxdDeleteMachine(name) {
 async function virtualboxDeleteMachine(name) {
   try {
     if ('virtualbox' in _config.default) {
-      const response = await virtualboxRequest('/machine/' + encodeURIComponent(name), {
+      const response = await virtualboxRequest(`/machine/${encodeURIComponent(name)}`, {
         method: 'DELETE'
       });
 
@@ -497,7 +498,7 @@ async function deleteMachines(instance) {
 
 
 async function deleteInstance(instance) {
-  await db.remove('instance/' + instance._id, instance._rev);
+  await db.remove(`instance/${instance._id}`, instance._rev);
 
   if (!instance.imported) {
     Promise.resolve().then(() => deleteMachines(instance)).then(() => deleteNetworks(instance));
@@ -514,16 +515,16 @@ async function deleteInstance(instance) {
 
 async function createGitlabGroup(gitlab, publicToken) {
   try {
-    const response = await (0, _nodeFetch.default)(gitlab.url + '/api/v4/groups?private_token=' + encodeURIComponent(gitlab.key), {
+    const response = await (0, _nodeFetch.default)(`${gitlab.url}/api/v4/groups?private_token=${encodeURIComponent(gitlab.key)}`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        'accept': 'application/json',
+        accept: 'application/json',
         'x-request-id': reqid()
       },
       body: JSON.stringify({
-        name: 'lab-' + publicToken,
-        path: 'lab-' + publicToken,
+        name: `lab-${publicToken}`,
+        path: `lab-${publicToken}`,
         lfs_enabled: false
       })
     });
@@ -535,13 +536,15 @@ async function createGitlabGroup(gitlab, publicToken) {
         name: body.name,
         link: body.web_url
       };
-    } else if (body && body.message === 'Failed to save group {:path=>["has already been taken"]}') {
+    }
+
+    if (body && body.message === 'Failed to save group {:path=>["has already been taken"]}') {
       logger.debug('GitLab group already exists');
 
       try {
-        const response = await (0, _nodeFetch.default)(gitlab.url + '/api/v4/groups/' + 'lab-' + encodeURIComponent(publicToken) + '?private_token=' + encodeURIComponent(gitlab.key), {
+        const response = await (0, _nodeFetch.default)(`${gitlab.url}/api/v4/groups/lab-${encodeURIComponent(publicToken)}?private_token=${encodeURIComponent(gitlab.key)}`, {
           headers: {
-            'accept': 'application/json',
+            accept: 'application/json',
             'x-request-id': reqid()
           }
         });
@@ -553,11 +556,11 @@ async function createGitlabGroup(gitlab, publicToken) {
             name: body.name,
             link: body.web_url
           };
-        } else {
-          logger.error('Failed to retrieve GitLab group', {
-            response: body
-          });
         }
+
+        logger.error('Failed to retrieve GitLab group', {
+          response: body
+        });
       } catch (e) {
         logger.error('Failed to retrieve GitLab group', {
           e: e.message
@@ -587,18 +590,18 @@ async function createGitlabGroup(gitlab, publicToken) {
 
 async function createGitlabUser(gitlab, publicToken) {
   try {
-    const response = await (0, _nodeFetch.default)(gitlab.url + '/api/v4/users?private_token=' + encodeURIComponent(gitlab.key), {
+    const response = await (0, _nodeFetch.default)(`${gitlab.url}/api/v4/users?private_token=${encodeURIComponent(gitlab.key)}`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        'accept': 'application/json',
+        accept: 'application/json',
         'x-request-id': reqid()
       },
       body: JSON.stringify({
-        email: 'user-' + encodeURIComponent(publicToken) + '@lab.example.com',
-        username: 'user-' + publicToken,
+        email: `user-${encodeURIComponent(publicToken)}@lab.example.com`,
+        username: `user-${publicToken}`,
         password: publicToken,
-        name: 'user-' + publicToken,
+        name: `user-${publicToken}`,
         projects_limit: 0,
         can_create_group: false,
         skip_confirmation: true
@@ -613,13 +616,15 @@ async function createGitlabUser(gitlab, publicToken) {
         link: body.web_url,
         password: publicToken
       };
-    } else if (body && (body.message === 'Email has already been taken' || body.message === 'Username has already been taken')) {
+    }
+
+    if (body && (body.message === 'Email has already been taken' || body.message === 'Username has already been taken')) {
       logger.debug('GitLab user already exists');
 
       try {
-        const response = await (0, _nodeFetch.default)(gitlab.url + '/api/v4/users' + '?username=user-' + encodeURIComponent(publicToken) + '&private_token=' + encodeURIComponent(gitlab.key), {
+        const response = await (0, _nodeFetch.default)(`${gitlab.url}/api/v4/users?username=user-${encodeURIComponent(publicToken)}&private_token=${encodeURIComponent(gitlab.key)}`, {
           headers: {
-            'accept': 'application/json',
+            accept: 'application/json',
             'x-request-id': reqid()
           }
         });
@@ -629,7 +634,7 @@ async function createGitlabUser(gitlab, publicToken) {
           if (body.length === 0) {
             throw new Error('User not found');
           } else if (body.length !== 1) {
-            throw new Error('Invalid number of users: ' + body.length);
+            throw new Error(`Invalid number of users: ${body.length}`);
           }
 
           return {
@@ -638,11 +643,11 @@ async function createGitlabUser(gitlab, publicToken) {
             link: body[0].web_url,
             password: publicToken
           };
-        } else {
-          logger.error('Failed to retrieve GitLab user', {
-            response: body
-          });
         }
+
+        logger.error('Failed to retrieve GitLab user', {
+          response: body
+        });
       } catch (e) {
         logger.error('Failed to retrieve GitLab user', {
           e: e.message
@@ -673,7 +678,7 @@ async function createGitlabUser(gitlab, publicToken) {
 
 async function addGitlabUserToGroup(gitlab, group, user) {
   try {
-    const response = await (0, _nodeFetch.default)(gitlab.url + '/api/v4/groups/' + encodeURIComponent(group.id) + '/members?private_token=' + encodeURIComponent(gitlab.key), {
+    const response = await (0, _nodeFetch.default)(`${gitlab.url}/api/v4/groups/${encodeURIComponent(group.id)}/members?private_token=${encodeURIComponent(gitlab.key)}`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -687,19 +692,19 @@ async function addGitlabUserToGroup(gitlab, group, user) {
 
     if (response.ok) {
       return true;
-    } else {
-      const body = await response.json();
-
-      if (body && body.message === 'Member already exists') {
-        return true;
-      }
-
-      logger.error('Failed to add Gitlab user to group', {
-        group,
-        user,
-        response: body
-      });
     }
+
+    const body = await response.json();
+
+    if (body && body.message === 'Member already exists') {
+      return true;
+    }
+
+    logger.error('Failed to add Gitlab user to group', {
+      group,
+      user,
+      response: body
+    });
   } catch (e) {
     logger.error('Failed to add Gitlab user to group', {
       group,
@@ -720,7 +725,7 @@ async function addGitlabUserToGroup(gitlab, group, user) {
 
 async function lxdMachineInfo(name) {
   try {
-    const response = await lxdRequest('/containers/' + encodeURIComponent(name) + '/state');
+    const response = await lxdRequest(`/containers/${encodeURIComponent(name)}/state`);
     const ips = [];
 
     for (const network in response.body.network) {
@@ -763,18 +768,18 @@ async function virtualboxMachineInfo(name, ip = false) {
       throw new Error('VirtualBox is not configured');
     }
 
-    const response = await virtualboxRequest('/machine/' + encodeURIComponent(name) + (ip ? '?ip' : ''));
+    const response = await virtualboxRequest(`/machine/${encodeURIComponent(name)}${ip ? '?ip' : ''}`);
     const body = await response.json();
 
     if (response.ok) {
       return body;
-    } else {
-      logger.error('Failed to get machine info', {
-        type: 'virtualbox',
-        machine: name,
-        response: body
-      });
     }
+
+    logger.error('Failed to get machine info', {
+      type: 'virtualbox',
+      machine: name,
+      response: body
+    });
   } catch (e) {
     logger.error('Failed to get machine info', {
       type: 'virtualbox',
@@ -821,7 +826,7 @@ async function lxdUpdateMachine(name, state) {
   }
 
   try {
-    await lxdRequest('/containers/' + encodeURIComponent(name) + '/state', {
+    await lxdRequest(`/containers/${encodeURIComponent(name)}/state`, {
       method: 'PUT',
       headers: {
         'content-type': 'application/json'
@@ -842,7 +847,7 @@ async function lxdUpdateMachine(name, state) {
     }
   }
 
-  return await lxdMachineInfo(name);
+  return lxdMachineInfo(name);
 }
 /**
  * Updates state of VirtualBox machine
@@ -860,7 +865,7 @@ async function virtualboxUpdateMachine(name, state, ip = false) {
       throw new Error('VirtualBox is not configured');
     }
 
-    const response = await virtualboxRequest('/machine/' + encodeURIComponent(name) + (ip ? '?ip' : ''), {
+    const response = await virtualboxRequest(`/machine/${encodeURIComponent(name)}${ip ? '?ip' : ''}`, {
       method: 'PUT',
       body: state
     });
@@ -868,13 +873,13 @@ async function virtualboxUpdateMachine(name, state, ip = false) {
 
     if (response.ok) {
       return body;
-    } else {
-      logger.error('Failed to update machine', {
-        type: 'virtualbox',
-        machine: name,
-        response: body
-      });
     }
+
+    logger.error('Failed to update machine', {
+      type: 'virtualbox',
+      machine: name,
+      response: body
+    });
   } catch (e) {
     logger.error('Failed to update machine', {
       type: 'virtualbox',
@@ -910,7 +915,7 @@ if (repos) {
 
 
 function serveRepository(req, res, repository) {
-  req.url = '/' + repository + '.git' + req.url;
+  req.url = `/${repository}.git${req.url}`;
 
   if (repos) {
     repos.handle(req, res);
@@ -931,7 +936,7 @@ async function iTeeLabinfo(privateToken) {
       throw new Error('I-Tee is not configured');
     }
 
-    const response = await (0, _nodeFetch.default)(_config.default.iTee.url + '/labinfo.json' + '?uuid=' + encodeURIComponent(privateToken), {
+    const response = await (0, _nodeFetch.default)(`${_config.default.iTee.url}/labinfo.json?uuid=${encodeURIComponent(privateToken)}`, {
       headers: {
         'x-request-id': reqid()
       }
@@ -943,7 +948,9 @@ async function iTeeLabinfo(privateToken) {
       if (body instanceof Object) {
         if (body.success) {
           return body;
-        } else if (body.message === 'Unable to find labuser with given uid' || body.message === 'Unable to find active labuser with given uid') {
+        }
+
+        if (body.message === 'Unable to find labuser with given uid' || body.message === 'Unable to find active labuser with given uid') {
           return null;
         }
       }

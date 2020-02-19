@@ -46,7 +46,7 @@ async function machineInfo(type, machine, ip) {
 
     default:
       _common.logger.error('Failed to get machine info', {
-        type: type,
+        type,
         machine: machine.name,
         e: 'Unknown machine type'
       });
@@ -56,7 +56,9 @@ async function machineInfo(type, machine, ip) {
 
 routes.use((req, res, next) => {
   if (req.instance && req.instance.imported && !req.instanceImported) {
-    const instance = req.instance;
+    const {
+      instance
+    } = req;
     ('iTee' in _config.default ? (0, _common.iTeeLabinfo)(instance.privateToken) : Promise.resolve(null)).then(labinfo => {
       if (labinfo === null) {
         delete req.instance;
@@ -113,7 +115,9 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
     }
   }
 }), (0, _util.asyncMiddleware)(async (req, res) => {
-  let instance = req.instance;
+  let {
+    instance
+  } = req;
 
   if (!instance) {
     res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
@@ -123,7 +127,8 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
   const privateAccess = req.instanceToken === instance.privateToken;
 
   if (req.accepts('html') || 'detailed' in req.query) {
-    await Promise.all(instance.lab.machineOrder.map(id => machineInfo(instance.lab.machines[id].type, instance.machines[id], req.accepts('html') || 'ip' in req.query)));
+    const askIp = req.accepts('html') || 'ip' in req.query;
+    await Promise.all(instance.lab.machineOrder.map(id => machineInfo(instance.lab.machines[id].type, instance.machines[id], askIp)));
   }
 
   if (!privateAccess) {
@@ -194,15 +199,17 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
   }
 
   res.format({
-    html: function () {
+    html() {
       res.send((0, _renderLayout.default)('Lab instance', {
         instance,
         instanceToken: req.instanceToken
       }, '<script src="bundle/instance.js"></script>'));
     },
-    json: function () {
+
+    json() {
       res.send(instance);
     }
+
   });
 }));
 routes.get('/machine/:machine', (0, _expressOpenapiMiddleware.apiOperation)({
@@ -259,7 +266,9 @@ routes.get('/machine/:machine', (0, _expressOpenapiMiddleware.apiOperation)({
     }
   }
 }), (0, _util.asyncMiddleware)(async (req, res) => {
-  const instance = req.instance;
+  const {
+    instance
+  } = req;
   const id = req.params.machine;
 
   if (!instance) {
@@ -380,7 +389,9 @@ routes.put('/machine/:machine', (0, _expressOpenapiMiddleware.apiOperation)({
     }
   }
 }), (0, _util.asyncMiddleware)(async (req, res) => {
-  const instance = req.instance;
+  const {
+    instance
+  } = req;
   const id = req.params.machine;
 
   if (!instance) {
@@ -453,16 +464,18 @@ function setHead(info, commit, ref) {
 
   if (m) {
     const flags = m[1].split(' ').filter(v => !/^symref=HEAD:.*$/.test(v));
-    flags.push('symref=HEAD:' + ref);
+    flags.push(`symref=HEAD:${ref}`);
     const newLine = `${commit} HEAD\0${flags.join(' ')}\n`;
-    return `${('0000' + (newLine.length + 4).toString(16)).slice(-4)}${newLine}${info.slice(length)}`;
-  } else {
-    return info;
+    return `${`0000${(newLine.length + 4).toString(16)}`.slice(-4)}${newLine}${info.slice(length)}`;
   }
+
+  return info;
 }
 
 routes.get('/repository/:repository/info/refs', (req, res) => {
-  const instance = req.instance;
+  const {
+    instance
+  } = req;
   const id = req.params.repository;
 
   if (!('repositories' in _config.default)) {
@@ -480,11 +493,11 @@ routes.get('/repository/:repository/info/refs', (req, res) => {
       'content-type': 'application/x-git-upload-pack-advertisement',
       'surrogate-control': 'no-store',
       'cache-control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-      'pragma': 'no-cache',
-      'expires': '0'
+      pragma: 'no-cache',
+      expires: '0'
     });
     const repository = instance.lab.repositories[id];
-    const repositoryLocation = _config.default.repositories + '/' + repository.name + '.git';
+    const repositoryLocation = `${_config.default.repositories}/${repository.name}.git`;
     (0, _child_process.execFile)('git-upload-pack', ['--stateless-rpc', '--advertise-refs', repositoryLocation], (e, stdout) => {
       if (e) {
         _common.logger.error('Failed to execute git-upload-pack service', {
@@ -492,33 +505,33 @@ routes.get('/repository/:repository/info/refs', (req, res) => {
         });
 
         res.status(500).send('Internal Server Error');
-      } else {
-        if ('head' in repository) {
-          (0, _child_process.execFile)('git', ['-C', repositoryLocation, 'show-ref', repository.head], (e, ref) => {
-            if (e) {
-              _common.logger.error('Failed to resolve head', {
-                e: e.message
-              });
+      } else if ('head' in repository) {
+        (0, _child_process.execFile)('git', ['-C', repositoryLocation, 'show-ref', repository.head], (e, ref) => {
+          if (e) {
+            _common.logger.error('Failed to resolve head', {
+              e: e.message
+            });
 
-              res.status(500).send('Internal Server Error');
-            } else {
-              const [commit, name] = ref.trim().split(' ');
-              res.write('001e# service=git-upload-pack\n');
-              res.write('0000');
-              res.end(setHead(stdout, commit, name));
-            }
-          });
-        } else {
-          res.write('001e# service=git-upload-pack\n');
-          res.write('0000');
-          res.end(stdout);
-        }
+            res.status(500).send('Internal Server Error');
+          } else {
+            const [commit, name] = ref.trim().split(' ');
+            res.write('001e# service=git-upload-pack\n');
+            res.write('0000');
+            res.end(setHead(stdout, commit, name));
+          }
+        });
+      } else {
+        res.write('001e# service=git-upload-pack\n');
+        res.write('0000');
+        res.end(stdout);
       }
     });
   }
 });
 routes.use('/repository/:repository', (req, res) => {
-  const instance = req.instance;
+  const {
+    instance
+  } = req;
   const id = req.params.repository;
 
   if (!instance) {

@@ -5,8 +5,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _path = _interopRequireDefault(require("path"));
-
 var _express = _interopRequireDefault(require("express"));
 
 var _browserifyMiddleware = _interopRequireDefault(require("browserify-middleware"));
@@ -29,6 +27,7 @@ var _iTeeCompat = require("./routes/i-tee-compat");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+// eslint-disable-next-line import/no-extraneous-dependencies
 const babelify = process.env.NODE_ENV !== 'production' ? require('babelify') : undefined;
 const app = (0, _express.default)();
 var _default = app;
@@ -48,20 +47,20 @@ const openapi = {
     url: _config.default.appUrl
   }],
   tags: [{
-    'name': 'Lab',
-    'description': 'Labs'
+    name: 'Lab',
+    description: 'Labs'
   }, {
-    'name': 'Instance',
-    'description': 'Running labs'
+    name: 'Instance',
+    description: 'Running labs'
   }, {
-    'name': 'Machine',
-    'description': 'VirtualBox machines'
+    name: 'Machine',
+    description: 'VirtualBox machines'
   }, {
-    'name': 'Repository',
-    'description': 'Git repositories'
+    name: 'Repository',
+    description: 'Git repositories'
   }, {
-    'name': 'I-Tee compatibility',
-    'description': 'Limited I-Tee compatibility API'
+    name: 'I-Tee compatibility',
+    description: 'Limited I-Tee compatibility API'
   }],
   paths: { ...(0, _expressOpenapiMiddleware.createPaths)(_routes.default),
     ...(0, _expressOpenapiMiddleware.createPaths)(_iTeeCompat.routes)
@@ -71,15 +70,15 @@ app.use('/docs/api', _swaggerUiExpress.default.serve, _swaggerUiExpress.default.
 const externalModules = ['react', 'react-dom', 'semantic-ui-react', 'table-dragger'];
 app.get('/bundle.js', (0, _browserifyMiddleware.default)(externalModules, {
   transform: babelify,
-  paths: [__dirname + '/../node_modules'],
+  paths: [`${__dirname}/../node_modules`],
   external: externalModules.concat(['!!../node_modules/css-loader/index.js!./main.css'])
 }));
-app.use('/bundle', (0, _browserifyMiddleware.default)(_path.default.join(__dirname, 'public'), {
+app.use('/bundle', (0, _browserifyMiddleware.default)(`${__dirname}/public`, {
   transform: babelify,
-  paths: [__dirname + '/../node_modules'],
+  paths: [`${__dirname}/../node_modules`],
   external: externalModules.concat(['!!../node_modules/css-loader/index.js!./main.css'])
 }));
-app.use(_express.default.static(_path.default.join(__dirname, '..', 'public')));
+app.use(_express.default.static(`${__dirname}/../public`));
 app.use(_express.default.json());
 app.use((0, _expressBearerToken.default)());
 app.use(_routes.default); // catch 404 and forward to error handler
@@ -92,10 +91,10 @@ app.use((req, res, next) => {
 });
 app.use((e, req, res, next) => {
   if (e instanceof Error) {
-    if (e.name === 'OpenAPIValidation') {
+    if (e.name === 'OpenAPIValidationError') {
       res.status(400).send({
         error: 'Bad Request',
-        validations: e.validations
+        validations: e.errors
       });
     } else {
       _common.logger.error('Application error ', {

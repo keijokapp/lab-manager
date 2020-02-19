@@ -20,17 +20,24 @@ class LabRow extends _react.default.Component {
   }
 
   deleteLab() {
-    if (this.state.loading) {
+    const {
+      lab
+    } = this.props;
+    const {
+      loading
+    } = this.state;
+
+    if (loading) {
       return;
     }
 
     this.setState({
       loading: 'delete'
     });
-    fetch('lab/' + encodeURIComponent(this.props.lab._id), {
+    fetch(`lab/${encodeURIComponent(lab._id)}`, {
       method: 'DELETE',
       headers: {
-        'if-match': this.props.lab._rev
+        'if-match': lab._rev
       }
     }).then(response => {
       if (response.ok) {
@@ -48,29 +55,36 @@ class LabRow extends _react.default.Component {
   }
 
   cloneLab(cloneName) {
-    if (this.state.loading) {
+    const {
+      lab
+    } = this.props;
+    const {
+      loading
+    } = this.state;
+
+    if (loading) {
       return;
     }
 
     this.setState({
       loading: 'clone'
     });
-    fetch('lab/' + encodeURIComponent(cloneName), {
+    fetch(`lab/${encodeURIComponent(cloneName)}`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json'
       },
-      body: JSON.stringify(this.props.lab)
+      body: JSON.stringify(lab)
     }).then(response => {
       if (response.ok) {
         return response.json().then(body => {
-          window.location.href = 'lab/' + encodeURIComponent(body._id);
-        });
-      } else {
-        this.setState({
-          loading: null
+          window.location.href = `lab/${encodeURIComponent(body._id)}`;
         });
       }
+
+      this.setState({
+        loading: null
+      });
     }).catch(e => {
       this.setState({
         loading: null
@@ -79,18 +93,25 @@ class LabRow extends _react.default.Component {
   }
 
   startLab(username) {
-    if (this.state.loading) {
+    const {
+      lab
+    } = this.props;
+    const {
+      loading
+    } = this.state;
+
+    if (loading) {
       return;
     }
 
     this.setState({
       loading: 'start'
     });
-    const resourceUrl = 'lab/' + encodeURIComponent(this.props.lab._id) + '/instance/' + encodeURIComponent(username);
+    const resourceUrl = `lab/${encodeURIComponent(lab._id)}/instance/${encodeURIComponent(username)}`;
     fetch(resourceUrl, {
       method: 'POST',
       headers: {
-        'if-match': this.props.lab._rev
+        'if-match': lab._rev
       }
     }).then(response => {
       if (response.ok) {
@@ -108,25 +129,25 @@ class LabRow extends _react.default.Component {
   }
 
   render() {
-    const lab = this.props.lab;
-    const repositories = [];
-
-    for (const id in lab.repositories) {
-      repositories.push(_react.default.createElement("p", {
-        key: id
-      }, id, " (", lab.repositories[id].name, lab.repositories[id].head && '/' + lab.repositories[id].head, ")"));
-    }
-
+    const {
+      lab
+    } = this.props;
+    const {
+      loading
+    } = this.state;
+    const repositories = 'repositories' in lab && Object.keys(lab.repositories).map(id => _react.default.createElement("p", {
+      key: id
+    }, `${id} (${lab.repositories[id].name}${lab.repositories[id].head ? `/${lab.repositories[id].head}` : ''})`));
     return _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.Cell, null, lab._id), _react.default.createElement(_semanticUiReact.Table.Cell, null, 'assistant' in lab ? lab.assistant.url : _react.default.createElement("i", null, "None")), _react.default.createElement(_semanticUiReact.Table.Cell, null, 'machineOrder' in lab ? lab.machineOrder.map(id => _react.default.createElement("p", {
       key: id
-    }, lab.machines[id].base, " (", lab.machines[id].description, ")")) : _react.default.createElement("i", null, "None")), _react.default.createElement(_semanticUiReact.Table.Cell, {
+    }, `${lab.machines[id].base} (${lab.machines[id].description})`)) : _react.default.createElement("i", null, "None")), _react.default.createElement(_semanticUiReact.Table.Cell, {
       singleLine: true
     }, repositories.length ? repositories : _react.default.createElement("i", null, "None")), _react.default.createElement(_semanticUiReact.Table.Cell, {
       singleLine: true
     }, 'endpoints' in lab ? lab.endpoints.map(name => _react.default.createElement("p", {
       key: name
     }, name)) : _react.default.createElement("i", null, "None")), _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement("a", {
-      href: 'lab/' + encodeURIComponent(lab._id)
+      href: `lab/${encodeURIComponent(lab._id)}`
     }, "Details")), _react.default.createElement(_semanticUiReact.Table.Cell, {
       collapsing: true
     }, _react.default.createElement(_semanticUiReact.Popup, {
@@ -136,12 +157,12 @@ class LabRow extends _react.default.Component {
       hideOnScroll: true,
       trigger: _react.default.createElement(_semanticUiReact.Button, {
         color: "green",
-        disabled: !!this.state.loading,
-        loading: this.state.loading === 'start',
+        disabled: !!loading,
+        loading: loading === 'start',
         icon: true
       }, _react.default.createElement(_semanticUiReact.Icon, {
         name: "caret square right"
-      }), " Start"),
+      }), ' Start'),
       onOpen: () => setTimeout(() => this.refs.username.focus(), 1)
     }, _react.default.createElement(_semanticUiReact.Form, {
       style: {
@@ -162,12 +183,12 @@ class LabRow extends _react.default.Component {
       hideOnScroll: true,
       trigger: _react.default.createElement(_semanticUiReact.Button, {
         color: "violet",
-        disabled: !!this.state.loading,
-        loading: this.state.loading === 'clone',
+        disabled: !!loading,
+        loading: loading === 'clone',
         icon: true
       }, _react.default.createElement(_semanticUiReact.Icon, {
         name: "clone"
-      }), " Clone"),
+      }), ' Clone'),
       onOpen: () => setTimeout(() => this.refs.cloneName.focus(), 1)
     }, _react.default.createElement(_semanticUiReact.Form, {
       style: {
@@ -189,12 +210,12 @@ class LabRow extends _react.default.Component {
       hideOnScroll: true,
       trigger: _react.default.createElement(_semanticUiReact.Button, {
         negative: true,
-        disabled: !!this.state.loading,
-        loading: this.state.loading === 'delete',
+        disabled: !!loading,
+        loading: loading === 'delete',
         icon: true
       }, _react.default.createElement(_semanticUiReact.Icon, {
         name: "trash"
-      }), " Delete")
+      }), ' Delete')
     }, _react.default.createElement(_semanticUiReact.Button, {
       negative: true,
       onClick: () => this.deleteLab()
@@ -207,20 +228,23 @@ class Labs extends _react.default.Component {
   constructor(props) {
     super();
     this.state = {
-      labs: props.labs,
       loading: false
     };
   }
 
   newLab(newName) {
-    if (this.state.loading) {
+    const {
+      loading
+    } = this.state;
+
+    if (loading) {
       return;
     }
 
     this.setState({
       loading: 'new'
     });
-    fetch('lab/' + encodeURIComponent(newName), {
+    fetch(`lab/${encodeURIComponent(newName)}`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json'
@@ -229,13 +253,13 @@ class Labs extends _react.default.Component {
     }).then(response => {
       if (response.ok) {
         return response.json().then(body => {
-          window.location.href = 'lab/' + encodeURIComponent(body._id);
-        });
-      } else {
-        this.setState({
-          loading: null
+          window.location.href = `lab/${encodeURIComponent(body._id)}`;
         });
       }
+
+      this.setState({
+        loading: null
+      });
     }).catch(e => {
       this.setState({
         loading: null
@@ -244,21 +268,21 @@ class Labs extends _react.default.Component {
   }
 
   render() {
-    const labs = [];
-
-    for (const lab of this.state.labs) {
-      labs.push(_react.default.createElement(LabRow, {
-        key: lab._id,
-        lab: lab
-      }));
-    }
-
+    const {
+      labs
+    } = this.props;
+    const {
+      loading
+    } = this.state;
     return _react.default.createElement(_semanticUiReact.Grid, null, _react.default.createElement(_semanticUiReact.Grid.Column, null, _react.default.createElement(_semanticUiReact.Header, {
       size: "large",
       color: "teal"
     }, "Labs"), _react.default.createElement(_semanticUiReact.Table, null, _react.default.createElement(_semanticUiReact.Table.Header, null, _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Lab"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Assistant"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Machines"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Repositories"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Endpoints"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, {
       colSpan: 4
-    }))), _react.default.createElement(_semanticUiReact.Table.Body, null, labs), _react.default.createElement(_semanticUiReact.Table.Footer, null, _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.Cell, {
+    }))), _react.default.createElement(_semanticUiReact.Table.Body, null, labs.map(lab => _react.default.createElement(LabRow, {
+      key: lab._id,
+      lab: lab
+    }))), _react.default.createElement(_semanticUiReact.Table.Footer, null, _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.Cell, {
       colSpan: 7
     }, _react.default.createElement(_semanticUiReact.Popup, {
       on: "click",
@@ -266,10 +290,10 @@ class Labs extends _react.default.Component {
       wide: true,
       trigger: _react.default.createElement(_semanticUiReact.Button, {
         positive: true,
-        disabled: !!this.state.loading,
-        loading: this.state.loading === 'new'
+        disabled: !!loading,
+        loading: loading === 'new'
       }, "New"),
-      onOpen: () => setTimeout(() => this.refs['newName'].focus(), 1)
+      onOpen: () => setTimeout(() => this.refs.newName.focus(), 1)
     }, _react.default.createElement(_semanticUiReact.Form, {
       style: {
         marginBottom: '0px'

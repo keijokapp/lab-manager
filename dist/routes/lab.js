@@ -183,7 +183,7 @@ const labSchema = {
     },
     machineOrder: {
       type: 'array',
-      'items': {
+      items: {
         type: 'string',
         minLength: 1
       }
@@ -266,7 +266,9 @@ function normalizeMachines(lab) {
   if ('machines' in lab) {
     const keyExists = new Array(Object.keys(lab.machines).length);
     const newOrder = [];
-    const machineOrder = lab.machineOrder;
+    const {
+      machineOrder
+    } = lab;
 
     for (const id of machineOrder) {
       if (id in lab.machines) {
@@ -324,14 +326,16 @@ routes.get('/', (0, _expressOpenapiMiddleware.apiOperation)({
     return d.doc;
   });
   res.format({
-    html: function () {
+    html() {
       res.send((0, _renderLayout.default)('Labs', {
         labs
       }, '<script src="bundle/lab.js"></script>'));
     },
-    json: function () {
+
+    json() {
       res.send(labs);
     }
+
   });
 }));
 routes.post('/:lab', (0, _expressOpenapiMiddleware.apiOperation)({
@@ -382,7 +386,7 @@ routes.post('/:lab', (0, _expressOpenapiMiddleware.apiOperation)({
   }
 }), (0, _util.asyncMiddleware)(async (req, res) => {
   const lab = { ...req.body,
-    _id: 'lab/' + req.params.lab,
+    _id: `lab/${req.params.lab}`,
     _rev: undefined
   };
   normalizeMachines(lab);
@@ -468,7 +472,7 @@ routes.put('/:lab', (0, _expressOpenapiMiddleware.apiOperation)({
   }
 }), (0, _util.asyncMiddleware)(async (req, res) => {
   const lab = { ...req.body,
-    _id: 'lab/' + req.params.lab,
+    _id: `lab/${req.params.lab}`,
     _rev: req.headers['if-match']
   };
   normalizeMachines(lab);
@@ -526,18 +530,20 @@ routes.get('/:lab', (0, _expressOpenapiMiddleware.apiOperation)({
   }
 }), (0, _util.asyncMiddleware)(async (req, res) => {
   try {
-    const lab = await _common.db.get('lab/' + req.params.lab);
+    const lab = await _common.db.get(`lab/${req.params.lab}`);
     lab._id = lab._id.slice(4);
     res.set('etag', lab._rev);
     res.format({
-      html: function () {
+      html() {
         res.send((0, _renderLayout.default)('Lab', {
           lab
         }, '<script src="bundle/lab.js"></script>'));
       },
-      json: function () {
+
+      json() {
         res.send(lab);
       }
+
     });
   } catch (e) {
     if (e.name === 'not_found') {
@@ -596,7 +602,7 @@ routes.delete('/:lab', (0, _expressOpenapiMiddleware.apiOperation)({
   }
 }), (0, _util.asyncMiddleware)(async (req, res) => {
   try {
-    await _common.db.remove('lab/' + req.params.lab, req.headers['if-match']);
+    await _common.db.remove(`lab/${req.params.lab}`, req.headers['if-match']);
     res.send({// ok
     });
   } catch (e) {
@@ -692,7 +698,9 @@ routes.post('/:lab/instance/:username', (0, _expressOpenapiMiddleware.apiOperati
     }
   }
 }), (0, _util.asyncMiddleware)(async (req, res) => {
-  const username = req.params.username;
+  const {
+    username
+  } = req.params;
   let lab;
 
   if (req.body instanceof Object && 'lab' in req.body) {
@@ -701,7 +709,7 @@ routes.post('/:lab/instance/:username', (0, _expressOpenapiMiddleware.apiOperati
     delete lab._rev;
   } else {
     try {
-      lab = await _common.db.get('lab/' + req.params.lab);
+      lab = await _common.db.get(`lab/${req.params.lab}`);
     } catch (e) {
       if (e.name === 'not_found') {
         res.status(404).send(req.apiOperation.responses[404].content['application/json'].example);
@@ -729,7 +737,7 @@ routes.post('/:lab/instance/:username', (0, _expressOpenapiMiddleware.apiOperati
   }
 
   const instance = await (0, _createInstance.default)({
-    _id: 'instance/' + lab._id + ':' + username,
+    _id: `instance/${lab._id}:${username}`,
     lab,
     username
   });
@@ -770,7 +778,7 @@ routes.use('/:lab/instance/:username', (0, _expressOpenapiMiddleware.apiOperatio
     }
   }]
 }), (req, res, next) => {
-  _common.db.get('instance/' + req.params.lab + ':' + req.params.username).then(instance => {
+  _common.db.get(`instance/${req.params.lab}:${req.params.username}`).then(instance => {
     instance._id = instance._id.slice(9);
     req.instance = instance;
     req.instanceToken = instance.privateToken;
@@ -826,7 +834,9 @@ routes.delete('/:lab/instance/:username', (0, _expressOpenapiMiddleware.apiOpera
     return;
   }
 
-  const instance = req.instance;
+  const {
+    instance
+  } = req;
   instance._rev = req.headers['if-match'];
   (0, _common.deleteInstance)(instance).then(() => {
     res.send({});

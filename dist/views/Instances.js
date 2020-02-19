@@ -22,17 +22,24 @@ class LabRow extends _react.default.Component {
   }
 
   deleteInstance() {
-    if (this.state.loading) {
+    const {
+      instance
+    } = this.props;
+    const {
+      loading
+    } = this.state;
+
+    if (loading) {
       return;
     }
 
     this.setState({
       loading: 'delete'
     });
-    fetch('lab/' + encodeURIComponent(this.props.instance.lab._id) + '/instance/' + this.props.instance.username, {
+    fetch(`lab/${encodeURIComponent(instance.lab._id)}/instance/${instance.username}`, {
       method: 'DELETE',
       headers: {
-        'if-match': this.props.instance._rev
+        'if-match': instance._rev
       }
     }).then(response => {
       if (response.ok) {
@@ -50,31 +57,37 @@ class LabRow extends _react.default.Component {
   }
 
   render() {
-    const instance = this.props.instance;
+    const {
+      instance
+    } = this.props;
+    const {
+      loading
+    } = this.state;
     const startTime = new Date(instance.startTime);
     const repositories = [];
 
     for (const id in instance.lab.repositories) {
       repositories.push(_react.default.createElement("p", {
         key: id
-      }, id, " (", instance.lab.repositories[id].name, instance.lab.repositories[id].head && '/' + instance.lab.repositories[id].head, ")"));
+      }, `${id} (${instance.lab.repositories[id].name}${instance.lab.repositories[id].head && `/${instance.lab.repositories[id].head}`})`));
     }
 
     return _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.Cell, null, instance.lab._id), _react.default.createElement(_semanticUiReact.Table.Cell, null, instance.username), _react.default.createElement(_semanticUiReact.Table.Cell, null, 'assistant' in instance.lab ? instance.lab.assistant.url : _react.default.createElement("i", null, "None")), _react.default.createElement(_semanticUiReact.Table.Cell, null, 'machines' in instance ? instance.lab.machineOrder.map(id => _react.default.createElement("p", {
       key: id
-    }, instance.machines[id].name, " (", instance.lab.machines[id].description, ")")) : _react.default.createElement("i", null, "None")), _react.default.createElement(_semanticUiReact.Table.Cell, {
+    }, `${instance.machines[id].name} (${instance.lab.machines[id].description})`)) : _react.default.createElement("i", null, "None")), _react.default.createElement(_semanticUiReact.Table.Cell, {
       singleLine: true
     }, repositories.length ? repositories : _react.default.createElement("i", null, "None")), _react.default.createElement(_semanticUiReact.Table.Cell, null, 'endpoints' in instance ? instance.lab.endpoints.map(id => _react.default.createElement("p", {
       key: id
     }, _react.default.createElement("a", {
       href: instance.endpoints[id].link,
+      rel: "noopener noreferrer",
       target: "_blank"
     }, id))) : _react.default.createElement("i", null, "None")), _react.default.createElement(_semanticUiReact.Table.Cell, {
       singleLine: true
-    }, _react.default.createElement("p", null, startTime.toDateString() + ' ' + startTime.toTimeString().split(' ')[0]), _react.default.createElement("p", null, _react.default.createElement(_util.TimeSince, {
+    }, _react.default.createElement("p", null, `${startTime.toDateString()} ${startTime.toTimeString().split(' ')[0]}`), _react.default.createElement("p", null, _react.default.createElement(_util.TimeSince, {
       date: startTime
-    }), " ago")), _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement("a", {
-      href: 'lab/' + encodeURIComponent(instance.lab._id) + '/instance/' + encodeURIComponent(instance.username)
+    }), ' ago')), _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement("a", {
+      href: `lab/${encodeURIComponent(instance.lab._id)}/instance/${encodeURIComponent(instance.username)}`
     }, "Details")), _react.default.createElement(_semanticUiReact.Table.Cell, {
       collapsing: true
     }, _react.default.createElement(_semanticUiReact.Popup, {
@@ -84,12 +97,12 @@ class LabRow extends _react.default.Component {
       hideOnScroll: true,
       trigger: _react.default.createElement(_semanticUiReact.Button, {
         negative: true,
-        disabled: !!this.state.loading,
-        loading: this.state.loading === 'delete',
+        disabled: !!loading,
+        loading: loading === 'delete',
         icon: true
       }, _react.default.createElement(_semanticUiReact.Icon, {
         name: "trash"
-      }), " Delete")
+      }), ' Delete')
     }, _react.default.createElement(_semanticUiReact.Button, {
       negative: true,
       onClick: () => this.deleteInstance()
@@ -118,40 +131,38 @@ class Instances extends _react.default.Component {
     this.state = {
       instances: props.instances,
       derivedDataCache,
-      loading: null,
       column: null,
       direction: null
     };
   }
 
   handleSort(clickedColumn) {
+    const {
+      instances,
+      column,
+      direction,
+      derivedDataCache
+    } = this.state;
     return () => {
-      if (this.state.column !== clickedColumn) {
+      if (column !== clickedColumn) {
         this.setState({
           column: clickedColumn,
-          instances: this.state.instances.slice().sort((one, another) => this.state.derivedDataCache[one._id][clickedColumn] - this.state.derivedDataCache[another._id][clickedColumn]),
+          // eslint-disable-next-line max-len
+          instances: instances.slice().sort((a, b) => derivedDataCache[a._id][clickedColumn] - derivedDataCache[b._id][clickedColumn]),
           direction: 'ascending'
         });
       } else {
         this.setState({
-          instances: this.state.instances.reverse(),
-          direction: this.state.direction === 'ascending' ? 'descending' : 'ascending'
+          instances: instances.reverse(),
+          direction: direction === 'ascending' ? 'descending' : 'ascending'
         });
       }
     };
   }
 
   render() {
-    const instances = [];
-
-    for (const instance of this.state.instances) {
-      instances.push(_react.default.createElement(LabRow, {
-        key: instance._id,
-        instance: instance
-      }));
-    }
-
     const {
+      instances,
       direction,
       column
     } = this.state;
@@ -183,7 +194,10 @@ class Instances extends _react.default.Component {
       onClick: this.handleSort('startTime')
     }, "Start time"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, {
       colSpan: "2"
-    }))), _react.default.createElement(_semanticUiReact.Table.Body, null, instances))));
+    }))), _react.default.createElement(_semanticUiReact.Table.Body, null, instances.map(instance => _react.default.createElement(LabRow, {
+      key: instance._id,
+      instance: instance
+    }))))));
   }
 
 }

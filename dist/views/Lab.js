@@ -17,7 +17,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 let templatesLoadPromiseResolve;
 let needTemplates = true;
-let templatesLoadPromise = new Promise(resolve => {
+const templatesLoadPromise = new Promise(resolve => {
   templatesLoadPromiseResolve = resolve;
 });
 
@@ -26,7 +26,7 @@ async function loadTemplates() {
     needTemplates = false;
     const response = await fetch('machine?templates', {
       headers: {
-        'accept': 'application/json'
+        accept: 'application/json'
       }
     });
 
@@ -42,7 +42,7 @@ async function loadTemplates() {
 
 let repositoriesLoadPromiseResolve;
 let needRepositories = true;
-let repositoriesLoadPromise = new Promise(resolve => {
+const repositoriesLoadPromise = new Promise(resolve => {
   repositoriesLoadPromiseResolve = resolve;
 });
 
@@ -51,7 +51,7 @@ async function loadRepositories() {
     needRepositories = false;
     const response = await fetch('repository', {
       headers: {
-        'accept': 'application/json'
+        accept: 'application/json'
       }
     });
 
@@ -85,8 +85,31 @@ class Assistant extends _react.default.Component {
   }
 
   getValue() {
-    return this.state.assistant ? { ...this.state.assistant
+    const {
+      assistant
+    } = this.state;
+    return assistant ? { ...assistant
     } : undefined;
+  }
+
+  setField(field) {
+    const {
+      assistant
+    } = this.state;
+    return e => {
+      this.setState({
+        assistant: { ...assistant,
+          [field]: e.target.value
+        }
+      });
+    };
+  }
+
+  deleteAssistant() {
+    this.setState({
+      errors: {},
+      assistant: undefined
+    });
   }
 
   createAssistant() {
@@ -99,27 +122,13 @@ class Assistant extends _react.default.Component {
     });
   }
 
-  deleteAssistant() {
-    this.setState({
-      errors: {},
-      assistant: undefined
-    });
-  }
-
-  setField(field) {
-    return e => {
-      this.setState({
-        assistant: { ...this.state.assistant,
-          [field]: e.target.value
-        }
-      });
-    };
-  }
-
   validateNotEmpty(field, message) {
     return e => {
+      const {
+        errors
+      } = this.state;
       this.setState({
-        errors: { ...this.state.errors,
+        errors: { ...errors,
           [field]: e.target.value.length < 1 ? message : undefined
         }
       });
@@ -127,41 +136,46 @@ class Assistant extends _react.default.Component {
   }
 
   render() {
-    if (typeof this.state.assistant !== 'object' || !this.state.assistant) {
+    const {
+      assistant,
+      errors
+    } = this.state;
+
+    if (typeof assistant !== 'object' || !assistant) {
       return _react.default.createElement(_semanticUiReact.Button, {
         color: "yellow",
         onClick: () => this.createAssistant()
       }, "Add");
-    } else {
-      return _react.default.createElement("div", null, _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Input, {
-        label: "URL",
-        defaultValue: this.state.assistant.url,
-        error: this.state.errors.url,
-        onChange: this.validateNotEmpty('url', 'URL must not be empty'),
-        onBlur: this.setField('url'),
-        style: {
-          width: '28.5em'
-        }
-      })), _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Input, {
-        label: "Lab ID",
-        defaultValue: this.state.assistant.lab,
-        error: this.state.errors.lab,
-        onChange: this.validateNotEmpty('lab', 'Lab ID must not be empty'),
-        onBlur: this.setField('lab')
-      })), _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Input, {
-        label: "Key",
-        defaultValue: this.state.assistant.key,
-        error: this.state.errors.key,
-        onChange: this.validateNotEmpty('key', 'Key must not be empty'),
-        onBlur: this.setField('key'),
-        style: {
-          width: '23.5em'
-        }
-      })), _react.default.createElement(_semanticUiReact.Button, {
-        negative: true,
-        onClick: () => this.deleteAssistant()
-      }, "Remove"));
     }
+
+    return _react.default.createElement("div", null, _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Input, {
+      label: "URL",
+      defaultValue: assistant.url,
+      error: errors.url,
+      onChange: this.validateNotEmpty('url', 'URL must not be empty'),
+      onBlur: this.setField('url'),
+      style: {
+        width: '28.5em'
+      }
+    })), _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Input, {
+      label: "Lab ID",
+      defaultValue: assistant.lab,
+      error: errors.lab,
+      onChange: this.validateNotEmpty('lab', 'Lab ID must not be empty'),
+      onBlur: this.setField('lab')
+    })), _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Input, {
+      label: "Key",
+      defaultValue: assistant.key,
+      error: errors.key,
+      onChange: this.validateNotEmpty('key', 'Key must not be empty'),
+      onBlur: this.setField('key'),
+      style: {
+        width: '23.5em'
+      }
+    })), _react.default.createElement(_semanticUiReact.Button, {
+      negative: true,
+      onClick: () => this.deleteAssistant()
+    }, "Remove"));
   }
 
 }
@@ -184,27 +198,38 @@ class Network extends _react.default.Component {
   }
 
   getValue() {
-    if (!this.state.name) {
+    const {
+      machineType
+    } = this.props;
+    const {
+      type,
+      name,
+      promiscuous,
+      resetMac,
+      ip
+    } = this.state;
+
+    if (!name) {
       return null;
     }
 
     const ret = {
-      name: this.state.name
+      name
     };
 
-    if (this.props.machineType === 'virtualbox') {
-      ret.type = this.state.type;
+    if (machineType === 'virtualbox') {
+      ret.type = type;
 
-      if (this.state.promiscuous) {
+      if (promiscuous) {
         ret.promiscuous = true;
       }
 
-      if (this.state.resetMac) {
+      if (resetMac) {
         ret.resetMac = true;
       }
 
-      if (this.state.ip) {
-        ret.ip = this.state.ip;
+      if (ip) {
+        ret.ip = ip;
       }
     }
 
@@ -213,8 +238,11 @@ class Network extends _react.default.Component {
 
   validateNotEmpty(field, message) {
     return e => {
+      const {
+        errors
+      } = this.state;
       this.setState({
-        errors: { ...this.state.errors,
+        errors: { ...errors,
           [field]: e.target.value.length < 1 ? message : undefined
         }
       });
@@ -222,21 +250,23 @@ class Network extends _react.default.Component {
   }
 
   render() {
-    const trigger = _react.default.createElement(_semanticUiReact.Input, {
-      defaultValue: this.state.name,
-      icon: "setting",
-      error: this.state.errors.name,
-      onChange: this.validateNotEmpty('name', 'Network name must not be empty'),
-      onBlur: e => this.setState({
-        name: e.target.value
-      }),
-      autoFocus: this.props.autoFocus
-    });
-
-    const settings = this.props.machineType === 'virtualbox' ? _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Dropdown, {
+    const {
+      machineType,
+      autoFocus,
+      onDelete
+    } = this.props;
+    const {
+      type,
+      name,
+      ip,
+      promiscuous,
+      resetMac,
+      errors
+    } = this.state;
+    const settings = machineType === 'virtualbox' ? _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Dropdown, {
       selection: true,
       fluid: true,
-      defaultValue: this.state.type,
+      defaultValue: type,
       options: [{
         text: 'VirtualBox internal network',
         value: 'virtualbox'
@@ -251,14 +281,14 @@ class Network extends _react.default.Component {
       }
     }), _react.default.createElement(_semanticUiReact.Input, {
       label: "IP:",
-      defaultValue: this.state.ip,
+      defaultValue: ip,
       onBlur: e => this.setState({
         ip: e.target.value
       })
     }), _react.default.createElement(_semanticUiReact.Checkbox, {
       toggle: true,
       label: "Promiscuous",
-      defaultChecked: this.state.promiscuous,
+      defaultChecked: promiscuous,
       onChange: (e, data) => {
         this.setState({
           promiscuous: data.checked
@@ -267,7 +297,7 @@ class Network extends _react.default.Component {
     }), _react.default.createElement(_semanticUiReact.Checkbox, {
       toggle: true,
       label: "Reset MAC",
-      defaultChecked: this.state.resetMac,
+      defaultChecked: resetMac,
       onChange: (e, data) => this.setState({
         resetMac: data.checked
       })
@@ -282,15 +312,24 @@ class Network extends _react.default.Component {
       }]
     });
     return _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Popup, {
+      position: "right center",
       hideOnScroll: true,
-      trigger: trigger,
-      content: settings,
       on: "click",
-      position: "right center"
+      trigger: _react.default.createElement(_semanticUiReact.Input, {
+        icon: "setting",
+        error: errors.name,
+        defaultValue: name,
+        onChange: this.validateNotEmpty('name', 'Network name must not be empty'),
+        onBlur: e => this.setState({
+          name: e.target.value
+        }),
+        autoFocus: autoFocus
+      }),
+      content: settings
     }), _react.default.createElement(_semanticUiReact.Button, {
       negative: true,
       icon: true,
-      onClick: this.props.onDelete
+      onClick: onDelete
     }, _react.default.createElement(_semanticUiReact.Icon, {
       name: "delete",
       style: {
@@ -315,28 +354,38 @@ class Networks extends _react.default.Component {
   }
 
   getValue() {
-    return this.state.order.map(i => this.refs['network-' + i].getValue());
+    const {
+      order
+    } = this.state;
+    return order.map(i => this.refs[`network-${i}`].getValue());
   }
 
   addNetwork() {
-    const index = this.state.newIndex + 1;
-    const newOrder = [...this.state.order, index];
-    const newNetworks = { ...this.state.networks,
-      [index]: {}
-    };
+    const {
+      newIndex,
+      order,
+      networks
+    } = this.state;
+    const index = newIndex + 1;
     this.setState({
       newIndex: index,
-      order: newOrder,
-      networks: newNetworks
+      order: [...order, index],
+      networks: { ...networks,
+        [index]: {}
+      }
     });
   }
 
   deleteNetwork(index) {
-    const newOrder = [...this.state.order];
-    const newNetworks = { ...this.state.networks
+    const {
+      order,
+      networks
+    } = this.state;
+    const newOrder = [...order];
+    const newNetworks = { ...networks
     };
-    const orderIndex = this.state.order.indexOf(index);
     delete newNetworks[index];
+    const orderIndex = order.indexOf(index);
 
     if (orderIndex !== -1) {
       newOrder.splice(orderIndex, 1);
@@ -349,15 +398,22 @@ class Networks extends _react.default.Component {
   }
 
   render() {
-    const networks = this.state.order.map(i => _react.default.createElement(Network, {
-      ref: 'network-' + i,
+    const {
+      machineType
+    } = this.props;
+    const {
+      order,
+      networks,
+      newIndex
+    } = this.state;
+    return _react.default.createElement("div", null, order.map(i => _react.default.createElement(Network, {
+      ref: `network-${i}`,
       key: i,
-      network: this.state.networks[i],
+      network: networks[i],
       onDelete: () => this.deleteNetwork(i),
-      autoFocus: i === this.state.newIndex,
-      machineType: this.props.machineType
-    }));
-    return _react.default.createElement("div", null, networks, _react.default.createElement(_semanticUiReact.Button, {
+      autoFocus: i === newIndex,
+      machineType: machineType
+    })), _react.default.createElement(_semanticUiReact.Button, {
       positive: true,
       icon: true,
       onClick: () => this.addNetwork()
@@ -376,22 +432,32 @@ class MachineLimits extends _react.default.Component {
     this.state = {
       cpu: limits.cpu || undefined,
       cpuAllowance: limits.cpuAllowance || 100,
-      memory: limits.memory || undefined,
-      errors: {}
+      memory: limits.memory || undefined
     };
   }
 
   getValue() {
-    if (this.state.cpu || this.state.cpuAllowance !== 100 || this.state.memory) {
+    const {
+      cpu,
+      cpuAllowance,
+      memory
+    } = this.state;
+
+    if (cpu || cpuAllowance !== 100 || memory) {
       return {
-        cpu: this.state.cpu || undefined,
-        cpuAllowance: !this.state.cpuAllowance || this.state.cpuAllowance === 100 ? undefined : this.state.cpuAllowance,
-        memory: this.state.memory || undefined
+        cpu: cpu || undefined,
+        cpuAllowance: !cpuAllowance || cpuAllowance === 100 ? undefined : cpuAllowance,
+        memory: memory || undefined
       };
     }
   }
 
   render() {
+    const {
+      cpu,
+      cpuAllowance,
+      memory
+    } = this.state;
     return _react.default.createElement(_semanticUiReact.Table, {
       collapsing: true
     }, _react.default.createElement(_semanticUiReact.Table.Body, null, _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.Cell, {
@@ -401,7 +467,7 @@ class MachineLimits extends _react.default.Component {
       style: {
         width: '10em'
       },
-      defaultValue: this.state.cpu,
+      defaultValue: cpu,
       onChange: e => this.setState({
         cpu: Number(e.target.value)
       })
@@ -411,22 +477,22 @@ class MachineLimits extends _react.default.Component {
       type: "range",
       min: "1",
       max: "100",
-      defaultValue: this.state.cpuAllowance || '100',
+      defaultValue: cpuAllowance || '100',
       onChange: e => this.setState({
         cpuAllowance: Number(e.target.value)
       })
-    }), " ", this.state.cpuAllowance, "%")), _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.Cell, {
+    }), `${cpuAllowance}%`)), _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.Cell, {
       collapsing: true
     }, "Memory:"), _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement(_semanticUiReact.Input, {
       type: "number",
       style: {
         width: '10em'
       },
-      defaultValue: this.state.memory,
+      defaultValue: memory,
       onChange: e => this.setState({
         memory: Number(e.target.value)
       })
-    }), " MiB"))));
+    }), "MiB"))));
   }
 
 }
@@ -453,50 +519,25 @@ class MachineRepositories extends _react.default.Component {
   }
 
   getValue() {
-    const repositories = [];
+    const {
+      repositories
+    } = this.state;
 
-    for (const i of this.state.order) {
-      repositories.push(this.state.repositories[i]);
+    if (!repositories.length) {
+      return;
     }
 
-    return repositories.length ? repositories : undefined;
-  }
-
-  addRepository() {
-    const newIndex = ++this.state.newIndex;
-    const order = [...this.state.order, newIndex];
-    const repositories = { ...this.state.repositories,
-      [newIndex]: {}
-    };
-    this.setState({
-      repositories,
-      order,
-      newIndex
-    });
-  }
-
-  deleteRepository(i) {
-    const repositories = { ...this.state.repositories
-    };
-    const order = [...this.state.order];
-    delete repositories[i];
-    const orderIndex = order.indexOf(i);
-
-    if (orderIndex >= 0) {
-      order.splice(orderIndex, 1);
-    }
-
-    this.setState({
-      repositories,
-      order
-    });
+    return repositories.map(i => repositories[i]);
   }
 
   setRepository(i, field) {
     return e => {
+      const {
+        repositories
+      } = this.state;
       this.setState({
-        repositories: { ...this.state.repositories,
-          [i]: { ...this.state.repositories[i],
+        repositories: { ...repositories,
+          [i]: { ...repositories[i],
             [field]: e.target.value
           }
         }
@@ -504,10 +545,49 @@ class MachineRepositories extends _react.default.Component {
     };
   }
 
+  deleteRepository(i) {
+    const {
+      repositories,
+      order
+    } = this.state;
+    const newRepositories = { ...repositories
+    };
+    delete newRepositories[i];
+    const newOrder = [...order];
+    const orderIndex = order.indexOf(i);
+
+    if (orderIndex >= 0) {
+      newOrder.splice(orderIndex, 1);
+    }
+
+    this.setState({
+      repositories: newRepositories,
+      order: newOrder
+    });
+  }
+
+  addRepository() {
+    const {
+      newIndex,
+      order,
+      repositories
+    } = this.state;
+    this.setState({
+      repositories: { ...repositories,
+        [newIndex + 1]: {}
+      },
+      order: [...order, newIndex],
+      newIndex: newIndex + 1
+    });
+  }
+
   validateName(i) {
     return e => {
+      const {
+        nameErrors
+      } = this.state;
       this.setState({
-        nameErrors: { ...this.state.nameErrors,
+        nameErrors: { ...nameErrors,
           [i]: !/^[a-zA-Z0-9_-]+$/.test(e.target.value)
         }
       });
@@ -516,8 +596,11 @@ class MachineRepositories extends _react.default.Component {
 
   validateLocation(i) {
     return e => {
+      const {
+        locationErrors
+      } = this.state;
       this.setState({
-        locationErrors: { ...this.state.locationErrors,
+        locationErrors: { ...locationErrors,
           [i]: !/^\/.+$/.test(e.target.value)
         }
       });
@@ -526,8 +609,11 @@ class MachineRepositories extends _react.default.Component {
 
   validateRef(i) {
     return e => {
+      const {
+        refErrors
+      } = this.state;
       this.setState({
-        refErrors: { ...this.state.refErrors,
+        refErrors: { ...refErrors,
           [i]: !/^[a-zA-Z0-9_/-]*$/.test(e.target.value)
         }
       });
@@ -535,35 +621,44 @@ class MachineRepositories extends _react.default.Component {
   }
 
   render() {
-    const repositories = this.state.order.map(i => _react.default.createElement(_semanticUiReact.Table.Row, {
+    const {
+      order,
+      repositories,
+      allRepositories,
+      newIndex,
+      nameErrors,
+      locationErrors,
+      refErrors
+    } = this.state;
+    return _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Table, null, _react.default.createElement(_semanticUiReact.Table.Header, null, _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Repository name"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Repository location in machine"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Ref"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null))), _react.default.createElement(_semanticUiReact.Table.Body, null, order.map(i => _react.default.createElement(_semanticUiReact.Table.Row, {
       key: i
     }, _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement(_semanticUiReact.Input, {
       fluid: true,
       list: "repositories",
-      defaultValue: this.state.repositories[i].name,
+      defaultValue: repositories[i].name,
       onBlur: this.setRepository(i, 'name'),
       onChange: this.validateName(i),
-      autoFocus: i === this.state.newIndex,
+      autoFocus: i === newIndex,
       onFocus: loadRepositories,
-      error: this.state.nameErrors[i]
+      error: nameErrors[i]
     })), _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement(_semanticUiReact.Input, {
       fluid: true,
-      defaultValue: this.state.repositories[i].location,
+      defaultValue: repositories[i].location,
       onBlur: this.setRepository(i, 'location'),
       onChange: this.validateLocation(i),
-      error: this.state.locationErrors[i]
+      error: locationErrors[i]
     })), _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement("datalist", {
-      id: 'refs-' + i
-    }, (this.state.allRepositories[this.state.repositories[i].name] || []).map(r => _react.default.createElement("option", {
+      id: `refs-${i}`
+    }, repositories[i].name in allRepositories && allRepositories[repositories[i].name].map(r => _react.default.createElement("option", {
       key: r
     }, r))), _react.default.createElement(_semanticUiReact.Input, {
       fluid: true,
-      list: 'refs-' + i,
-      defaultValue: this.state.repositories[i].ref,
+      list: `refs-${i}`,
+      WdefaultValue: repositories[i].ref,
       onBlur: this.setRepository(i, 'ref'),
       onChange: this.validateRef(i),
       onFocus: loadRepositories,
-      error: this.state.refErrors[i]
+      error: refErrors[i]
     })), _react.default.createElement(_semanticUiReact.Table.Cell, {
       collapsing: true
     }, _react.default.createElement(_semanticUiReact.Button, {
@@ -572,8 +667,7 @@ class MachineRepositories extends _react.default.Component {
       onClick: () => this.deleteRepository(i)
     }, _react.default.createElement(_semanticUiReact.Icon, {
       name: "delete"
-    })))));
-    return _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Table, null, _react.default.createElement(_semanticUiReact.Table.Header, null, _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Repository name"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Repository location in machine"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Ref"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null))), _react.default.createElement(_semanticUiReact.Table.Body, null, repositories)), _react.default.createElement(_semanticUiReact.Button, {
+    }))))))), _react.default.createElement(_semanticUiReact.Button, {
       positive: true,
       onClick: () => this.addRepository(),
       autoFocus: true
@@ -585,34 +679,46 @@ class MachineRepositories extends _react.default.Component {
 class Machine extends _react.default.Component {
   constructor(props) {
     super();
-    this.state = {
-      errors: {},
-      machine: {
-        type: 'virtualbox',
-        ...props.machine
-      }
+    const machine = {
+      type: 'virtualbox',
+      ...props.machine
     };
 
     if ('enable_token' in props.machine) {
-      this.state.machine.enable_private = props.machine.enable_token;
-      delete this.state.machine.enable_token;
+      machine.enable_private = props.machine.enable_token;
+      delete machine.enable_token;
     }
+
+    this.state = {
+      errors: {},
+      machine
+    };
   }
 
   getValue() {
-    return { ...this.state.machine,
+    const {
+      machine
+    } = this.state;
+    return { ...machine,
       networks: this.refs.networks.getValue()
     };
   }
 
   setId(e) {
+    const {
+      onIdChange,
+      id
+    } = this.props;
+    const {
+      errors
+    } = this.state;
     const newId = e.target.value;
-    const updated = this.props.onIdChange(newId);
+    const updated = onIdChange(newId);
 
     if (updated === false) {
-      e.target.value = this.props.id;
+      e.target.value = id;
       this.setState({
-        errors: { ...this.state.errors,
+        errors: { ...errors,
           id: undefined
         }
       });
@@ -620,8 +726,11 @@ class Machine extends _react.default.Component {
   }
 
   setMachineField(field, value) {
+    const {
+      machine
+    } = this.state;
     this.setState({
-      machine: { ...this.state.machine,
+      machine: { ...machine,
         [field]: value
       }
     });
@@ -629,8 +738,11 @@ class Machine extends _react.default.Component {
 
   validateRegex(field, regex) {
     return e => {
+      const {
+        errors
+      } = this.state;
       this.setState({
-        errors: { ...this.state.errors,
+        errors: { ...errors,
           [field]: regex.test(e.target.value) ? undefined : true
         }
       });
@@ -638,14 +750,24 @@ class Machine extends _react.default.Component {
   }
 
   render() {
-    const machine = this.state.machine;
+    const {
+      id,
+      primary,
+      autoFocus,
+      onPrimary,
+      onDelete
+    } = this.props;
+    const {
+      machine,
+      errors
+    } = this.state;
 
-    const id = _react.default.createElement(_semanticUiReact.Input, {
+    const idNode = _react.default.createElement(_semanticUiReact.Input, {
       fluid: true,
-      defaultValue: this.props.id,
-      autoFocus: this.props.autoFocus,
+      defaultValue: id,
+      autoFocus: autoFocus,
       onChange: this.validateRegex('id', /^[a-zA-Z0-9-_]+$/),
-      error: this.state.errors.id,
+      error: errors.id,
       onFocus: e => e.target.select(),
       onBlur: e => this.setId(e),
       icon: machine.type === 'lxd' ? 'box' : 'desktop'
@@ -655,7 +777,7 @@ class Machine extends _react.default.Component {
       fluid: true,
       defaultValue: machine.description,
       onChange: this.validateRegex('description', /./),
-      error: this.state.errors.description,
+      error: errors.description,
       onBlur: e => this.setMachineField('description', e.target.value)
     });
 
@@ -663,7 +785,7 @@ class Machine extends _react.default.Component {
       fluid: true,
       list: machine.type === 'virtualbox' ? 'virtualbox-templates' : undefined,
       defaultValue: machine.base,
-      error: this.state.errors.base,
+      error: errors.base,
       onChange: this.validateRegex('base', /[a-zA-Z0-9-_]+-template$/),
       onBlur: e => this.setMachineField('base', e.target.value),
       onFocus: loadTemplates
@@ -673,17 +795,22 @@ class Machine extends _react.default.Component {
 
     if (machine.type === 'lxd') {
       containerConfigiration = _react.default.createElement(_semanticUiReact.Modal, {
+        closeIcon: true,
+        closeOnDimmerClick: false,
         trigger: _react.default.createElement(_semanticUiReact.Button, {
           color: "teal"
         }, "Configure"),
-        closeIcon: true,
-        closeOnDimmerClick: false,
-        onClose: () => this.setState({
-          machine: { ...this.state.machine,
-            limits: this.refs.limits.getValue(),
-            repositories: this.refs.repositories.getValue()
-          }
-        })
+        onClose: () => {
+          const {
+            machine
+          } = this.state;
+          this.setState({
+            machine: { ...machine,
+              limits: this.refs.limits.getValue(),
+              repositories: this.refs.repositories.getValue()
+            }
+          });
+        }
       }, _react.default.createElement(_semanticUiReact.Header, null, "Container configuration"), _react.default.createElement(_semanticUiReact.Modal.Content, null, _react.default.createElement(_semanticUiReact.Segment, null, _react.default.createElement(_semanticUiReact.Header, null, "Limits"), _react.default.createElement(MachineLimits, {
         ref: "limits",
         limits: machine.limits
@@ -694,34 +821,15 @@ class Machine extends _react.default.Component {
     }
 
     const createButton = (field, disabled = false) => {
-      if (machine[field]) {
-        return _react.default.createElement(_semanticUiReact.Button, {
-          onClick: () => this.setMachineField(field, false),
-          primary: true,
-          icon: true,
-          disabled: disabled
-        }, _react.default.createElement(_semanticUiReact.Icon, {
-          name: "check"
-        }));
-      } else {
-        return _react.default.createElement(_semanticUiReact.Button, {
-          onClick: () => this.setMachineField(field, true),
-          icon: true,
-          disabled: disabled
-        }, _react.default.createElement(_semanticUiReact.Icon, {
-          name: "circle"
-        }));
-      }
+      return _react.default.createElement(_semanticUiReact.Button, {
+        primary: !!machine[field],
+        icon: true,
+        disabled: disabled,
+        onClick: () => this.setMachineField(field, !machine[field])
+      }, _react.default.createElement(_semanticUiReact.Icon, {
+        name: machine[field] ? 'check' : 'circle'
+      }));
     };
-
-    let primary;
-
-    if (this.props.primary) {
-      primary = _react.default.createElement(_semanticUiReact.Icon, {
-        name: "star",
-        size: "big"
-      });
-    }
 
     return _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.Cell, {
       className: "table-dragger-handle",
@@ -730,9 +838,12 @@ class Machine extends _react.default.Component {
       name: "sort",
       size: "big"
     })), _react.default.createElement(_semanticUiReact.Table.Cell, {
-      onClick: this.props.onPrimary,
+      onClick: onPrimary,
       collapsing: true
-    }, primary), _react.default.createElement(_semanticUiReact.Table.Cell, null, id), _react.default.createElement(_semanticUiReact.Table.Cell, null, description), _react.default.createElement(_semanticUiReact.Table.Cell, null, base), _react.default.createElement(_semanticUiReact.Table.Cell, null, createButton('enable_autostart')), _react.default.createElement(_semanticUiReact.Table.Cell, null, createButton('enable_private')), _react.default.createElement(_semanticUiReact.Table.Cell, null, createButton('enable_remote', machine.type === 'lxd')), _react.default.createElement(_semanticUiReact.Table.Cell, null, createButton('enable_restart')), _react.default.createElement(_semanticUiReact.Table.Cell, {
+    }, !!primary && _react.default.createElement(_semanticUiReact.Icon, {
+      name: "star",
+      size: "big"
+    })), _react.default.createElement(_semanticUiReact.Table.Cell, null, idNode), _react.default.createElement(_semanticUiReact.Table.Cell, null, description), _react.default.createElement(_semanticUiReact.Table.Cell, null, base), _react.default.createElement(_semanticUiReact.Table.Cell, null, createButton('enable_autostart')), _react.default.createElement(_semanticUiReact.Table.Cell, null, createButton('enable_private')), _react.default.createElement(_semanticUiReact.Table.Cell, null, createButton('enable_remote', machine.type === 'lxd')), _react.default.createElement(_semanticUiReact.Table.Cell, null, createButton('enable_restart')), _react.default.createElement(_semanticUiReact.Table.Cell, {
       collapsing: true
     }, _react.default.createElement(Networks, {
       ref: "networks",
@@ -744,7 +855,7 @@ class Machine extends _react.default.Component {
       collapsing: true
     }, _react.default.createElement(_semanticUiReact.Button, {
       negative: true,
-      onClick: this.props.onDelete
+      onClick: onDelete
     }, "Delete")));
   }
 
@@ -753,18 +864,19 @@ class Machine extends _react.default.Component {
 class Machines extends _react.default.Component {
   constructor(props) {
     super();
+    const keys = {};
+
+    for (let i = 0; i < props.machineOrder.length; i++) {
+      keys[props.machineOrder[i]] = i;
+    }
+
     this.state = {
       primary: props.primary,
       machines: { ...props.machines
       },
       machineOrder: [...props.machineOrder],
-      keys: {}
+      keys
     };
-
-    for (let i = 0; i < props.machineOrder.length; i++) {
-      this.state.keys[props.machineOrder[i]] = i;
-    }
-
     templatesLoadPromise.then(templates => {
       this.setState({
         templates
@@ -772,18 +884,160 @@ class Machines extends _react.default.Component {
     });
   }
 
+  componentDidMount() {
+    this.createTableDragger();
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    if (nextProps !== this.props) {
+      return true;
+    }
+
+    const {
+      machineOrder,
+      templates,
+      primary
+    } = this.state;
+
+    if (nextState.machineOrder !== machineOrder) {
+      return true;
+    }
+
+    if (nextState.templates !== templates) {
+      return true;
+    }
+
+    return nextState.primary !== primary;
+  }
+
+  componentDidUpdate() {
+    this.createTableDragger();
+  }
+
   getValue() {
+    const {
+      machineOrder,
+      primary
+    } = this.state;
     const ret = {
       machines: {},
-      machineOrder: [...this.state.machineOrder],
-      primaryMachine: this.state.primary
+      machineOrder: [...machineOrder],
+      primaryMachine: primary
     };
 
-    for (const id of this.state.machineOrder) {
-      ret.machines[id] = this.refs['machine-' + id].getValue();
+    for (const id of machineOrder) {
+      ret.machines[id] = this.refs[`machine-${id}`].getValue();
     }
 
     return ret;
+  }
+
+  setPrimary(id) {
+    return () => {
+      const {
+        primary
+      } = this.state;
+      this.setState({
+        primary: id !== primary ? id : undefined
+      });
+    };
+  }
+
+  deleteMachine(id) {
+    return () => {
+      const {
+        machines,
+        machineOrder,
+        keys,
+        primary
+      } = this.state;
+      const newMachines = { ...machines
+      };
+      const newMachineOrder = [...machineOrder];
+      const newKeys = { ...keys
+      };
+      const newPrimary = primary !== id ? primary : undefined;
+      delete newMachines[id];
+      delete newKeys[id];
+      const orderIndex = newMachineOrder.indexOf(id);
+
+      if (orderIndex >= 0) {
+        newMachineOrder.splice(orderIndex, 1);
+      }
+
+      this.setState({
+        machines: newMachines,
+        machineOrder: newMachineOrder,
+        keys: newKeys,
+        primary: newPrimary
+      });
+    };
+  }
+
+  newMachine(type) {
+    const {
+      machines,
+      machineOrder,
+      keys
+    } = this.state;
+    const newMachines = { ...machines
+    };
+    const newMachineOrder = [...machineOrder];
+    const newKeys = { ...keys
+    };
+    const newId = Date.now().toString(16);
+    newMachines[newId] = {
+      type,
+      description: '',
+      base: '',
+      networks: []
+    };
+    newKeys[newId] = Date.now();
+    newMachineOrder.push(newId);
+    this.setState({
+      machines: newMachines,
+      machineOrder: newMachineOrder,
+      keys: newKeys,
+      newMachine: newId
+    });
+  }
+
+  changeId(oldId) {
+    return newId => {
+      const {
+        machines,
+        machineOrder,
+        keys,
+        primary
+      } = this.state;
+
+      if (oldId === newId || newId === '' || machineOrder.includes(newId)) {
+        return false;
+      }
+
+      const newMachines = { ...machines
+      };
+      const newMachineOrder = [...machineOrder];
+      const newKeys = { ...keys
+      };
+      const newPrimary = primary === oldId ? newId : primary;
+      newMachines[newId] = newMachines[oldId];
+      newKeys[newId] = newKeys[oldId];
+      delete newMachines[oldId];
+      delete newKeys[oldId];
+      const orderIndex = newMachineOrder.indexOf(oldId);
+
+      if (orderIndex !== -1) {
+        newMachineOrder.splice(orderIndex, 1, newId);
+      }
+
+      this.setState({
+        machines: newMachines,
+        machineOrder: newMachineOrder,
+        keys: newKeys,
+        primary: newPrimary
+      });
+    };
   }
 
   createTableDragger() {
@@ -800,10 +1054,12 @@ class Machines extends _react.default.Component {
         onlyBody: true,
         animation: 300
       }).on('drop', (from, to) => {
-        // one-based?
+        const {
+          machineOrder
+        } = this.state;
         from--;
         to--;
-        const newOrder = [...this.state.machineOrder];
+        const newOrder = [...machineOrder];
         const index = newOrder.splice(from, 1);
         newOrder.splice(to, 0, index[0]);
         this.setState({
@@ -814,129 +1070,17 @@ class Machines extends _react.default.Component {
     }
   }
 
-  componentDidMount() {
-    this.createTableDragger();
-  }
-
-  componentDidUpdate() {
-    this.createTableDragger();
-  }
-
-  changeId(oldId) {
-    return newId => {
-      if (oldId === newId || newId === '' || this.state.machineOrder.includes(newId)) {
-        return false;
-      }
-
-      const machines = { ...this.state.machines
-      };
-      const machineOrder = [...this.state.machineOrder];
-      const keys = { ...this.state.keys
-      };
-      machines[newId] = machines[oldId];
-      keys[newId] = keys[oldId];
-      delete machines[oldId];
-      delete keys[oldId];
-      const orderIndex = machineOrder.indexOf(oldId);
-
-      if (orderIndex !== -1) {
-        machineOrder.splice(orderIndex, 1, newId);
-      }
-
-      let primary = this.state.primary;
-
-      if (primary === oldId) {
-        primary = newId;
-      }
-
-      this.setState({
-        machines,
-        machineOrder,
-        keys,
-        primary
-      });
-    };
-  }
-
-  newMachine(type) {
-    const machines = { ...this.state.machines
-    };
-    const machineOrder = [...this.state.machineOrder];
-    const keys = { ...this.state.keys
-    };
-    const newId = Date.now().toString(16);
-    machines[newId] = {
-      type,
-      description: '',
-      base: '',
-      networks: []
-    };
-    keys[newId] = Date.now();
-    machineOrder.push(newId);
-    this.setState({
+  render() {
+    const {
       machines,
       machineOrder,
+      primary,
       keys,
-      newMachine: newId
-    });
-  }
+      newMachine,
+      templates
+    } = this.state;
 
-  deleteMachine(id) {
-    return () => {
-      const machines = { ...this.state.machines
-      };
-      const machineOrder = [...this.state.machineOrder];
-      const keys = { ...this.state.keys
-      };
-      delete machines[id];
-      delete keys[id];
-      const orderIndex = machineOrder.indexOf(id);
-
-      if (orderIndex >= 0) {
-        machineOrder.splice(orderIndex, 1);
-      }
-
-      let primary = this.state.primary;
-
-      if (primary === id) {
-        primary = undefined;
-      }
-
-      this.setState({
-        machines,
-        machineOrder,
-        keys,
-        primary
-      });
-    };
-  }
-
-  setPrimary(id) {
-    return () => {
-      this.setState({
-        primary: id !== this.state.primary ? id : undefined
-      });
-    };
-  }
-
-  shouldComponentUpdate(nextProps, nextState) {
-    if (nextProps !== this.props) {
-      return true;
-    }
-
-    if (nextState.machineOrder !== this.state.machineOrder) {
-      return true;
-    }
-
-    if (nextState.templates !== this.state.templates) {
-      return true;
-    }
-
-    return nextState.primary !== this.state.primary;
-  }
-
-  render() {
-    if (this.state.machineOrder.length === 0) {
+    if (machineOrder.length === 0) {
       return _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Button, {
         positive: true,
         onClick: () => this.newMachine('virtualbox')
@@ -946,22 +1090,11 @@ class Machines extends _react.default.Component {
       }, "New container"));
     }
 
-    const machines = this.state.machineOrder.map(id => _react.default.createElement(Machine, {
-      ref: 'machine-' + id,
-      key: this.state.keys[id],
-      id: id,
-      machine: this.state.machines[id],
-      onIdChange: this.changeId(id),
-      onDelete: this.deleteMachine(id),
-      onPrimary: this.setPrimary(id),
-      primary: this.state.primary === id,
-      autoFocus: this.state.newMachine === id
-    }));
     return _react.default.createElement("div", null, _react.default.createElement("datalist", {
       id: "virtualbox-templates"
-    }, 'templates' in this.state && this.state.templates.map(t => _react.default.createElement("option", {
+    }, templates ? templates.map(t => _react.default.createElement("option", {
       key: t
-    }, t))), _react.default.createElement(_semanticUiReact.Table, null, _react.default.createElement(_semanticUiReact.Table.Header, null, _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.HeaderCell, {
+    }, t)) : undefined), _react.default.createElement(_semanticUiReact.Table, null, _react.default.createElement(_semanticUiReact.Table.Header, null, _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.HeaderCell, {
       collapsing: true
     }), _react.default.createElement(_semanticUiReact.Table.HeaderCell, {
       collapsing: true
@@ -975,7 +1108,17 @@ class Machines extends _react.default.Component {
       width: 1
     }, "Power control"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, {
       collapsing: true
-    }, "Networks"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null))), _react.default.createElement(_semanticUiReact.Table.Body, null, machines)), _react.default.createElement(_semanticUiReact.Button, {
+    }, "Networks"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null))), _react.default.createElement(_semanticUiReact.Table.Body, null, machineOrder.map(id => _react.default.createElement(Machine, {
+      ref: `machine-${id}`,
+      key: keys[id],
+      id: id,
+      machine: machines[id],
+      onIdChange: this.changeId(id),
+      onDelete: this.deleteMachine(id),
+      onPrimary: this.setPrimary(id),
+      primary: primary === id,
+      autoFocus: newMachine === id
+    })))), _react.default.createElement(_semanticUiReact.Button, {
       positive: true,
       onClick: () => this.newMachine('virtualbox')
     }, "New machine"), _react.default.createElement(_semanticUiReact.Button, {
@@ -993,27 +1136,28 @@ class Machines extends _react.default.Component {
 class Repositories extends _react.default.Component {
   constructor(props) {
     super();
+    const repositories = {};
+    const order = [];
+    let counter = 0;
+
+    for (const i in props.repositories) {
+      repositories[counter] = {
+        id: i,
+        name: props.repositories[i].name,
+        head: props.repositories[i].head
+      };
+      order.push(counter++);
+    }
+
     this.state = {
       allRepositories: {},
       idErrors: {},
       nameErrors: {},
       headErrors: {},
-      repositories: {},
-      order: [],
-      newIndex: props.repositories.length
+      repositories,
+      order,
+      newIndex: counter
     };
-    let counter = 0;
-
-    for (const i in props.repositories) {
-      this.state.repositories[counter] = {
-        id: i,
-        name: props.repositories[i].name,
-        head: props.repositories[i].head
-      };
-      this.state.order.push(counter++);
-    }
-
-    this.state.newIndex = counter;
     repositoriesLoadPromise.then(repositories => {
       this.setState({
         allRepositories: repositories
@@ -1022,66 +1166,40 @@ class Repositories extends _react.default.Component {
   }
 
   getValue() {
-    const repositories = {};
+    const {
+      order,
+      repositories
+    } = this.state;
+    const value = {};
     let hasRepositories = false;
 
-    for (const i of this.state.order) {
-      const repository = this.state.repositories[i];
+    for (const i of order) {
+      const repository = repositories[i];
 
-      if (repository.id && repository.name && !(repository.id in repositories)) {
-        repositories[repository.id] = {
+      if (repository.id && repository.name && !(repository.id in value)) {
+        value[repository.id] = {
           name: repository.name
         };
 
         if (repository.head) {
-          repositories[repository.id].head = repository.head;
+          value[repository.id].head = repository.head;
         }
 
         hasRepositories = true;
       }
     }
 
-    return hasRepositories ? repositories : undefined;
-  }
-
-  addRepository() {
-    const newIndex = ++this.state.newIndex;
-    const order = [...this.state.order, newIndex];
-    const repositories = { ...this.state.repositories,
-      [newIndex]: {
-        id: '',
-        name: ''
-      }
-    };
-    this.setState({
-      repositories,
-      order,
-      newIndex
-    });
-  }
-
-  deleteRepository(id) {
-    const repositories = { ...this.state.repositories
-    };
-    const order = [...this.state.order];
-    delete repositories[id];
-    const orderIndex = order.indexOf(id);
-
-    if (orderIndex >= 0) {
-      order.splice(orderIndex, 1);
-    }
-
-    this.setState({
-      repositories,
-      order
-    });
+    return hasRepositories ? value : undefined;
   }
 
   setRepository(id, field) {
     return e => {
+      const {
+        repositories
+      } = this.state;
       this.setState({
-        repositories: { ...this.state.repositories,
-          [id]: { ...this.state.repositories[id],
+        repositories: { ...repositories,
+          [id]: { ...repositories[id],
             [field]: e.target.value
           }
         }
@@ -1089,16 +1207,61 @@ class Repositories extends _react.default.Component {
     };
   }
 
+  deleteRepository(id) {
+    const {
+      repositories,
+      order
+    } = this.state;
+    const newRepositories = { ...repositories
+    };
+    const newOrder = [...order];
+    delete newRepositories[id];
+    const orderIndex = newOrder.indexOf(id);
+
+    if (orderIndex >= 0) {
+      newOrder.splice(orderIndex, 1);
+    }
+
+    this.setState({
+      repositories: newRepositories,
+      order: newOrder
+    });
+  }
+
+  addRepository() {
+    const {
+      order,
+      repositories,
+      newIndex
+    } = this.state;
+    const index = newIndex + 1;
+    this.setState({
+      repositories: { ...repositories,
+        [index]: {
+          id: '',
+          name: ''
+        }
+      },
+      order: [...order, index],
+      newIndex: index
+    });
+  }
+
   validateId(id) {
     return e => {
+      const {
+        order,
+        repositories,
+        idErrors
+      } = this.state;
       let invalid = false;
 
       if (!/^[a-zA-Z0-9_-]+$/.test(e.target.value)) {
         invalid = true;
       } else {
-        for (const i of this.state.order) {
+        for (const i of order) {
           if (i !== id) {
-            if (this.state.repositories[i].id === e.target.value) {
+            if (repositories[i].id === e.target.value) {
               invalid = true;
               break;
             }
@@ -1107,7 +1270,7 @@ class Repositories extends _react.default.Component {
       }
 
       this.setState({
-        idErrors: { ...this.state.idErrors,
+        idErrors: { ...idErrors,
           [id]: invalid
         }
       });
@@ -1116,8 +1279,11 @@ class Repositories extends _react.default.Component {
 
   validateName(id) {
     return e => {
+      const {
+        nameErrors
+      } = this.state;
       this.setState({
-        nameErrors: { ...this.state.nameErrors,
+        nameErrors: { ...nameErrors,
           [id]: !/^[a-zA-Z0-9_-]+$/.test(e.target.value)
         }
       });
@@ -1126,8 +1292,11 @@ class Repositories extends _react.default.Component {
 
   validateHead(id) {
     return e => {
+      const {
+        headErrors
+      } = this.state;
       this.setState({
-        headErrors: { ...this.state.headErrors,
+        headErrors: { ...headErrors,
           [id]: !/^[a-zA-Z0-9_/-]*$/.test(e.target.value)
         }
       });
@@ -1135,48 +1304,56 @@ class Repositories extends _react.default.Component {
   }
 
   render() {
-    const repositories = this.state.order.map(i => _react.default.createElement(_semanticUiReact.Table.Row, {
+    const {
+      order,
+      repositories,
+      newIndex,
+      idErrors,
+      nameErrors,
+      headErrors,
+      allRepositories
+    } = this.state;
+    return _react.default.createElement("div", null, _react.default.createElement("datalist", {
+      id: "repositories"
+    }, Object.keys(allRepositories).map(r => _react.default.createElement("option", {
+      key: r
+    }, r))), order.length !== 0 && _react.default.createElement(_semanticUiReact.Table, {
+      collapsing: true
+    }, _react.default.createElement(_semanticUiReact.Table.Header, null, _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "ID"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Name"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Head"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null))), _react.default.createElement(_semanticUiReact.Table.Body, null, order.map(i => _react.default.createElement(_semanticUiReact.Table.Row, {
       key: i
     }, _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement(_semanticUiReact.Input, {
       list: "repositories",
-      defaultValue: this.state.repositories[i].id,
+      defaultValue: repositories[i].id,
       onBlur: this.setRepository(i, 'id'),
       onChange: this.validateId(i),
-      autoFocus: i === this.state.newIndex,
+      autoFocus: i === newIndex,
       onFocus: loadRepositories,
-      error: this.state.idErrors[i]
+      error: idErrors[i]
     })), _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement(_semanticUiReact.Input, {
       list: "repositories",
-      defaultValue: this.state.repositories[i].name,
+      defaultValue: repositories[i].name,
       onBlur: this.setRepository(i, 'name'),
       onChange: this.validateName(i),
       onFocus: loadRepositories,
-      error: this.state.nameErrors[i]
+      error: nameErrors[i]
     })), _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement("datalist", {
-      id: 'refs-' + i
-    }, (this.state.allRepositories[this.state.repositories[i].name] || []).map(r => _react.default.createElement("option", {
+      id: `refs-${i}`
+    }, repositories[i].name in allRepositories && allRepositories[repositories[i].name].map(r => _react.default.createElement("option", {
       key: r
     }, r))), _react.default.createElement(_semanticUiReact.Input, {
-      list: 'refs-' + i,
-      defaultValue: this.state.repositories[i].head,
+      list: `refs-${i}`,
+      defaultValue: repositories[i].head,
       onBlur: this.setRepository(i, 'head'),
       onChange: this.validateHead(i),
       onFocus: loadRepositories,
-      error: this.state.headErrors[i]
+      error: headErrors[i]
     })), _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement(_semanticUiReact.Button, {
       icon: true,
       negative: true,
       onClick: () => this.deleteRepository(i)
     }, _react.default.createElement(_semanticUiReact.Icon, {
       name: "delete"
-    })))));
-    return _react.default.createElement("div", null, _react.default.createElement("datalist", {
-      id: "repositories"
-    }, Object.keys(this.state.allRepositories).map(r => _react.default.createElement("option", {
-      key: r
-    }, r))), this.state.order.length ? _react.default.createElement(_semanticUiReact.Table, {
-      collapsing: true
-    }, _react.default.createElement(_semanticUiReact.Table.Header, null, _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "ID"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Name"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Head"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null))), _react.default.createElement(_semanticUiReact.Table.Body, null, repositories)) : undefined, _react.default.createElement(_semanticUiReact.Button, {
+    }))))))), _react.default.createElement(_semanticUiReact.Button, {
       positive: true,
       onClick: () => this.addRepository()
     }, "New"));
@@ -1200,67 +1377,85 @@ class Endpoints extends _react.default.Component {
     };
   }
 
-  normalize() {
-    const order = this.state.order.filter(i => this.state.endpoints[i].length);
-    this.setState({
-      order
-    });
-  }
-
   getValue() {
-    this.normalize();
-    const endpoints = this.state.order.map(i => this.state.endpoints[i]);
-    return endpoints.length ? endpoints : undefined;
-  }
-
-  addEndpoint() {
-    const newIndex = ++this.state.newIndex;
-    const order = [...this.state.order, newIndex];
-    const endpoints = { ...this.state.endpoints,
-      [newIndex]: ''
-    };
-    this.setState({
-      endpoints,
+    const {
       order,
-      newIndex
-    });
+      endpoints
+    } = this.state;
+    this.normalize();
+    return order.length ? order.map(i => endpoints[i]) : undefined;
   }
 
   setEndpoint(id) {
     return e => {
+      const {
+        order,
+        endpoints
+      } = this.state;
+
       if (e.target.value === '') {
-        const order = [...this.state.order];
         const orderIndex = order.indexOf(id);
 
         if (orderIndex > -1) {
-          order.splice(orderIndex, 1);
+          const newOrder = [...order];
+          newOrder.splice(orderIndex, 1);
           this.setState({
-            order
+            order: newOrder
           });
         }
-      } else if (this.state.endpoints[id] !== e.target.value && this.state.order.find(id => this.state.endpoints[id] === e.target.value) === undefined) {
-        const endpoints = { ...this.state.endpoints
+      } else if (endpoints[id] !== e.target.value && !order.some(id => endpoints[id] === e.target.value)) {
+        const newEndpoints = { ...endpoints
         };
-        endpoints[id] = e.target.value;
+        newEndpoints[id] = e.target.value;
         this.setState({
-          endpoints
+          endpoints: newEndpoints
         });
       } else {
-        e.target.value = this.state.endpoints[id];
+        e.target.value = endpoints[id];
       }
     };
   }
 
+  addEndpoint() {
+    const {
+      newIndex,
+      order,
+      endpoints
+    } = this.state;
+    const index = newIndex + 1;
+    this.setState({
+      endpoints: { ...endpoints,
+        [index]: ''
+      },
+      order: [...order, index],
+      newIndex: index
+    });
+  }
+
+  normalize() {
+    const {
+      order,
+      endpoints
+    } = this.state;
+    this.setState({
+      order: order.filter(i => endpoints[i].length)
+    });
+  }
+
   render() {
-    const endpoints = this.state.order.map(i => _react.default.createElement("div", {
+    const {
+      order,
+      endpoints,
+      newIndex
+    } = this.state;
+    return _react.default.createElement("div", null, order.map(i => _react.default.createElement("div", {
       key: i
     }, _react.default.createElement(_semanticUiReact.Input, {
-      ref: 'endpoint-' + i,
-      defaultValue: this.state.endpoints[i],
+      ref: `endpoint-${i}`,
+      defaultValue: endpoints[i],
       onBlur: this.setEndpoint(i),
-      autoFocus: i === this.state.newIndex
-    })));
-    return _react.default.createElement("div", null, endpoints, _react.default.createElement(_semanticUiReact.Button, {
+      autoFocus: i === newIndex
+    }))), _react.default.createElement(_semanticUiReact.Button, {
       positive: true,
       onClick: () => this.addEndpoint()
     }, "New"));
@@ -1281,8 +1476,30 @@ class Gitlab extends _react.default.Component {
   }
 
   getValue() {
-    return typeof this.state.gitlab === 'object' && this.state.gitlab ? { ...this.state.gitlab
+    const {
+      gitlab
+    } = this.state;
+    return typeof gitlab === 'object' && gitlab ? { ...gitlab
     } : undefined;
+  }
+
+  setField(field) {
+    return e => {
+      const {
+        gitlab
+      } = this.state;
+      this.setState({
+        gitlab: { ...gitlab,
+          [field]: e.target.value
+        }
+      });
+    };
+  }
+
+  deleteGitlab() {
+    this.setState({
+      gitlab: undefined
+    });
   }
 
   createGitlab() {
@@ -1294,45 +1511,33 @@ class Gitlab extends _react.default.Component {
     });
   }
 
-  deleteGitlab() {
-    this.setState({
-      gitlab: undefined
-    });
-  }
-
-  setField(field) {
-    return e => {
-      this.setState({
-        gitlab: { ...this.state.gitlab,
-          [field]: e.target.value
-        }
-      });
-    };
-  }
-
   render() {
-    if (typeof this.state.gitlab !== 'object' || !this.state.gitlab) {
+    const {
+      gitlab
+    } = this.state;
+
+    if (typeof gitlab !== 'object' || !gitlab) {
       return _react.default.createElement(_semanticUiReact.Button, {
         color: "yellow",
         onClick: () => this.createGitlab()
       }, "Add");
-    } else {
-      return _react.default.createElement("div", null, _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Input, {
-        label: "URL",
-        defaultValue: this.state.gitlab.url,
-        onBlur: this.setField('url'),
-        style: {
-          width: '28.5em'
-        }
-      })), _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Input, {
-        label: "Key",
-        defaultValue: this.state.gitlab.key,
-        onBlur: this.setField('key')
-      })), _react.default.createElement(_semanticUiReact.Button, {
-        negative: true,
-        onClick: () => this.deleteGitlab()
-      }, "Remove"));
     }
+
+    return _react.default.createElement("div", null, _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Input, {
+      label: "URL",
+      defaultValue: gitlab.url,
+      onBlur: this.setField('url'),
+      style: {
+        width: '28.5em'
+      }
+    })), _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Input, {
+      label: "Key",
+      defaultValue: gitlab.key,
+      onBlur: this.setField('key')
+    })), _react.default.createElement(_semanticUiReact.Button, {
+      negative: true,
+      onClick: () => this.deleteGitlab()
+    }, "Remove"));
   }
 
 }
@@ -1356,18 +1561,25 @@ class _default extends _react.default.Component {
   }
 
   async save() {
-    if (this.state.loading) {
+    const {
+      lab
+    } = this.props;
+    const {
+      loading
+    } = this.state;
+
+    if (loading) {
       return;
     }
 
     this.setState({
       loading: 'save'
     });
-    fetch('lab/' + encodeURIComponent(this.props.lab._id), {
+    fetch(`lab/${encodeURIComponent(lab._id)}`, {
       method: 'PUT',
       headers: {
         'content-type': 'application/json',
-        'if-match': this.props.lab._rev
+        'if-match': lab._rev
       },
       body: JSON.stringify(this.getValue())
     }).then(response => {
@@ -1378,7 +1590,7 @@ class _default extends _react.default.Component {
           loading: null
         });
       }
-    }).catch(e => {
+    }, e => {
       this.setState({
         loading: null
       });
@@ -1386,60 +1598,54 @@ class _default extends _react.default.Component {
   }
 
   render() {
-    const lab = this.props.lab;
-
-    const assistant = _react.default.createElement(Assistant, {
+    const {
+      lab
+    } = this.props;
+    const {
+      loading
+    } = this.state;
+    return _react.default.createElement(_semanticUiReact.Grid, null, _react.default.createElement(_semanticUiReact.Grid.Column, null, _react.default.createElement(_semanticUiReact.Header, {
+      color: "teal",
+      size: "huge"
+    }, `Lab: ${lab._id}`), _react.default.createElement(_semanticUiReact.Segment, null, _react.default.createElement(_semanticUiReact.Header, null, "Assistant", _react.default.createElement(_semanticUiReact.Popup, {
+      trigger: _react.default.createElement(_semanticUiReact.Icon, {
+        color: "blue",
+        name: "info circle",
+        size: "tiny"
+      })
+    }, _react.default.createElement("p", null, "Virtual Teaching Assistant is proprietary software used to directly interact with end user."), _react.default.createElement("p", null, "Lab manager can create VirtualTA lab instance and provide access to that instance to integrated applications."))), _react.default.createElement(Assistant, {
       ref: "assistant",
       assistant: lab.assistant
-    });
-
-    const machines = _react.default.createElement(Machines, {
+    })), _react.default.createElement(_semanticUiReact.Segment, null, _react.default.createElement(_semanticUiReact.Header, null, "Machines"), _react.default.createElement(Machines, {
       ref: "machines",
       machines: 'machines' in lab ? lab.machines : {},
       machineOrder: 'machineOrder' in lab ? lab.machineOrder : [],
       primary: lab.primaryMachine
-    });
-
-    const repositories = _react.default.createElement(Repositories, {
+    })), _react.default.createElement(_semanticUiReact.Segment, null, _react.default.createElement(_semanticUiReact.Header, null, "Repositories", _react.default.createElement(_semanticUiReact.Popup, {
+      trigger: _react.default.createElement(_semanticUiReact.Icon, {
+        color: "blue",
+        name: "info circle",
+        size: "tiny"
+      })
+    }, _react.default.createElement("p", null, "Repositories which this lab has access to. ID is alias to repo (often equal to name), different labs can access to different repositories with same ID. Name is on-disk repository name."))), _react.default.createElement(Repositories, {
       ref: "repositories",
       repositories: 'repositories' in lab ? lab.repositories : {}
-    });
-
-    const endpoints = _react.default.createElement(Endpoints, {
+    })), _react.default.createElement(_semanticUiReact.Segment, null, _react.default.createElement(_semanticUiReact.Header, null, "Endpoints", _react.default.createElement(_semanticUiReact.Popup, {
+      trigger: _react.default.createElement(_semanticUiReact.Icon, {
+        color: "blue",
+        name: "info circle",
+        size: "tiny"
+      })
+    }, _react.default.createElement("p", null, "This section configures endpoints exposed to user via lab proxy"))), _react.default.createElement(Endpoints, {
       ref: "endpoints",
       endpoints: 'endpoints' in lab ? lab.endpoints : []
-    });
-
-    const gitlab = _react.default.createElement(Gitlab, {
+    })), _react.default.createElement(_semanticUiReact.Segment, null, _react.default.createElement(_semanticUiReact.Header, null, "Gitlab"), _react.default.createElement(Gitlab, {
       ref: "gitlab",
       gitlab: lab.gitlab
-    });
-
-    return _react.default.createElement(_semanticUiReact.Grid, null, _react.default.createElement(_semanticUiReact.Grid.Column, null, _react.default.createElement(_semanticUiReact.Header, {
-      color: "teal",
-      size: "huge"
-    }, "Lab: ", lab._id), _react.default.createElement(_semanticUiReact.Segment, null, _react.default.createElement(_semanticUiReact.Header, null, "Assistant ", _react.default.createElement(_semanticUiReact.Popup, {
-      trigger: _react.default.createElement(_semanticUiReact.Icon, {
-        color: "blue",
-        name: "info circle",
-        size: "tiny"
-      })
-    }, _react.default.createElement("p", null, "Virtual Teaching Assistant is proprietary software used to directly interact with end user."), _react.default.createElement("p", null, "Lab manager can create VirtualTA lab instance and provide access to that instance to integrated applications."))), assistant), _react.default.createElement(_semanticUiReact.Segment, null, _react.default.createElement(_semanticUiReact.Header, null, "Machines"), machines), _react.default.createElement(_semanticUiReact.Segment, null, _react.default.createElement(_semanticUiReact.Header, null, "Repositories ", _react.default.createElement(_semanticUiReact.Popup, {
-      trigger: _react.default.createElement(_semanticUiReact.Icon, {
-        color: "blue",
-        name: "info circle",
-        size: "tiny"
-      })
-    }, _react.default.createElement("p", null, "Repositories which this lab has access to. ID is alias to repo (often equal to name), different labs can access to different repositories with same ID. Name is on-disk repository name."))), repositories), _react.default.createElement(_semanticUiReact.Segment, null, _react.default.createElement(_semanticUiReact.Header, null, "Endpoints ", _react.default.createElement(_semanticUiReact.Popup, {
-      trigger: _react.default.createElement(_semanticUiReact.Icon, {
-        color: "blue",
-        name: "info circle",
-        size: "tiny"
-      })
-    }, _react.default.createElement("p", null, "This section configures endpoints exposed to user via lab proxy"))), endpoints), _react.default.createElement(_semanticUiReact.Segment, null, _react.default.createElement(_semanticUiReact.Header, null, "Gitlab"), gitlab), _react.default.createElement(_semanticUiReact.Button, {
+    })), _react.default.createElement(_semanticUiReact.Button, {
       primary: true,
       onClick: () => this.save(),
-      disabled: !!this.state.loading
+      disabled: !!loading
     }, "Save")));
   }
 

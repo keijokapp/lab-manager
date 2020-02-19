@@ -25,14 +25,19 @@ class Repository extends _react.default.Component {
   }
 
   fetch() {
-    if (this.state.loading) {
+    const {
+      name,
+      loading
+    } = this.state;
+
+    if (loading) {
       return;
     }
 
     this.setState({
       loading: 'fetch'
     });
-    fetch('repository/' + encodeURIComponent(this.state.name) + '/fetch', {
+    fetch(`repository/${encodeURIComponent(name)}/fetch`, {
       method: 'POST'
     }).then(response => {
       if (response.ok) {
@@ -50,14 +55,19 @@ class Repository extends _react.default.Component {
   }
 
   reload(force) {
-    if (!force && this.state.loading) {
+    const {
+      name,
+      loading
+    } = this.state;
+
+    if (!force && loading) {
       return;
     }
 
     this.setState({
       loading: 'reload'
     });
-    fetch('repository/' + encodeURIComponent(this.state.name)).then(response => {
+    fetch(`repository/${encodeURIComponent(name)}`).then(response => {
       if (response.ok) {
         return response.json().then(body => {
           this.setState({
@@ -65,11 +75,11 @@ class Repository extends _react.default.Component {
             loading: null
           });
         });
-      } else {
-        this.setState({
-          loading: null
-        });
       }
+
+      this.setState({
+        loading: null
+      });
     }).catch(e => {
       this.setState({
         loading: null
@@ -78,10 +88,17 @@ class Repository extends _react.default.Component {
   }
 
   render() {
+    const {
+      name,
+      link,
+      showMore,
+      refs,
+      loading
+    } = this.state;
     const commits = {};
 
-    for (const ref in this.state.refs) {
-      const commit = this.state.refs[ref];
+    for (const ref in refs) {
+      const commit = refs[ref];
 
       if (commit in commits) {
         commits[commit].push(ref);
@@ -90,7 +107,7 @@ class Repository extends _react.default.Component {
       }
     }
 
-    const refs = [];
+    const refNodes = [];
     let hasMaster = false;
 
     for (const commit in commits) {
@@ -104,53 +121,56 @@ class Repository extends _react.default.Component {
         key: commit
       }, _react.default.createElement(_semanticUiReact.Label, {
         basic: true
-      }, commit.slice(0, 8)), " ", names);
+      }, commit.slice(0, 8)), names);
 
       if (commits[commit].includes('master')) {
-        refs.splice(0, 0, el);
+        refNodes.splice(0, 0, el);
         hasMaster = true;
       } else if (commits[commit].includes('dev')) {
-        refs.splice(hasMaster ? 1 : 0, 0, el);
+        refNodes.splice(hasMaster ? 1 : 0, 0, el);
       } else {
-        refs.push(el);
+        refNodes.push(el);
       }
     }
 
-    const showMore = refs.length > 3 ? _react.default.createElement("div", null, _react.default.createElement("a", {
-      href: "javascript:void(0)",
-      onClick: () => {
-        this.setState({
-          showMore: !this.state.showMore
-        });
-      }
-    }, this.state.showMore ? 'Show less' : refs.length - 3 + ' more')) : undefined;
     return _react.default.createElement(_semanticUiReact.Table.Row, {
       verticalAlign: "top"
-    }, _react.default.createElement(_semanticUiReact.Table.Cell, null, this.state.name), _react.default.createElement(_semanticUiReact.Table.Cell, null, this.state.showMore ? refs : refs.slice(0, 3), showMore), _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement(_semanticUiReact.Label, {
+    }, _react.default.createElement(_semanticUiReact.Table.Cell, null, name), _react.default.createElement(_semanticUiReact.Table.Cell, null, showMore ? refNodes : refNodes.slice(0, 3), refNodes.length > 3 && _react.default.createElement("div", null, _react.default.createElement(_semanticUiReact.Button, {
+      style: {
+        boxShadow: 'none',
+        background: 'none',
+        color: '#4183c4'
+      },
+      onClick: () => {
+        this.setState({
+          showMore: !showMore
+        });
+      }
+    }, showMore ? 'Show less' : `${refNodes.length - 3} more`))), _react.default.createElement(_semanticUiReact.Table.Cell, null, _react.default.createElement(_semanticUiReact.Label, {
       size: "big"
-    }, this.state.link, " ", _react.default.createElement(_semanticUiReact.Icon, {
+    }, link, _react.default.createElement(_semanticUiReact.Icon, {
       name: "clipboard outline",
       style: {
         cursor: 'pointer',
-        padding: '0 0 0 01em'
+        margin: '0 0 0 1em'
       },
-      onClick: () => (0, _copyToClipboard.default)(this.state.link)
+      onClick: () => (0, _copyToClipboard.default)(link)
     }))), _react.default.createElement(_semanticUiReact.Table.Cell, {
       collapsing: true
     }, _react.default.createElement(_semanticUiReact.Button, {
       icon: true,
       color: "violet",
-      loading: this.state.loading === 'fetch',
-      disabled: !!this.state.loading,
+      loading: loading === 'fetch',
+      disabled: !!loading,
       onClick: () => this.fetch()
     }, _react.default.createElement(_semanticUiReact.Icon, {
       name: "download"
-    }), " Fetch")), _react.default.createElement(_semanticUiReact.Table.Cell, {
+    }), ' Fetch')), _react.default.createElement(_semanticUiReact.Table.Cell, {
       collapsing: true
     }, _react.default.createElement(_semanticUiReact.Button, {
       icon: true,
-      loading: this.state.loading === 'reload',
-      disabled: !!this.state.loading,
+      loading: loading === 'reload',
+      disabled: !!loading,
       onClick: () => this.reload()
     }, _react.default.createElement(_semanticUiReact.Icon, {
       name: "sync alternate"
@@ -159,19 +179,20 @@ class Repository extends _react.default.Component {
 
 }
 
-var _default = props => {
-  const repositories = props.repositories.map(repository => _react.default.createElement(Repository, {
-    key: repository._id,
-    name: repository._id,
-    refs: repository.refs,
-    link: repository.link
-  }));
+var _default = ({
+  repositories
+}) => {
   return _react.default.createElement(_semanticUiReact.Grid, null, _react.default.createElement(_semanticUiReact.Grid.Column, null, _react.default.createElement(_semanticUiReact.Header, {
     size: "large",
     color: "teal"
   }, "Repositories"), _react.default.createElement(_semanticUiReact.Table, {
     selectable: true
-  }, _react.default.createElement(_semanticUiReact.Table.Header, null, _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Name"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Refs"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Clone URL"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null))), _react.default.createElement(_semanticUiReact.Table.Body, null, repositories))));
+  }, _react.default.createElement(_semanticUiReact.Table.Header, null, _react.default.createElement(_semanticUiReact.Table.Row, null, _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Name"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Refs"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null, "Clone URL"), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null), _react.default.createElement(_semanticUiReact.Table.HeaderCell, null))), _react.default.createElement(_semanticUiReact.Table.Body, null, repositories.map(repository => _react.default.createElement(Repository, {
+    key: repository._id,
+    name: repository._id,
+    refs: repository.refs,
+    link: repository.link
+  }))))));
 };
 
 exports.default = _default;

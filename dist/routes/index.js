@@ -30,5 +30,5 @@ routes.use('/instance', _instance.default);
 routes.use('/machine', _machine.default);
 routes.use('/repository', _repository.default);
 routes.get('/', (req, res) => {
-  res.redirect(_config.default.appUrl + '/lab');
+  res.redirect(`${_config.default.appUrl}/lab`);
 });

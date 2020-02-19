@@ -23,7 +23,7 @@ if ('repositories' in _config.default) {
   browserConfig.repositories = true;
 }
 
-let menu = [["lab", "Labs"], ["instance", 'Running labs']];
+let menu = [['lab', 'Labs'], ['instance', 'Running labs']];
 
 if ('virtualbox' in _config.default) {
   menu.push(['machine', 'Virtual machines']);
@@ -49,7 +49,7 @@ function _default(title, state, html) {
 	<head>
 		<meta charset="utf-8"/>
 		<title>${title}</title>
-		<base href="${_config.default.appUrl + '/'}"/>
+		<base href="${`${_config.default.appUrl}/`}"/>
 		<link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"/>
 		<link rel="stylesheet" href="semantic.min.css"/>
 		<script src="bundle.js"></script>
@@ -68,5 +68,3 @@ function _default(title, state, html) {
 	</body>
 	</html>`;
 }
-
-;
