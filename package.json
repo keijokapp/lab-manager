@@ -8,9 +8,6 @@
 	"scripts": {
 		"build": "babel lib --out-dir dist"
 	},
-	"browser": {
-		"./lib/config.js": "./lib/config-browser.js"
-	},
 	"dependencies": {
 		"browserify-middleware": "^8.1.1",
 		"copy-to-clipboard": "^3.2.0",
