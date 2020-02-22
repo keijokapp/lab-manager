@@ -5,8 +5,14 @@
 	"author": "Keijo Kapp <keijo.kapp@rangeforce.com>",
 	"license": "MIT",
 	"bin": "./dist/index.js",
+	"files": [
+		"dist",
+		"public",
+		"config_sample.json",
+		"lab-manager.service"
+	],
 	"scripts": {
-		"build": "babel lib --out-dir dist",
+		"build": "babel lib --out-dir dist && npm pack && rm -rf dist",
 		"lint": "eslint lib"
 	},
 	"dependencies": {

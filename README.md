@@ -37,7 +37,7 @@ apt install nodejs npm libsystemd-dev
 ### Quick start
 
 ```
-npm install https://github.com/keijokapp/lab-manager
+npm install https://github.com/keijokapp/lab-manager/releases/download/0.0.1/lab-manager-0.0.1.tgz
 
 lab-manager /path/to/config-file.json
 ```
