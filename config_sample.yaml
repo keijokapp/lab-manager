@@ -1,5 +1,8 @@
 # PouchDB database path or URL
-database: db
+database:
+#  clusterFile: /path/to/fdb.cluster
+  apiVersion: 600
+#  prefix: 'lm'
 
 # Public URL of application
 appUrl: http://localhost:3000

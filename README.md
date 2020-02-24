@@ -50,7 +50,7 @@ Example configuration is shown in [config_sample.json](config_sample.json). Only
  | `listen.port`, `listen.address` | Listen address (optional) and port |
  | `listen.path`, `listen.mode` | UNIX socket path and mode (optional) |
  | `appUrl` | Public (related to other components) URL prefix of the application |
- | `database` | Database URL (CouchDB) or location on disk (LevelDB) |
+ | `database.apiVersion`, `database.clusterFile`, `database.prefix` | FoundationDB API version (must be supported by client library and cluster), cluster file (optional - looked up from default locations if not provided) and database key prefix (optional) |
  | `tokens` | (optional) Array of authorized bearer tokens |
  | `labProxy.url`, `labProxy.key` | (optional) Lab proxy URL and access token |
  | `virtualbox.url`, `virtualbox.key` | (optional) [VirtualBox API service](https://github.com/keijokapp/i-tee-virtualbox) URL and access token (optional) |
@@ -88,6 +88,15 @@ Lab manager essentially stores two types of documents:
  * `instance` - document describing a *running* lab instance identified by lab name and username (semi-arbitrary string specified by client). This object is created by application by starting the lab is not changed once created. Its schema is not strictly defined, but generally for every module specified by lab object, there's a property in instance object. It embeds lab object upon creation and does not depend on original lab object.
 
 Both of these objects must not contain "phantom" properties. E.g. if lab does not have any endpoints, it must not have endpoints property.
+
+## Database structure
+
+Lab manager uses following database namespaces using tuple encoding for keys:
+ * `lab`, *`id`* - lab as JSON text
+ * `lab`, *`id`*, `rev` - lab revision as UTF-8 encoded UUID
+ * `instance`, *`id`* - instance as JSON text
+ * `instance`, *`id`*, `rev` - instance revision as UTF-8 encoded UUID
+ * `instance-token`, *`token`* - reference of instance, indexed by instance's private and public tokens - UTF-8 encoded instnace ID
 
 ## Instance tokens
 
