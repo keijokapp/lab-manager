@@ -1,0 +1,40 @@
+# PouchDB database path or URL
+database: db
+
+# Public URL of application
+appUrl: http://localhost:3000
+
+# Application listener oconfiguration
+listen:
+#  address: ::
+  port: 3000
+
+# Bearer tokens for authorization
+#tokens: []
+
+# Path to Git repositories
+#repositories: repositories
+
+# Lab Proxy
+#labProxy:
+#  url: https://lab-host.example.com/lab-proxy
+#  key: api-token
+
+# VirtualBox API (i-tee-virtualbox) configuration
+#virtualbox:
+#  url: http://localhost:3001
+#  key: XXX
+
+# Remote console (lab-remote) base URL
+#remote: https://example.com/remote
+
+# LXD configuration
+#lxd:
+#  url: https://localhost:9443
+#  certificate: lxd-client-certificate
+#  key: lxd-client-key
+
+# I-Tee integration for compatibility
+#iTee:
+#  url: https://i-tee.example.com
+#  key: XXX
