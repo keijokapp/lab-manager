@@ -1,6 +1,6 @@
-Lab manager is a laboratory management API service originally inspired by [I-Tee](https://github.com/magavdraakon/i-tee).
+Lab manager is a laboratory management API service.
 
-It provides RESTful API and decent browser-based UI for managing labs, lab instances and related resources. It has limited I-Tee API compatibility layer and lab instance import feature  (actual I-Tee instance is currently needed for these).
+It provides RESTful API and decent browser-based UI for managing labs, lab instances and related resources.
 
 **Features:**
 
@@ -57,7 +57,6 @@ Example configuration is shown in [config_sample.json](config_sample.json). Only
  | `remote` | (optional) [Remote console application](https://github.com/keijokapp/lab-remote) URL |
  | `repositories` | (optional) Directory where Git repositories are located |
  | `lxd.url`, `lxd.certificate`, `lxd.key` | (optional) LXD URL prefix, TLS certificate and key |
- | `iTee.url`, `iTee.key` | (optional) I-Tee URL prefix and access token (not needed for import feature) for lab instance import and I-Tee compatibility layer |
 
 ### Installing as Systemd service:
 ```
@@ -80,13 +79,7 @@ Swagger-based API documentation is available at `/docs/api/` (note the slash at 
 
 ## Authentication and authorization
 
-Lab manager does not have concept of *users* and therefore does not provide authentication. However, if bearer tokens are configured, application uses these in authorization process as described in [RFC6750](https://tools.ietf.org/html/rfc6750). Instance endpoints accessed by instance tokens are not explicitly authorized. I-Tee compatibility layer uses its own request format to provide authorization token.
-
-## I-Tee compatibility
-
-Lab manager provides few endpoints which emulate some behaviour of I-Tee API. This layer currently needs actual I-Tee instance to manage users and keep track of lab ID-s.
-
-Take a look at [lib/routes/i-tee-compat.js](lib/routes/i-tee-compat.js) for details.
+Lab manager does not have concept of *users* and therefore does not provide authentication. However, if bearer tokens are configured, application uses these in authorization process as described in [RFC6750](https://tools.ietf.org/html/rfc6750). Instance endpoints accessed by instance tokens are not explicitly authorized.
 
 ## Data structures
 
@@ -96,15 +89,11 @@ Lab manager essentially stores two types of documents:
 
 Both of these objects must not contain "phantom" properties. E.g. if lab does not have any endpoints, it must not have endpoints property.
 
-I-Tee API compatibility layer creates another type of objects - `i-tee-compat` - objects representing virtual unstarted lab instances identified by lab name and username. This is essentially needed to map between integer lab/user/instace ID-s (as used by I-Tee) and lab-/username. This can coexists with corresponding instance object in which case the instance object takes precedence and this object is entirely ignored.
-
 ## Instance tokens
 
 Each lab instance has two unique unpredictable tokens (UUIDv4-s currently):
  * Private token - provides access to full instance object and features like machine state reading and control, repositories etc. This token should not be exposed to any untrusted party as it enables compromising sensitive data and systems.
  * Public token - provides access only to features directed to lab users like reading carefully whitelisted information of lab, machines, GitLab etc. This token can be exposed to user.
-
-Whenever request is made with unknown token and I-Tee integration is configured, lab manager tries to seamlessly import instance from I-Tee. That way, features provided by lab manager (e.g. repositories) can be used even if lab runs on I-Tee. Lab definition in both lab manager and I-Tee must be strictly compatible, otherwise the import fails.
 
 ## VirtualBox
 
